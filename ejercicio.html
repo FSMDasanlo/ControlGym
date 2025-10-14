@@ -7,19 +7,20 @@
   <style>
     body { font-family: Arial, sans-serif; background: #f0f8ff; margin: 0; padding: 0; }
     header { text-align: center; padding: 1rem; background: #0077cc; color: white; font-size: 1.2rem; }
-    .detalle { padding: 1rem; font-style: italic; }
+    .detalle { padding: 1rem; font-style: italic; text-align: center; max-width: 600px; margin: auto; }
     .tabla-container { overflow-x: auto; padding: 1rem; }
     table { border-collapse: collapse; width: 100%; min-width: 500px; }
     th, td { border: 1px solid #0077cc; padding: 5px; text-align: center; }
     th { background: #0077cc; color: white; }
-    .form { display: flex; justify-content: center; gap: 10px; margin: 1rem 0; }
-    input { padding: 0.5rem; width: 100px; }
-    button { padding: 0.5rem 1rem; background: #0077cc; color: white; border: none; cursor: pointer; border-radius: 5px; }
+    .form { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 1rem 0; }
+    input { padding: 0.5rem; width: 120px; }
+    button { padding: 0.5rem 1rem; background: #0077cc; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 1rem; }
     .background-img { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-size: cover; background-position: center; opacity: 0.2; z-index: -1; }
     .toast { visibility: hidden; min-width: 200px; background: green; color: #fff; text-align: center; border-radius: 5px; padding: 0.5rem; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); }
     .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
     @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 20px; opacity: 1;} }
     @keyframes fadeout { from {bottom: 20px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -41,8 +42,13 @@
 
   <div class="form">
     <input type="number" id="peso" placeholder="Peso">
-    <input type="number" id="reps" placeholder="Reps">
+    <input type="number" id="reps" placeholder="Repeticiones">
     <button id="guardar">Guardar</button>
+  </div>
+
+  <div class="nav-buttons">
+    <button onclick="volverRutinas()">← Volver a Rutinas</button>
+    <button onclick="volverCalendario()">🏠 Volver al Calendario</button>
   </div>
 
   <div id="toast" class="toast">Guardado ✅</div>
@@ -89,15 +95,14 @@
     const toast = document.getElementById('toast');
 
     const data = JSON.parse(localStorage.getItem('gymData') || '{}');
-    const key = fecha;
-    if(!data[key]) data[key] = {};
-    if(!data[key][rutina]) data[key][rutina] = {peso:[], reps:[], fechas:[]};
+    if(!data[fecha]) data[fecha] = {};
+    if(!data[fecha][rutina]) data[fecha][rutina] = {peso:[], reps:[], fechas:[]};
 
     function renderTable(){
-      const rut = data[key][rutina];
+      const rut = data[fecha][rutina];
       thead.innerHTML = `<th>Día</th>${rut.fechas.map(f=>`<th>${f}</th>`).join('')}<th>Resumen</th>`;
       pesoRow.innerHTML = `<td>Peso</td>${rut.peso.map(v=>`<td>${v}</td>`).join('')}<td>${rut.peso.length} días | media ${rut.peso.length?(rut.peso.reduce((a,b)=>a+b,0)/rut.peso.length).toFixed(2):0}</td>`;
-      repsRow.innerHTML = `<td>Reps</td>${rut.reps.map(v=>`<td>${v}</td>`).join('')}<td>${rut.reps.length? (rut.reps.reduce((a,b)=>a+b,0)/rut.reps.length).toFixed(1):0}</td>`;
+      repsRow.innerHTML = `<td>Repeticiones</td>${rut.reps.map(v=>`<td>${v}</td>`).join('')}<td>${rut.reps.length?(rut.reps.reduce((a,b)=>a+b,0)/rut.reps.length).toFixed(1):0}</td>`;
     }
 
     renderTable();
@@ -106,15 +111,22 @@
       const p = parseFloat(document.getElementById('peso').value);
       const r = parseInt(document.getElementById('reps').value);
       if(isNaN(p) || isNaN(r)) return;
-      const fechaLocal = new Date().toLocaleDateString('es-ES');
-      data[key][rutina].peso.push(p);
-      data[key][rutina].reps.push(r);
-      data[key][rutina].fechas.push(fechaLocal);
+      data[fecha][rutina].peso.push(p);
+      data[fecha][rutina].reps.push(r);
+      data[fecha][rutina].fechas.push(fecha);
       localStorage.setItem('gymData', JSON.stringify(data));
       renderTable();
       toast.classList.add('show');
       setTimeout(()=>toast.classList.remove('show'), 2500);
     });
+
+    function volverRutinas(){
+      window.location.href = `rutinas.html?fecha=${fecha}`;
+    }
+
+    function volverCalendario(){
+      window.location.href = `index.html`;
+    }
   </script>
 </body>
 </html>

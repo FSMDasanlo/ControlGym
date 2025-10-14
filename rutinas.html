@@ -7,35 +7,46 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background: #f0f8ff; }
     header { text-align: center; padding: 1rem; background: #0077cc; color: white; font-size: 1.2rem; }
-    .rutina { 
-      position: relative; 
-      margin: 10px auto; 
-      width: 90%; 
-      height: 120px; 
-      background-size: cover; 
-      background-position: center; 
-      border-radius: 10px; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      color: white; 
-      font-weight: bold; 
-      font-size: 1.2rem;
+    .rutina {
+      position: relative;
+      margin: 10px auto;
+      width: 90%;
+      min-height: 140px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1rem;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
     }
-    .rutina::after {
-      content: "";
+    .overlay {
       position: absolute;
-      top:0;left:0;right:0;bottom:0;
-      background: rgba(0,0,0,0.4);
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
       border-radius: 10px;
     }
-    .rutina span { position: relative; z-index: 1; }
+    .rutina span { position: relative; z-index: 1; font-size: 1.2rem; text-align: center; margin-bottom: 0.5rem; }
+    ul { position: relative; z-index: 1; font-weight: normal; margin: 0; padding-left: 1.2rem; }
+    li { font-size: 0.9rem; }
+    .check {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #4caf50;
+      color: white;
+      border-radius: 50%;
+      padding: 5px 8px;
+      font-size: 1rem;
+      z-index: 2;
+    }
   </style>
 </head>
 <body>
   <header>🏋️ Rutinas del <span id="fecha"></span></header>
-
   <div id="lista"></div>
 
   <script>
@@ -43,26 +54,53 @@
     document.getElementById('fecha').textContent = fecha;
 
     const rutinas = [
-      {titulo:'Pecho, bíceps y abdominales', img:'https://images.pexels.com/photos/3838389/pexels-photo-3838389.jpeg'},
-      {titulo:'Espalda y tríceps', img:'https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg'},
-      {titulo:'Hombros, trapecio y piernas', img:'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'},
-      {titulo:'Pecho y bíceps', img:'https://images.pexels.com/photos/3253501/pexels-photo-3253501.jpeg'},
-      {titulo:'Espalda y tríceps', img:'https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg'},
-      {titulo:'Rodillas', img:'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg'},
+      {titulo:'Pecho, bíceps y abdominales', detalle:'Press de banca con barra, aperturas en banco inclinado con mancuernas, press inclinado con mancuernas, curl de bíceps con barra y crunch en máquina con carga alta.', img:'https://images.pexels.com/photos/3838389/pexels-photo-3838389.jpeg'},
+      {titulo:'Espalda y tríceps', detalle:'Dominadas en barra fija, remo con barra, press francés, extensiones de tríceps en polea alta y fondos de tríceps.', img:'https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg'},
+      {titulo:'Hombros, trapecio y piernas', detalle:'Elevaciones laterales con mancuernas, trapecios con polea baja, sentadillas con barra, extensiones de piernas, peso muerto con barra y gemelo en máquina.', img:'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'},
+      {titulo:'Pecho y bíceps', detalle:'Press de banca con mancuernas, press declinado con mancuernas, curl de bíceps sentado con mancuerna y curl de bíceps.', img:'https://images.pexels.com/photos/3253501/pexels-photo-3253501.jpeg'},
+      {titulo:'Espalda y tríceps', detalle:'Remo en polea baja, peso muerto, extensión vertical alterna con mancuerna y flexiones de tríceps.', img:'https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg'},
+      {titulo:'Rodillas', detalle:'Rutinas de bajo impacto como sentadillas, elevación de piernas y ejercicios isométricos.', img:'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg'}
     ];
 
+    const data = JSON.parse(localStorage.getItem('gymData') || '{}');
     const lista = document.getElementById('lista');
+
     rutinas.forEach((r,index)=>{
       const div = document.createElement('div');
-      div.className='rutina';
+      div.className = 'rutina';
       div.style.backgroundImage = `url(${r.img})`;
-      div.innerHTML = `<span>${r.titulo}</span>`;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay';
+
+      const titulo = document.createElement('span');
+      titulo.textContent = r.titulo;
+
+      const ul = document.createElement('ul');
+      r.detalle.split(',').forEach(item=>{
+        const li = document.createElement('li');
+        li.textContent = item.trim();
+        ul.appendChild(li);
+      });
+
+      // Check si hay datos para esta rutina en esa fecha
+      if (data[fecha] && data[fecha][index+1] && data[fecha][index+1].peso.length > 0) {
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.textContent = '✔';
+        div.appendChild(check);
+      }
+
+      div.appendChild(overlay);
+      div.appendChild(titulo);
+      div.appendChild(ul);
+
       div.addEventListener('click', ()=>{
         window.open(`ejercicio.html?fecha=${fecha}&rutina=${index+1}`, '_blank');
       });
+
       lista.appendChild(div);
     });
   </script>
 </body>
 </html>
-
