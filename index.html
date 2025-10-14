@@ -2,21 +2,61 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Calendario Simple</title>
+  <title>Control Gym - Calendario</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
-    select { margin: 10px; padding: 5px; }
-    table { margin: 20px auto; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; width: 40px; height: 40px; }
-    th { background-color: #f2f2f2; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 { margin-top: 20px; }
+    .controls { margin: 20px; }
+    select, button {
+      padding: 10px;
+      margin: 5px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background-color: #ff5722;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background-color: #e64a19; }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      color: black;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    th, td {
+      width: 50px;
+      height: 50px;
+      text-align: center;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    th { background-color: #f50057; color: white; }
+    td:hover { background-color: #ffeb3b; }
+    .empty { background: #f1f1f1; cursor: default; }
   </style>
 </head>
 <body>
-  <h1>Calendario</h1>
-
-  <select id="mes"></select>
-  <select id="anio"></select>
-
+  <h1>Calendario de Entrenamientos</h1>
+  <div class="controls">
+    <button id="prevMes">⏪ Mes anterior</button>
+    <select id="mes"></select>
+    <select id="anio"></select>
+    <button id="nextMes">Mes siguiente ⏩</button>
+  </div>
   <div id="calendario"></div>
 
   <script>
@@ -27,7 +67,6 @@
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
-    // llenar desplegable de meses
     meses.forEach((m, i) => {
       const option = document.createElement('option');
       option.value = i;
@@ -35,7 +74,6 @@
       mesSelect.appendChild(option);
     });
 
-    // llenar desplegable de años
     const añoActual = new Date().getFullYear();
     for (let a = añoActual - 10; a <= añoActual + 10; a++) {
       const option = document.createElement('option');
@@ -44,29 +82,64 @@
       anioSelect.appendChild(option);
     }
 
-    // mostrar calendario al cambiar mes/año
-    mesSelect.value = new Date().getMonth();
-    anioSelect.value = añoActual;
-    mesSelect.addEventListener('change', mostrarCalendario);
-    anioSelect.addEventListener('change', mostrarCalendario);
+    let mesActual = new Date().getMonth();
+    let anioActual = añoActual;
+    mesSelect.value = mesActual;
+    anioSelect.value = anioActual;
+
+    mesSelect.addEventListener('change', () => {
+      mesActual = parseInt(mesSelect.value);
+      mostrarCalendario();
+    });
+    anioSelect.addEventListener('change', () => {
+      anioActual = parseInt(anioSelect.value);
+      mostrarCalendario();
+    });
+
+    document.getElementById('prevMes').addEventListener('click', () => {
+      mesActual--;
+      if (mesActual < 0) { mesActual = 11; anioActual--; }
+      mesSelect.value = mesActual;
+      anioSelect.value = anioActual;
+      mostrarCalendario();
+    });
+
+    document.getElementById('nextMes').addEventListener('click', () => {
+      mesActual++;
+      if (mesActual > 11) { mesActual = 0; anioActual++; }
+      mesSelect.value = mesActual;
+      anioSelect.value = anioActual;
+      mostrarCalendario();
+    });
 
     function mostrarCalendario() {
-      const mes = parseInt(mesSelect.value);
-      const anio = parseInt(anioSelect.value);
-
-      const primerDia = new Date(anio, mes, 1).getDay();
-      const ultimoDia = new Date(anio, mes + 1, 0).getDate();
+      const diasSemana = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+      let primerDia = new Date(anioActual, mesActual, 1).getDay();
+      primerDia = (primerDia + 6) % 7;
+      const ultimoDia = new Date(anioActual, mesActual + 1, 0).getDate();
+      const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
 
       let tabla = "<table><tr>";
-      const dias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-      for (const d of dias) tabla += `<th>${d}</th>`;
+      for (const d of diasSemana) tabla += `<th>${d}</th>`;
       tabla += "</tr><tr>";
 
-      for (let i = 0; i < primerDia; i++) tabla += "<td></td>";
+      for (let i = 0; i < primerDia; i++) tabla += "<td class='empty'></td>";
 
       for (let dia = 1; dia <= ultimoDia; dia++) {
+        const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+        let check = '';
+        if (data[fechaISO]) {
+          const ejercicios = data[fechaISO];
+          const tieneDatos = ejercicios.some(e =>
+            e.tiempo.trim() !== '?' ||
+            e.peso.trim() !== '?' ||
+            e.repeticiones.trim() !== '?' ||
+            e.libre.trim() !== '?'
+          );
+          if (tieneDatos) check = ' ✅';
+        }
         if ((primerDia + dia - 1) % 7 === 0 && dia !== 1) tabla += "</tr><tr>";
-        tabla += `<td>${dia}</td>`;
+        tabla += `<td onclick="window.open('dia.html?fecha=${fechaISO}', '_blank')">${dia}${check}</td>`;
       }
 
       tabla += "</tr></table>";
