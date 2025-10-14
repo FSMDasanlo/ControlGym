@@ -4,24 +4,103 @@
   <meta charset="UTF-8" />
   <title>Detalle ejercicio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #00c6ff, #0072ff); color: #fff; text-align:center; margin:0; }
-    h1 { padding:20px; font-size:20px; }
-    img { width:90%; max-width:400px; border-radius:10px; margin:10px 0; }
-    .campo { margin:10px auto; max-width:300px; display:flex; justify-content:space-between; }
-    input { width:100px; padding:5px; border-radius:5px; border:none; }
-    .botones { margin-top:20px; }
-    button {
-      padding:10px 15px;
-      margin:5px;
-      background:#ff5722;
-      color:white;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
+    <div id="toast"></div>
+
+  <div class="botones">
+    <button onclick="guardar()">💾 Guardar</button>
+    <button onclick="window.location.href='index.html'">🏠 Calendario</button>
+    <button onclick="window.location.href='dia.html?fecha='+fechaKey">↩ Ejercicios</button>
+  </div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const fecha = params.get('fecha');
+  const ejercicioNum = params.get('ejercicio');
+
+  document.getElementById('fechaTitulo').textContent = `${fecha} - Ejercicio ${ejercicioNum}`;
+
+  const tiempoInput = document.getElementById('tiempo');
+  const pesoInput = document.getElementById('peso');
+  const repeticionesInput = document.getElementById('repeticiones');
+  const libreInput = document.getElementById('libre');
+  const saveBtn = document.getElementById('saveBtn');
+
+  const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
+  if (data[fecha] && data[fecha][ejercicioNum-1]) {
+    const e = data[fecha][ejercicioNum-1];
+    tiempoInput.value = e.tiempo;
+    pesoInput.value = e.peso;
+    repeticionesInput.value = e.repeticiones;
+    libreInput.value = e.libre;
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const tiempo = tiempoInput.value || '?';
+    const peso = pesoInput.value || '?';
+    const repeticiones = repeticionesInput.value || '?';
+    const libre = libreInput.value || '?';
+
+    if (!data[fecha]) {
+      data[fecha] = Array(6).fill().map(() => ({
+        tiempo: '?', peso: '?', repeticiones: '?', libre: '?'
+      }));
     }
-    button:hover { background:#e64a19; }
+
+    data[fecha][ejercicioNum-1] = { tiempo, peso, repeticiones, libre };
+    localStorage.setItem('entrenamientos', JSON.stringify(data));
+
+    mostrarMensaje('✅ Datos guardados correctamente');
+  });
+
+  function mostrarMensaje(texto) {
+    const msg = document.createElement('div');
+    msg.textContent = texto;
+    msg.style.position = 'fixed';
+    msg.style.bottom = '20px';
+    msg.style.left = '50%';
+    msg.style.transform = 'translateX(-50%)';
+    msg.style.background = '#4caf50';
+    msg.style.color = '#fff';
+    msg.style.padding = '10px 15px';
+    msg.style.borderRadius = '8px';
+    msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+    msg.style.fontSize = '16px';
+    msg.style.zIndex = '1000';
+    document.body.appendChild(msg);
+
+    setTimeout(() => {
+      msg.style.transition = 'opacity 0.5s';
+      msg.style.opacity = '0';
+      setTimeout(() => msg.remove(), 500);
+    }, 1500);
+  }
+</script>
+
+
+  <style>
+    #toast {
+      visibility: hidden;
+      min-width: 180px;
+      background-color: #323232;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      font-size: 14px;
+      transform: translateX(-50%);
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 1.3s;
+    }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
   </style>
+
 </head>
 <body>
   <h1 id="titulo"></h1>
