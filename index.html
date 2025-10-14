@@ -2,252 +2,127 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Control Gym - Calendario</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control Gym 🏋️</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
+    body { font-family: Arial, sans-serif; background: #f0f8ff; margin: 0; padding: 0; }
+    header { text-align: center; padding: 1rem; background: #0077cc; color: white; font-size: 1.5rem; }
+    .controls { display: flex; justify-content: center; gap: 10px; margin: 1rem 0; }
+    select { padding: 0.5rem; font-size: 1rem; }
+    table { width: 100%; max-width: 500px; margin: auto; border-collapse: collapse; }
+    th, td { width: 14.28%; text-align: center; padding: 0.5rem; }
+    th { background: #0077cc; color: white; }
+    td { background: white; cursor: pointer; position: relative; }
+    td:hover { background: #e6f7ff; }
+    .check { position: absolute; bottom: 4px; right: 4px; font-size: 1rem; color: green; }
+    .toast {
+      visibility: hidden;
+      min-width: 200px;
+      background: green;
       color: #fff;
       text-align: center;
-      margin: 0;
-      padding: 0;
+      border-radius: 5px;
+      padding: 0.5rem;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
     }
-    h1 { margin-top: 18px; font-size: 20px; }
-    .controls {
-      margin: 12px;
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    select {
-      padding: 8px 10px;
-      margin: 0;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-    #calendario-wrapper { padding: 8px 0 24px 0; }
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      background: white;
-      color: black;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.18);
-      width: 95%;
-      max-width: 540px;
-    }
-    th, td {
-      width: 14.285%;
-      height: 56px;
-      text-align: center;
-      border: 1px solid #e6e6e6;
-      font-size: 14px;
-      cursor: pointer;
-      vertical-align: middle;
-      padding: 4px;
-    }
-    th {
-      background-color: #f50057;
-      color: white;
-      font-size: 13px;
-      padding: 6px 4px;
-    }
-    td:hover { background-color: #fff9c4; }
-    .empty { background: #f7f7f7; cursor: default; }
-    .day-number { display: block; font-weight: 600; }
-    .check { display: block; font-size: 12px; color: #00a000; margin-top: 4px; }
-    .stats-container {
-      margin: 20px auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 90%;
-      max-width: 400px;
-    }
-    #btnStats {
-      padding: 10px 15px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      background: #ff5722;
-      color: #fff;
-      cursor: pointer;
-    }
-    #statsBox {
-      display: none;
-      background: #fff;
-      color: #000;
-      padding: 15px;
-      border-radius: 10px;
-      width: 100%;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      text-align: left;
-      font-size: 15px;
-    }
-    .stats-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      text-align: center;
-      font-size: 16px;
-    }
-    .stat-line { margin-bottom: 6px; }
-    @media (max-width: 420px) {
-      th, td { height: 48px; font-size: 13px; }
-      .controls { gap: 6px; }
-      select { font-size: 15px; padding: 7px 8px; }
-    }
+    .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 20px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 20px; opacity: 1;} to {bottom: 0; opacity: 0;} }
   </style>
 </head>
 <body>
-  <h1>Calendario</h1>
+  <header>📅 Control Gym</header>
   <div class="controls">
-    <select id="mes" aria-label="Mes"></select>
-    <select id="anio" aria-label="Año"></select>
+    <select id="month"></select>
+    <select id="year"></select>
   </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th>
+      </tr>
+    </thead>
+    <tbody id="calendar"></tbody>
+  </table>
 
-  <div id="calendario-wrapper">
-    <div id="calendario"></div>
-  </div>
-
-  <div class="stats-container">
-    <button id="btnStats">📊 Ver estadísticas mensuales</button>
-    <div id="statsBox"></div>
-  </div>
+  <div id="toast" class="toast">Guardado ✅</div>
 
   <script>
-    const mesSelect = document.getElementById('mes');
-    const anioSelect = document.getElementById('anio');
-    const calendarioDiv = document.getElementById('calendario');
-    const statsBox = document.getElementById('statsBox');
-    const btnStats = document.getElementById('btnStats');
+    const calendar = document.getElementById('calendar');
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    const toast = document.getElementById('toast');
 
-    const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
-                   "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-    meses.forEach((m, i) => {
+    const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+
+    months.forEach((m,i)=>{
       const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = m;
-      mesSelect.appendChild(opt);
+      opt.value = i; opt.textContent = m;
+      if(i===currentMonth) opt.selected = true;
+      monthSelect.appendChild(opt);
     });
 
-    const añoActual = new Date().getFullYear();
-    for (let a = añoActual - 5; a <= añoActual + 5; a++) {
+    for(let y=currentYear-5; y<=currentYear+5; y++){
       const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      anioSelect.appendChild(opt);
+      opt.value = y; opt.textContent = y;
+      if(y===currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
     }
 
-    let mesActual = new Date().getMonth();
-    let anioActual = añoActual;
-    mesSelect.value = mesActual;
-    anioSelect.value = anioActual;
+    function showToast() {
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'), 2500);
+    }
 
-    mesSelect.addEventListener('change', () => { mesActual = parseInt(mesSelect.value); mostrarCalendario(); });
-    anioSelect.addEventListener('change', () => { anioActual = parseInt(anioSelect.value); mostrarCalendario(); });
-
-    function mostrarCalendario() {
-      const diasSemana = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-      let primerDia = new Date(anioActual, mesActual, 1).getDay();
-      primerDia = (primerDia + 6) % 7; // lunes como primer día
-      const ultimoDia = new Date(anioActual, mesActual + 1, 0).getDate();
-      const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-
-      let tabla = "<table><tr>";
-      for (const d of diasSemana) tabla += `<th>${d}</th>`;
-      tabla += `</tr><tr>`;
-
-      for (let i = 0; i < primerDia; i++) tabla += `<td class="empty"></td>`;
-
-      for (let dia = 1; dia <= ultimoDia; dia++) {
-        const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-        let checkHTML = '';
-
-        if (data[fechaISO]) {
-          const ejercicios = data[fechaISO];
-          const tieneDatos = ejercicios.some(e =>
-            (e.tiempo || '').trim() !== '?' && (e.tiempo || '').trim() !== '' ||
-            (e.peso || '').trim() !== '?' && (e.peso || '').trim() !== '' ||
-            (e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '' ||
-            (e.libre || '').trim() !== '?' && (e.libre || '').trim() !== ''
-          );
-          if (tieneDatos) checkHTML = `<span class="check">✅</span>`;
+    function generateCalendar(month, year){
+      calendar.innerHTML = '';
+      const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      let date = 1;
+      for(let i=0;i<6;i++){
+        const row = document.createElement('tr');
+        for(let j=0;j<7;j++){
+          const cell = document.createElement('td');
+          if(i===0 && j<firstDay){
+            cell.textContent = '';
+          }else if(date>daysInMonth){
+            cell.textContent = '';
+          }else{
+            cell.textContent = date;
+            const dateString = `${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+            cell.addEventListener('click',()=>{ window.location.href=`rutinas.html?fecha=${dateString}`; });
+            // check si hay datos guardados
+            const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+            if(data[dateString]){
+              const check = document.createElement('span');
+              check.textContent = '✔';
+              check.className = 'check';
+              cell.appendChild(check);
+            }
+            date++;
+          }
+          row.appendChild(cell);
         }
-
-        if ((primerDia + dia - 1) % 7 === 0 && dia !== 1) tabla += "</tr><tr>";
-        tabla += `<td onclick="location.href='dia.html?fecha=${fechaISO}'"><span class="day-number">${dia}</span>${checkHTML}</td>`;
+        calendar.appendChild(row);
       }
-
-      tabla += "</tr></table>";
-      calendarioDiv.innerHTML = tabla;
     }
 
-    mostrarCalendario();
-
-    btnStats.addEventListener('click', () => {
-      const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-      const ultimoDiaMes = new Date(anioActual, mesActual + 1, 0).getDate();
-
-      let diasEntrenados = 0;
-      const ejercicioCount = [0,0,0,0,0,0];
-      let totalTiempo = 0;
-      let totalPeso = 0;
-      let countTiempo = 0;
-      let countPeso = 0;
-
-      for (let dia = 1; dia <= ultimoDiaMes; dia++) {
-        const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-        const ejercicios = data[fechaISO];
-        if (!ejercicios) continue;
-
-        let entrenado = false;
-        ejercicios.forEach((e, idx) => {
-          const t = (e.tiempo || '').trim();
-          const p = (e.peso || '').trim();
-          const hayT = t !== '' && t !== '?';
-          const hayP = p !== '' && p !== '?';
-          const hayAlgo = hayT || hayP || 
-            ((e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '') ||
-            ((e.libre || '').trim() !== '?' && (e.libre || '').trim() !== '');
-          if (hayAlgo) {
-            ejercicioCount[idx]++;
-            entrenado = true;
-          }
-          if (hayT && !isNaN(parseFloat(t))) {
-            totalTiempo += parseFloat(t);
-            countTiempo++;
-          }
-          if (hayP && !isNaN(parseFloat(p))) {
-            totalPeso += parseFloat(p);
-            countPeso++;
-          }
-        });
-
-        if (entrenado) diasEntrenados++;
-      }
-
-      const promedioTiempo = countTiempo > 0 ? (totalTiempo / countTiempo).toFixed(1) : 0;
-      const promedioPeso = countPeso > 0 ? (totalPeso / countPeso).toFixed(1) : 0;
-
-      let html = `<div class="stats-title">📊 Estadísticas de ${meses[mesActual]} ${anioActual}</div>`;
-      html += `<div class="stat-line"><b>Días entrenados:</b> ${diasEntrenados}</div>`;
-      html += `<div class="stat-line"><b>Veces por ejercicio:</b><br>`;
-      ejercicioCount.forEach((c, i) => {
-        html += `&nbsp;&nbsp;Ejercicio ${i+1}: ${c}<br>`;
-      });
-      html += `</div>`;
-      html += `<div class="stat-line"><b>Promedio tiempo:</b> ${promedioTiempo}</div>`;
-      html += `<div class="stat-line"><b>Promedio peso:</b> ${promedioPeso}</div>`;
-
-      statsBox.innerHTML = html;
-      statsBox.style.display = 'block';
+    monthSelect.addEventListener('change', ()=> {
+      currentMonth = parseInt(monthSelect.value);
+      generateCalendar(currentMonth, currentYear);
     });
+    yearSelect.addEventListener('change', ()=> {
+      currentYear = parseInt(yearSelect.value);
+      generateCalendar(currentMonth, currentYear);
+    });
+
+    generateCalendar(currentMonth, currentYear);
   </script>
 </body>
 </html>

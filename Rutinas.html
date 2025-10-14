@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rutinas - Control Gym</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f0f8ff; }
+    header { text-align: center; padding: 1rem; background: #0077cc; color: white; font-size: 1.2rem; }
+    .rutina { 
+      position: relative; 
+      margin: 10px auto; 
+      width: 90%; 
+      height: 120px; 
+      background-size: cover; 
+      background-position: center; 
+      border-radius: 10px; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      color: white; 
+      font-weight: bold; 
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .rutina::after {
+      content: "";
+      position: absolute;
+      top:0;left:0;right:0;bottom:0;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+    }
+    .rutina span { position: relative; z-index: 1; }
+  </style>
+</head>
+<body>
+  <header>🏋️ Rutinas del <span id="fecha"></span></header>
+
+  <div id="lista"></div>
+
+  <script>
+    const fecha = new URLSearchParams(window.location.search).get('fecha');
+    document.getElementById('fecha').textContent = fecha;
+
+    const rutinas = [
+      {titulo:'Pecho, bíceps y abdominales', img:'https://images.pexels.com/photos/3838389/pexels-photo-3838389.jpeg'},
+      {titulo:'Espalda y tríceps', img:'https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg'},
+      {titulo:'Hombros, trapecio y piernas', img:'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg'},
+      {titulo:'Pecho y bíceps', img:'https://images.pexels.com/photos/3253501/pexels-photo-3253501.jpeg'},
+      {titulo:'Espalda y tríceps', img:'https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg'},
+      {titulo:'Rodillas', img:'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg'},
+    ];
+
+    const lista = document.getElementById('lista');
+    rutinas.forEach((r,index)=>{
+      const div = document.createElement('div');
+      div.className='rutina';
+      div.style.backgroundImage = `url(${r.img})`;
+      div.innerHTML = `<span>${r.titulo}</span>`;
+      div.addEventListener('click', ()=>{
+        window.open(`ejercicio.html?fecha=${fecha}&rutina=${index+1}`, '_blank');
+      });
+      lista.appendChild(div);
+    });
+  </script>
+</body>
+</html>
