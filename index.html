@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Control Gym - Calendario</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,20 +14,14 @@
       padding: 0;
     }
     h1 { margin-top: 20px; }
-    .controls { margin: 20px; }
-    select, button {
-      padding: 10px;
+    .controls { margin: 15px; }
+    select {
+      padding: 8px;
       margin: 5px;
       font-size: 16px;
       border-radius: 5px;
       border: none;
     }
-    button {
-      background-color: #ff5722;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover { background-color: #e64a19; }
     table {
       margin: 0 auto;
       border-collapse: collapse;
@@ -35,27 +30,27 @@
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      width: 95%;
+      max-width: 500px;
     }
     th, td {
-      width: 50px;
-      height: 50px;
+      width: 14.28%;
+      height: 45px;
       text-align: center;
       border: 1px solid #ddd;
+      font-size: 14px;
       cursor: pointer;
-      font-size: 16px;
     }
-    th { background-color: #f50057; color: white; }
+    th { background-color: #f50057; color: white; font-size: 13px; }
     td:hover { background-color: #ffeb3b; }
     .empty { background: #f1f1f1; cursor: default; }
   </style>
 </head>
 <body>
-  <h1>Calendario de Entrenamientos</h1>
+  <h1>Calendario</h1>
   <div class="controls">
-    <button id="prevMes">⏪ Mes anterior</button>
     <select id="mes"></select>
     <select id="anio"></select>
-    <button id="nextMes">Mes siguiente ⏩</button>
   </div>
   <div id="calendario"></div>
 
@@ -66,7 +61,6 @@
 
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-
     meses.forEach((m, i) => {
       const option = document.createElement('option');
       option.value = i;
@@ -75,7 +69,7 @@
     });
 
     const añoActual = new Date().getFullYear();
-    for (let a = añoActual - 10; a <= añoActual + 10; a++) {
+    for (let a = añoActual - 5; a <= añoActual + 5; a++) {
       const option = document.createElement('option');
       option.value = a;
       option.textContent = a;
@@ -87,30 +81,8 @@
     mesSelect.value = mesActual;
     anioSelect.value = anioActual;
 
-    mesSelect.addEventListener('change', () => {
-      mesActual = parseInt(mesSelect.value);
-      mostrarCalendario();
-    });
-    anioSelect.addEventListener('change', () => {
-      anioActual = parseInt(anioSelect.value);
-      mostrarCalendario();
-    });
-
-    document.getElementById('prevMes').addEventListener('click', () => {
-      mesActual--;
-      if (mesActual < 0) { mesActual = 11; anioActual--; }
-      mesSelect.value = mesActual;
-      anioSelect.value = anioActual;
-      mostrarCalendario();
-    });
-
-    document.getElementById('nextMes').addEventListener('click', () => {
-      mesActual++;
-      if (mesActual > 11) { mesActual = 0; anioActual++; }
-      mesSelect.value = mesActual;
-      anioSelect.value = anioActual;
-      mostrarCalendario();
-    });
+    mesSelect.addEventListener('change', () => { mesActual = parseInt(mesSelect.value); mostrarCalendario(); });
+    anioSelect.addEventListener('change', () => { anioActual = parseInt(anioSelect.value); mostrarCalendario(); });
 
     function mostrarCalendario() {
       const diasSemana = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
@@ -139,7 +111,7 @@
           if (tieneDatos) check = ' ✅';
         }
         if ((primerDia + dia - 1) % 7 === 0 && dia !== 1) tabla += "</tr><tr>";
-        tabla += `<td onclick="window.open('dia.html?fecha=${fechaISO}', '_blank')">${dia}${check}</td>`;
+        tabla += `<td onclick="window.location.href='dia.html?fecha=${fechaISO}'">${dia}${check}</td>`;
       }
 
       tabla += "</tr></table>";

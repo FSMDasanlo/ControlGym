@@ -2,20 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Día de entrenamiento</title>
+  <title>Ejercicios del día</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #ff416c, #ff4b2b); color: #fff; margin:0; text-align:center; }
     h1 { padding:20px; }
-    .btn-volver { margin:10px; padding:10px 20px; background:#0072ff; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
+    .btn-volver {
+      margin:10px;
+      padding:10px 20px;
+      background:#0072ff;
+      color:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+      font-size:16px;
+    }
     .btn-volver:hover { background:#0059b3; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; padding:20px; max-width:1200px; margin:auto; }
-    .card { background:#fff; color:#000; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.2); padding-bottom:10px; }
-    .card img { width:100%; height:180px; object-fit:cover; }
-    .card p { padding:10px; font-weight:bold; background:#ff416c; color:#fff; margin:0; }
-    .card .campo { display:flex; justify-content:space-between; padding:5px 10px; font-size:14px; }
-    .card input { width:50px; border:1px solid #ccc; border-radius:4px; padding:2px 4px; }
-    .guardar-btn { margin-top:10px; padding:5px 10px; background:#00c6ff; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; }
-    .guardar-btn:hover { background:#0072ff; color:#fff; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:15px; padding:20px; }
+    .card { background:#fff; color:#000; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.2); cursor:pointer; }
+    .card img { width:100%; height:120px; object-fit:cover; }
+    .card p { padding:10px; font-weight:bold; background:#ff416c; color:#fff; margin:0; font-size:14px; }
   </style>
 </head>
 <body>
@@ -29,7 +35,7 @@
     const fechaObj = fecha ? new Date(fecha) : new Date();
     document.getElementById('fecha').textContent = fechaObj.toLocaleDateString('es-ES', {day:'numeric',month:'long',year:'numeric'});
 
-    const ejerciciosGrid = document.getElementById('ejercicios-grid');
+    const grid = document.getElementById('ejercicios-grid');
     const imagenes = [
       "https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg",
       "https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg",
@@ -39,55 +45,28 @@
       "https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg"
     ];
 
-    function cargarDatos() {
-      const dataJSON = localStorage.getItem('entrenamientos');
-      return dataJSON ? JSON.parse(dataJSON) : {};
-    }
-    function guardarDatos(data) { localStorage.setItem('entrenamientos', JSON.stringify(data)); }
-
-    const data = cargarDatos();
+    const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
     const fechaKey = fecha || fechaObj.toISOString().split('T')[0];
     if (!data[fechaKey]) {
       data[fechaKey] = [];
       for (let i=1;i<=6;i++) {
         data[fechaKey].push({ejercicio:`Ejercicio ${i}`, tiempo:"?", peso:"?", repeticiones:"?", libre:"?"});
       }
+      localStorage.setItem('entrenamientos', JSON.stringify(data));
     }
 
-    function renderizarEjercicios() {
-      ejerciciosGrid.innerHTML="";
-      data[fechaKey].forEach((ej, idx)=>{
-        const card = document.createElement('div');
-        card.className='card';
-        card.innerHTML=`
-          <img src="${imagenes[idx]}" alt="${ej.ejercicio}">
-          <p>${ej.ejercicio}</p>
-          <div class="campo">Tiempo: <input type="text" value="${ej.tiempo}" id="tiempo-${idx}"></div>
-          <div class="campo">Peso: <input type="text" value="${ej.peso}" id="peso-${idx}"></div>
-          <div class="campo">Repeticiones: <input type="text" value="${ej.repeticiones}" id="rep-${idx}"></div>
-          <div class="campo">Libre: <input type="text" value="${ej.libre}" id="libre-${idx}"></div>
-          <button class="guardar-btn" onclick="guardarEjercicio(${idx})">Guardar</button>
-        `;
-        ejerciciosGrid.appendChild(card);
-      });
-    }
-
-    function guardarEjercicio(idx) {
-      data[fechaKey][idx].tiempo=document.getElementById(`tiempo-${idx}`).value;
-      data[fechaKey][idx].peso=document.getElementById(`peso-${idx}`).value;
-      data[fechaKey][idx].repeticiones=document.getElementById(`rep-${idx}`).value;
-      data[fechaKey][idx].libre=document.getElementById(`libre-${idx}`).value;
-
-      // Solo guardar si hay datos reales
-      const tieneDatos = data[fechaKey].some(e =>
-        e.tiempo.trim()!=='?'||e.peso.trim()!=='?'||e.repeticiones.trim()!=='?'||e.libre.trim()!=='?'
-      );
-      if (tieneDatos) guardarDatos(data);
-      alert(`Datos del ${data[fechaKey][idx].ejercicio} guardados ✅`);
-    }
-
-    renderizarEjercicios();
+    data[fechaKey].forEach((ej, idx)=>{
+      const card = document.createElement('div');
+      card.className='card';
+      card.innerHTML=`
+        <img src="${imagenes[idx]}" alt="${ej.ejercicio}">
+        <p>${ej.ejercicio}</p>
+      `;
+      card.onclick = () => {
+        window.open(`ejercicio.html?fecha=${fechaKey}&id=${idx}`, '_blank');
+      };
+      grid.appendChild(card);
+    });
   </script>
 </body>
 </html>
- 
