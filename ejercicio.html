@@ -5,59 +5,26 @@
   <title>Ejercicio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
-      color: white;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    h1 {
-      margin: 20px 0;
-      font-size: 20px;
-    }
-    .form-container {
-      background: white;
-      color: black;
-      width: 90%;
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    label {
-      display: block;
-      text-align: left;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 15px;
-      font-size: 16px;
-      margin-top: 10px;
-      margin-right: 5px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-    }
-    #saveBtn { background: #4caf50; }
-    #backExercises { background: #ff9800; }
-    #backCalendar { background: #f50057; }
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#00c6ff,#0072ff); color:#fff; margin:0; padding:0; text-align:center; }
+    h1 { margin:20px 0; font-size:20px; }
+    .form-container { background:#fff; color:#000; width:90%; max-width:400px; margin:0 auto; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.3); }
+    label { display:block; text-align:left; margin:10px 0 5px; font-weight:bold; }
+    input { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:8px; margin-bottom:10px; }
+    .row-btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+    button { padding:10px 15px; font-size:16px; border:none; border-radius:8px; cursor:pointer; color:#fff; }
+    #saveBtn { background:#4caf50; }
+    #backExercises { background:#ff9800; }
+    #backCalendar { background:#f50057; }
+    /* toast */
+    #toast { visibility:hidden; min-width:160px; background:#323232; color:#fff; text-align:center; border-radius:6px; padding:10px; position:fixed; z-index:1000; left:50%; bottom:30px; transform:translateX(-50%); font-size:14px; }
+    #toast.show { visibility:visible; animation:fadein 0.4s, fadeout 0.4s 1.4s; }
+    @keyframes fadein { from {bottom:0; opacity:0;} to {bottom:30px; opacity:1;} }
+    @keyframes fadeout { from {bottom:30px; opacity:1;} to {bottom:0; opacity:0;} }
   </style>
 </head>
 <body>
-  <h1 id="fechaTitulo"></h1>
+  <h1 id="fechaTitulo">Ejercicio</h1>
+
   <div class="form-container">
     <label for="tiempo">Tiempo:</label>
     <input type="text" id="tiempo" placeholder="?">
@@ -71,80 +38,124 @@
     <label for="libre">Libre:</label>
     <input type="text" id="libre" placeholder="?">
 
-    <button id="saveBtn">💾 Guardar</button>
-    <button id="backExercises">🏋️ Volver a ejercicios</button>
-    <button id="backCalendar">📅 Volver al calendario</button>
+    <div class="row-btns">
+      <button id="saveBtn">💾 Guardar</button>
+      <button id="backExercises">🏋️ Volver a ejercicios</button>
+      <button id="backCalendar">📅 Volver al calendario</button>
+    </div>
   </div>
 
+  <div id="toast"></div>
+
   <script>
+    // Leer parámetros (acepta 'id' o 'ejercicio' por compatibilidad)
     const params = new URLSearchParams(window.location.search);
     const fecha = params.get('fecha');
-    const ejercicioNum = params.get('ejercicio');
+    const idxParam = params.get('id') ?? params.get('ejercicio') ?? params.get('numero');
+    const ejercicioIndex = idxParam !== null ? parseInt(idxParam, 10) : NaN;
 
-    document.getElementById('fechaTitulo').textContent = `${fecha} - Ejercicio ${ejercicioNum}`;
-
+    const tituloEl = document.getElementById('fechaTitulo');
     const tiempoInput = document.getElementById('tiempo');
     const pesoInput = document.getElementById('peso');
     const repeticionesInput = document.getElementById('repeticiones');
     const libreInput = document.getElementById('libre');
     const saveBtn = document.getElementById('saveBtn');
+    const backExercises = document.getElementById('backExercises');
+    const backCalendar = document.getElementById('backCalendar');
+    const toast = document.getElementById('toast');
 
-    const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-    if (data[fecha] && data[fecha][ejercicioNum-1]) {
-      const e = data[fecha][ejercicioNum-1];
-      tiempoInput.value = e.tiempo;
-      pesoInput.value = e.peso;
-      repeticionesInput.value = e.repeticiones;
-      libreInput.value = e.libre;
+    function showToast(text, color='#4caf50') {
+      toast.textContent = text;
+      toast.style.background = color;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1800);
     }
 
-    saveBtn.addEventListener('click', () => {
-      const tiempo = tiempoInput.value || '?';
-      const peso = pesoInput.value || '?';
-      const repeticiones = repeticionesInput.value || '?';
-      const libre = libreInput.value || '?';
+    // Validaciones básicas
+    if (!fecha) {
+      tituloEl.textContent = 'Fecha no especificada';
+      showToast('Error: falta la fecha', '#d32f2f');
+      // desactivar botones de guardado/volver correctamente
+      saveBtn.disabled = true;
+      backExercises.disabled = true;
+      backCalendar.disabled = false;
+    } else if (Number.isNaN(ejercicioIndex) || ejercicioIndex < 0) {
+      // permitir cero si se envía; pero la UX original usa 0..5 o 1..6 según versión.
+      // Aquí asumimos índices desde 0 (como usó dia.html con id=idx). Si tu versión usa 1..6, modifica arriba.
+      tituloEl.textContent = `${fecha} - Ejercicio ?`;
+      showToast('Error: id de ejercicio inválido', '#d32f2f');
+      saveBtn.disabled = true;
+    } else {
+      // Mostrar título
+      // Si el índice vino en 0..5, mostramos +1 para el usuario
+      tituloEl.textContent = `${fecha} - Ejercicio ${ejercicioIndex + 1}`;
 
-      if (!data[fecha]) {
-        data[fecha] = Array(6).fill().map(() => ({
-          tiempo: '?', peso: '?', repeticiones: '?', libre: '?'
-        }));
+      // cargar datos existentes
+      const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
+
+      // si no existe la fecha, no inicializamos en localStorage todavía; inicializamos en memoria
+      if (data[fecha] && data[fecha][ejercicioIndex]) {
+        const e = data[fecha][ejercicioIndex];
+        tiempoInput.value = e.tiempo ?? '?';
+        pesoInput.value = e.peso ?? '?';
+        repeticionesInput.value = e.repeticiones ?? '?';
+        libreInput.value = e.libre ?? '?';
+      } else {
+        // valores por defecto
+        tiempoInput.value = '?';
+        pesoInput.value = '?';
+        repeticionesInput.value = '?';
+        libreInput.value = '?';
       }
 
-      data[fecha][ejercicioNum-1] = { tiempo, peso, repeticiones, libre };
-      localStorage.setItem('entrenamientos', JSON.stringify(data));
-      mostrarMensaje('✅ Datos guardados correctamente');
-    });
+      saveBtn.addEventListener('click', () => {
+        const tiempo = (tiempoInput.value || '?').trim() || '?';
+        const peso = (pesoInput.value || '?').trim() || '?';
+        const repeticiones = (repeticionesInput.value || '?').trim() || '?';
+        const libre = (libreInput.value || '?').trim() || '?';
 
-    document.getElementById('backExercises').addEventListener('click', () => {
-      window.location.href = `dia.html?fecha=${fecha}`;
-    });
+        // cargar de nuevo (por si cambió en otra pestaña)
+        const current = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
 
-    document.getElementById('backCalendar').addEventListener('click', () => {
-      window.location.href = `index.html`;
-    });
+        // asegurar array de 6 ejercicios
+        if (!current[fecha] || !Array.isArray(current[fecha]) || current[fecha].length < 6) {
+          current[fecha] = [];
+          for (let i = 0; i < 6; i++) {
+            current[fecha].push({ ejercicio: `Ejercicio ${i+1}`, tiempo: "?", peso: "?", repeticiones: "?", libre: "?" });
+          }
+        }
 
-    function mostrarMensaje(texto) {
-      const msg = document.createElement('div');
-      msg.textContent = texto;
-      msg.style.position = 'fixed';
-      msg.style.bottom = '20px';
-      msg.style.left = '50%';
-      msg.style.transform = 'translateX(-50%)';
-      msg.style.background = '#4caf50';
-      msg.style.color = '#fff';
-      msg.style.padding = '10px 15px';
-      msg.style.borderRadius = '8px';
-      msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
-      msg.style.fontSize = '16px';
-      msg.style.zIndex = '1000';
-      document.body.appendChild(msg);
+        // guardar en el índice correcto
+        current[fecha][ejercicioIndex] = {
+          ejercicio: current[fecha][ejercicioIndex]?.ejercicio ?? `Ejercicio ${ejercicioIndex+1}`,
+          tiempo, peso, repeticiones, libre
+        };
 
-      setTimeout(() => {
-        msg.style.transition = 'opacity 0.5s';
-        msg.style.opacity = '0';
-        setTimeout(() => msg.remove(), 500);
-      }, 1500);
+        // comprobar si hay datos reales en toda la fecha: si NO hay ninguno, eliminamos la fecha
+        const tieneAlguno = current[fecha].some(e =>
+          (e.tiempo || '').trim() !== '?' && (e.tiempo || '').trim() !== '' ||
+          (e.peso || '').trim() !== '?' && (e.peso || '').trim() !== '' ||
+          (e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '' ||
+          (e.libre || '').trim() !== '?' && (e.libre || '').trim() !== ''
+        );
+
+        if (tieneAlguno) {
+          localStorage.setItem('entrenamientos', JSON.stringify(current));
+          showToast('✅ Datos guardados correctamente');
+        } else {
+          // si no hay nada guardado (todo '?'), eliminamos la entrada para no generar checks vacíos
+          delete current[fecha];
+          localStorage.setItem('entrenamientos', JSON.stringify(current));
+          showToast('⚠️ No se guardó nada (todo vacío)', '#ff9800');
+        }
+      });
     }
+
+    backExercises.addEventListener('click', () => {
+      if (fecha) location.href = `dia.html?fecha=${encodeURIComponent(fecha)}`;
+      else location.href = 'index.html';
+    });
+    backCalendar.addEventListener('click', () => location.href = 'index.html');
   </script>
 </body>
 </html>
