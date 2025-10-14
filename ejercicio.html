@@ -1,132 +1,116 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ejercicio - Control Gym</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f0f8ff; margin: 0; padding: 0; }
-    header { text-align: center; padding: 1rem; background: #0077cc; color: white; font-size: 1.2rem; }
-    .detalle { padding: 1rem; font-style: italic; text-align: center; max-width: 600px; margin: auto; }
-    .tabla-container { overflow-x: auto; padding: 1rem; }
-    table { border-collapse: collapse; width: 100%; min-width: 500px; }
-    th, td { border: 1px solid #0077cc; padding: 5px; text-align: center; }
-    th { background: #0077cc; color: white; }
-    .form { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 1rem 0; }
-    input { padding: 0.5rem; width: 120px; }
-    button { padding: 0.5rem 1rem; background: #0077cc; color: white; border: none; cursor: pointer; border-radius: 5px; font-size: 1rem; }
-    .background-img { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-size: cover; background-position: center; opacity: 0.2; z-index: -1; }
-    .toast { visibility: hidden; min-width: 200px; background: green; color: #fff; text-align: center; border-radius: 5px; padding: 0.5rem; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); }
-    .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
-    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 20px; opacity: 1;} }
-    @keyframes fadeout { from {bottom: 20px; opacity: 1;} to {bottom: 0; opacity: 0;} }
-    .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 1rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejercicio - Control Gym</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f0f8ff; margin:0; padding:0; }
+header { text-align:center; padding:1rem; background:#0077cc; color:white; font-size:1.2rem; }
+.detalle { padding:1rem; font-style:italic; text-align:center; max-width:600px; margin:auto; }
+.tabla-container { overflow-x:auto; padding:1rem; }
+table { border-collapse:collapse; width:100%; min-width:500px; }
+th, td { border:1px solid #0077cc; padding:5px; text-align:center; }
+th { background:#0077cc; color:white; }
+.form { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:1rem 0; }
+input { padding:0.5rem; width:120px; }
+button { padding:0.5rem 1rem; background:#0077cc; color:white; border:none; cursor:pointer; border-radius:5px; font-size:1rem; }
+.background-img { position:fixed; top:0; left:0; right:0; bottom:0; background-size:cover; background-position:center; opacity:0.2; z-index:-1; }
+.toast { visibility:hidden; min-width:200px; background:green; color:#fff; text-align:center; border-radius:5px; padding:0.5rem; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); }
+.toast.show { visibility:visible; animation:fadein 0.5s, fadeout 0.5s 2s; }
+@keyframes fadein { from {bottom:0; opacity:0;} to {bottom:20px; opacity:1;} }
+@keyframes fadeout { from {bottom:20px; opacity:1;} to {bottom:0; opacity:0;} }
+.nav-buttons { display:flex; justify-content:center; gap:15px; margin-bottom:1rem; }
+</style>
 </head>
 <body>
-  <header><span id="fecha"></span> — <span id="titulo"></span></header>
-  <div class="detalle" id="detalle"></div>
-  <div class="background-img" id="fondo"></div>
+<header><span id="fecha"></span> — <span id="titulo"></span></header>
+<div class="detalle" id="detalle"></div>
+<div class="background-img" id="fondo"></div>
 
-  <div class="tabla-container">
-    <table>
-      <thead>
-        <tr id="thead"></tr>
-      </thead>
-      <tbody>
-        <tr id="peso-row"></tr>
-        <tr id="reps-row"></tr>
-      </tbody>
-    </table>
-  </div>
+<div class="tabla-container">
+<table>
+<thead><tr id="thead"></tr></thead>
+<tbody>
+<tr id="peso-row"></tr>
+<tr id="reps-row"></tr>
+</tbody>
+</table>
+</div>
 
-  <div class="form">
-    <input type="number" id="peso" placeholder="Peso">
-    <input type="number" id="reps" placeholder="Repeticiones">
-    <button id="guardar">Guardar</button>
-  </div>
+<div class="form">
+<input type="number" id="peso" placeholder="Peso">
+<input type="number" id="reps" placeholder="Repeticiones">
+<button id="guardar">Guardar</button>
+</div>
 
-  <div class="nav-buttons">
-    <button onclick="volverRutinas()">← Volver a Rutinas</button>
-    <button onclick="volverCalendario()">🏠 Volver al Calendario</button>
-  </div>
+<div class="nav-buttons">
+<button onclick="volverRutinas()">← Volver a Rutinas</button>
+<button onclick="volverCalendario()">🏠 Volver al Calendario</button>
+</div>
 
-  <div id="toast" class="toast">Guardado ✅</div>
+<div id="toast" class="toast">Guardado ✅</div>
 
-  <script>
-    const fecha = new URLSearchParams(window.location.search).get('fecha');
-    const rutina = parseInt(new URLSearchParams(window.location.search).get('rutina'));
+<script>
+const fecha = new URLSearchParams(window.location.search).get('fecha');
+const rutina = parseInt(new URLSearchParams(window.location.search).get('rutina'));
 
-    const titulos = [
-      'Pecho, bíceps y abdominales',
-      'Espalda y tríceps',
-      'Hombros, trapecio y piernas',
-      'Pecho y bíceps',
-      'Espalda y tríceps',
-      'Rodillas'
-    ];
+function formatearFecha(f){const [año,mes,dia]=f.split("-"); return `${dia}-${mes}-${año}`;}
 
-    const detalles = [
-      'Press de banca con barra, aperturas en banco inclinado con mancuernas, press inclinado con mancuernas, curl de bíceps con barra y crunch en máquina con carga alta.',
-      'Dominadas en barra fija, remo con barra, press francés, extensiones de tríceps en polea alta y fondos de tríceps.',
-      'Elevaciones laterales con mancuernas, trapecios con polea baja, sentadillas con barra, extensiones de piernas, peso muerto con barra y gemelo en máquina.',
-      'Press de banca con mancuernas, press declinado con mancuernas, curl de bíceps sentado con mancuerna y curl de bíceps.',
-      'Remo en polea baja, peso muerto, extensión vertical alterna con mancuerna y flexiones de tríceps.',
-      'Rutinas de bajo impacto como sentadillas, elevación de piernas y ejercicios isométricos.'
-    ];
+const titulos=['Pecho, bíceps y abdominales','Espalda y tríceps','Hombros, trapecio y piernas','Pecho y bíceps','Espalda y tríceps','Rodillas'];
+const detalles=['Press de banca con barra, aperturas en banco inclinado con mancuernas, press inclinado con mancuernas, curl de bíceps con barra y crunch en máquina con carga alta.',
+'Dominadas en barra fija, remo con barra, press francés, extensiones de tríceps en polea alta y fondos de tríceps.',
+'Elevaciones laterales con mancuernas, trapecios con polea baja, sentadillas con barra, extensiones de piernas, peso muerto con barra y gemelo en máquina.',
+'Press de banca con mancuernas, press declinado con mancuernas, curl de bíceps sentado con mancuerna y curl de bíceps.',
+'Remo en polea baja, peso muerto, extensión vertical alterna con mancuerna y flexiones de tríceps.',
+'Rutinas de bajo impacto como sentadillas, elevación de piernas y ejercicios isométricos.'];
 
-    const imagenes = [
-      'https://images.pexels.com/photos/3838389/pexels-photo-3838389.jpeg',
-      'https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg',
-      'https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg',
-      'https://images.pexels.com/photos/3253501/pexels-photo-3253501.jpeg',
-      'https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg',
-      'https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg'
-    ];
+const imagenes=['https://images.pexels.com/photos/3838389/pexels-photo-3838389.jpeg','https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg','https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg','https://images.pexels.com/photos/3253501/pexels-photo-3253501.jpeg','https://images.pexels.com/photos/2261477/pexels-photo-2261477.jpeg','https://images.pexels.com/photos/1552106/pexels-photo-1552106.jpeg'];
 
-    document.getElementById('fecha').textContent = fecha;
-    document.getElementById('titulo').textContent = titulos[rutina-1];
-    document.getElementById('detalle').textContent = detalles[rutina-1];
-    document.getElementById('fondo').style.backgroundImage = `url(${imagenes[rutina-1]})`;
+document.getElementById('fecha').textContent=formatearFecha(fecha);
+document.getElementById('titulo').textContent=titulos[rutina-1];
+document.getElementById('detalle').textContent=detalles[rutina-1];
+document.getElementById('fondo').style.backgroundImage=`url(${imagenes[rutina-1]})`;
 
-    const thead = document.getElementById('thead');
-    const pesoRow = document.getElementById('peso-row');
-    const repsRow = document.getElementById('reps-row');
-    const toast = document.getElementById('toast');
+const thead=document.getElementById('thead');
+const pesoRow=document.getElementById('peso-row');
+const repsRow=document.getElementById('reps-row');
+const toast=document.getElementById('toast');
 
-    const data = JSON.parse(localStorage.getItem('gymData') || '{}');
-    if(!data[fecha]) data[fecha] = {};
-    if(!data[fecha][rutina]) data[fecha][rutina] = {peso:[], reps:[], fechas:[]};
+const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+if(!data[fecha]) data[fecha]={};
+if(!data[fecha][rutina]) data[fecha][rutina]={peso:[], reps:[], fechas:[]};
 
-    function renderTable(){
-      const rut = data[fecha][rutina];
-      thead.innerHTML = `<th>Día</th>${rut.fechas.map(f=>`<th>${f}</th>`).join('')}<th>Resumen</th>`;
-      pesoRow.innerHTML = `<td>Peso</td>${rut.peso.map(v=>`<td>${v}</td>`).join('')}<td>${rut.peso.length} días | media ${rut.peso.length?(rut.peso.reduce((a,b)=>a+b,0)/rut.peso.length).toFixed(2):0}</td>`;
-      repsRow.innerHTML = `<td>Repeticiones</td>${rut.reps.map(v=>`<td>${v}</td>`).join('')}<td>${rut.reps.length?(rut.reps.reduce((a,b)=>a+b,0)/rut.reps.length).toFixed(1):0}</td>`;
-    }
+function renderTable(){
+  const rut=data[fecha][rutina];
+  // ordenar por fecha
+  const orden = rut.fechas.map((f,i)=>({fecha:f,peso:rut.peso[i], reps:rut.reps[i]})).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+  const fechasOrd = orden.map(x=>x.fecha);
+  const pesosOrd = orden.map(x=>x.peso);
+  const repsOrd = orden.map(x=>x.reps);
 
-    renderTable();
+  thead.innerHTML=`<th>Día</th>${fechasOrd.map(f=>`<th>${formatearFecha(f)}</th>`).join('')}<th>Resumen</th>`;
+  pesoRow.innerHTML=`<td>Peso</td>${pesosOrd.map(v=>`<td>${v}</td>`).join('')}<td>${pesosOrd.length} días | media ${pesosOrd.length?(pesosOrd.reduce((a,b)=>a+b,0)/pesosOrd.length).toFixed(2):0}</td>`;
+  repsRow.innerHTML=`<td>Repeticiones</td>${repsOrd.map(v=>`<td>${v}</td>`).join('')}<td>${repsOrd.length?(repsOrd.reduce((a,b)=>a+b,0)/repsOrd.length).toFixed(1):0}</td>`;
+}
 
-    document.getElementById('guardar').addEventListener('click', ()=>{
-      const p = parseFloat(document.getElementById('peso').value);
-      const r = parseInt(document.getElementById('reps').value);
-      if(isNaN(p) || isNaN(r)) return;
-      data[fecha][rutina].peso.push(p);
-      data[fecha][rutina].reps.push(r);
-      data[fecha][rutina].fechas.push(fecha);
-      localStorage.setItem('gymData', JSON.stringify(data));
-      renderTable();
-      toast.classList.add('show');
-      setTimeout(()=>toast.classList.remove('show'), 2500);
-    });
+renderTable();
 
-    function volverRutinas(){
-      window.location.href = `rutinas.html?fecha=${fecha}`;
-    }
+document.getElementById('guardar').addEventListener('click', ()=>{
+  const p=parseFloat(document.getElementById('peso').value);
+  const r=parseInt(document.getElementById('reps').value);
+  if(isNaN(p) || isNaN(r)) return;
+  data[fecha][rutina].peso.push(p);
+  data[fecha][rutina].reps.push(r);
+  data[fecha][rutina].fechas.push(fecha);
+  localStorage.setItem('gymData',JSON.stringify(data));
+  renderTable();
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2500);
+});
 
-    function volverCalendario(){
-      window.location.href = `index.html`;
-    }
-  </script>
+function volverRutinas(){window.location.href=`rutinas.html?fecha=${fecha}`;}
+function volverCalendario(){window.location.href=`index.html`;}
+</script>
 </body>
 </html>
