@@ -13,15 +13,17 @@
       margin: 0;
       padding: 0;
     }
-    h1 { margin-top: 20px; }
-    .controls { margin: 15px; }
+    h1 { margin-top: 18px; font-size:20px; }
+    .controls { margin: 12px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
     select {
-      padding: 8px;
-      margin: 5px;
+      padding: 8px 10px;
+      margin: 0;
       font-size: 16px;
-      border-radius: 5px;
+      border-radius: 8px;
       border: none;
+      outline: none;
     }
+    #calendario-wrapper { padding: 8px 0 24px 0; }
     table {
       margin: 0 auto;
       border-collapse: collapse;
@@ -29,51 +31,106 @@
       color: black;
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.18);
       width: 95%;
-      max-width: 500px;
+      max-width: 540px;
     }
     th, td {
-      width: 14.28%;
-      height: 45px;
+      width: 14.285%;
+      height: 56px;
       text-align: center;
-      border: 1px solid #ddd;
+      border: 1px solid #e6e6e6;
       font-size: 14px;
       cursor: pointer;
+      vertical-align: middle;
+      padding: 4px;
     }
-    th { background-color: #f50057; color: white; font-size: 13px; }
-    td:hover { background-color: #ffeb3b; }
-    .empty { background: #f1f1f1; cursor: default; }
+    th {
+      background-color: #f50057;
+      color: white;
+      font-size: 13px;
+      padding: 6px 4px;
+    }
+    td:hover { background-color: #fff9c4; }
+    .empty { background: #f7f7f7; cursor: default; }
+    .day-number { display:block; font-weight:600; }
+    .check { display:block; font-size:12px; color:#00a000; margin-top:4px; }
+    .stats-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    #btnStats {
+      padding:10px 15px;
+      font-size:16px;
+      border:none;
+      border-radius:8px;
+      background:#ff5722;
+      color:#fff;
+      cursor:pointer;
+    }
+    #statsBox {
+      display:none;
+      background:#fff;
+      color:#000;
+      padding:15px;
+      border-radius:10px;
+      width:90%;
+      max-width:400px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2);
+      text-align:left;
+    }
+    canvas { max-width: 95%; margin-top: 10px; }
+    @media (max-width:420px){
+      th, td { height:48px; font-size:13px; }
+      .controls { gap:6px; }
+      select { font-size:15px; padding:7px 8px; }
+    }
   </style>
 </head>
 <body>
   <h1>Calendario</h1>
   <div class="controls">
-    <select id="mes"></select>
-    <select id="anio"></select>
+    <select id="mes" aria-label="Mes"></select>
+    <select id="anio" aria-label="Año"></select>
   </div>
-  <div id="calendario"></div>
 
+  <div id="calendario-wrapper">
+    <div id="calendario"></div>
+  </div>
+
+  <div class="stats-container">
+    <button id="btnStats">📊 Ver estadísticas</button>
+    <div id="statsBox"></div>
+    <canvas id="chart" height="200"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const mesSelect = document.getElementById('mes');
     const anioSelect = document.getElementById('anio');
     const calendarioDiv = document.getElementById('calendario');
+    const statsBox = document.getElementById('statsBox');
+    const btnStats = document.getElementById('btnStats');
+    const ctx = document.getElementById('chart');
 
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     meses.forEach((m, i) => {
-      const option = document.createElement('option');
-      option.value = i;
-      option.textContent = m;
-      mesSelect.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = m;
+      mesSelect.appendChild(opt);
     });
 
     const añoActual = new Date().getFullYear();
     for (let a = añoActual - 5; a <= añoActual + 5; a++) {
-      const option = document.createElement('option');
-      option.value = a;
-      option.textContent = a;
-      anioSelect.appendChild(option);
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      anioSelect.appendChild(opt);
     }
 
     let mesActual = new Date().getMonth();
@@ -93,25 +150,27 @@
 
       let tabla = "<table><tr>";
       for (const d of diasSemana) tabla += `<th>${d}</th>`;
-      tabla += "</tr><tr>";
+      tabla += `</tr><tr>`;
 
-      for (let i = 0; i < primerDia; i++) tabla += "<td class='empty'></td>";
+      for (let i = 0; i < primerDia; i++) tabla += `<td class="empty"></td>`;
 
       for (let dia = 1; dia <= ultimoDia; dia++) {
         const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-        let check = '';
+        let checkHTML = '';
+
         if (data[fechaISO]) {
           const ejercicios = data[fechaISO];
           const tieneDatos = ejercicios.some(e =>
-            e.tiempo.trim() !== '?' ||
-            e.peso.trim() !== '?' ||
-            e.repeticiones.trim() !== '?' ||
-            e.libre.trim() !== '?'
+            (e.tiempo || '').trim() !== '?' && (e.tiempo || '').trim() !== '' ||
+            (e.peso || '').trim() !== '?' && (e.peso || '').trim() !== '' ||
+            (e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '' ||
+            (e.libre || '').trim() !== '?' && (e.libre || '').trim() !== ''
           );
-          if (tieneDatos) check = ' ✅';
+          if (tieneDatos) checkHTML = `<span class="check">✅</span>`;
         }
+
         if ((primerDia + dia - 1) % 7 === 0 && dia !== 1) tabla += "</tr><tr>";
-        tabla += `<td onclick="window.location.href='dia.html?fecha=${fechaISO}'">${dia}${check}</td>`;
+        tabla += `<td onclick="location.href='dia.html?fecha=${fechaISO}'"><span class="day-number">${dia}</span>${checkHTML}</td>`;
       }
 
       tabla += "</tr></table>";
@@ -119,6 +178,69 @@
     }
 
     mostrarCalendario();
+
+    let chartInstance = null;
+
+    btnStats.addEventListener('click', () => {
+      const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
+      let totalDias = 0;
+      let totalEjercicios = 0;
+      const ultimoDiaMes = new Date(anioActual, mesActual + 1, 0).getDate();
+      const labels = [];
+      const valores = [];
+
+      for (let dia = 1; dia <= ultimoDiaMes; dia++) {
+        const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+        labels.push(dia.toString());
+        if (data[fechaISO]) {
+          const ejercicios = data[fechaISO];
+          const ejerciciosHechos = ejercicios.filter(e =>
+            (e.tiempo || '').trim() !== '?' && (e.tiempo || '').trim() !== '' ||
+            (e.peso || '').trim() !== '?' && (e.peso || '').trim() !== '' ||
+            (e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '' ||
+            (e.libre || '').trim() !== '?' && (e.libre || '').trim() !== ''
+          ).length;
+          valores.push(ejerciciosHechos);
+          if (ejerciciosHechos > 0) {
+            totalDias++;
+            totalEjercicios += ejerciciosHechos;
+          }
+        } else {
+          valores.push(0);
+        }
+      }
+
+      const promedio = totalDias > 0 ? (totalEjercicios / totalDias).toFixed(1) : 0;
+      statsBox.innerHTML = `
+        <b>Días entrenados:</b> ${totalDias}<br>
+        <b>Total ejercicios:</b> ${totalEjercicios}<br>
+        <b>Promedio por día:</b> ${promedio}
+      `;
+      statsBox.style.display = 'block';
+
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ejercicios por día',
+            data: valores,
+            backgroundColor: '#ff5722'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision:0 } }
+          }
+        }
+      });
+    });
   </script>
 </body>
 </html>
