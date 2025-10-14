@@ -2,162 +2,148 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Detalle ejercicio</title>
+  <title>Ejercicio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <div id="toast"></div>
-
-  <div class="botones">
-    <button onclick="guardar()">💾 Guardar</button>
-    <button onclick="window.location.href='index.html'">🏠 Calendario</button>
-    <button onclick="window.location.href='dia.html?fecha='+fechaKey">↩ Ejercicios</button>
-  </div>
-
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const fecha = params.get('fecha');
-  const ejercicioNum = params.get('ejercicio');
-
-  document.getElementById('fechaTitulo').textContent = `${fecha} - Ejercicio ${ejercicioNum}`;
-
-  const tiempoInput = document.getElementById('tiempo');
-  const pesoInput = document.getElementById('peso');
-  const repeticionesInput = document.getElementById('repeticiones');
-  const libreInput = document.getElementById('libre');
-  const saveBtn = document.getElementById('saveBtn');
-
-  const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-  if (data[fecha] && data[fecha][ejercicioNum-1]) {
-    const e = data[fecha][ejercicioNum-1];
-    tiempoInput.value = e.tiempo;
-    pesoInput.value = e.peso;
-    repeticionesInput.value = e.repeticiones;
-    libreInput.value = e.libre;
-  }
-
-  saveBtn.addEventListener('click', () => {
-    const tiempo = tiempoInput.value || '?';
-    const peso = pesoInput.value || '?';
-    const repeticiones = repeticionesInput.value || '?';
-    const libre = libreInput.value || '?';
-
-    if (!data[fecha]) {
-      data[fecha] = Array(6).fill().map(() => ({
-        tiempo: '?', peso: '?', repeticiones: '?', libre: '?'
-      }));
-    }
-
-    data[fecha][ejercicioNum-1] = { tiempo, peso, repeticiones, libre };
-    localStorage.setItem('entrenamientos', JSON.stringify(data));
-
-    mostrarMensaje('✅ Datos guardados correctamente');
-  });
-
-  function mostrarMensaje(texto) {
-    const msg = document.createElement('div');
-    msg.textContent = texto;
-    msg.style.position = 'fixed';
-    msg.style.bottom = '20px';
-    msg.style.left = '50%';
-    msg.style.transform = 'translateX(-50%)';
-    msg.style.background = '#4caf50';
-    msg.style.color = '#fff';
-    msg.style.padding = '10px 15px';
-    msg.style.borderRadius = '8px';
-    msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
-    msg.style.fontSize = '16px';
-    msg.style.zIndex = '1000';
-    document.body.appendChild(msg);
-
-    setTimeout(() => {
-      msg.style.transition = 'opacity 0.5s';
-      msg.style.opacity = '0';
-      setTimeout(() => msg.remove(), 500);
-    }, 1500);
-  }
-</script>
-
-
   <style>
-    #toast {
-      visibility: hidden;
-      min-width: 180px;
-      background-color: #323232;
-      color: #fff;
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      border-radius: 6px;
+    }
+    h1 {
+      margin: 20px 0;
+      font-size: 20px;
+    }
+    .form-container {
+      background: white;
+      color: black;
+      width: 90%;
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    label {
+      display: block;
+      text-align: left;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
       padding: 10px;
-      position: fixed;
-      z-index: 1;
-      left: 50%;
-      bottom: 30px;
-      font-size: 14px;
-      transform: translateX(-50%);
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
-    #toast.show {
-      visibility: visible;
-      animation: fadein 0.5s, fadeout 0.5s 1.3s;
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin-top: 10px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
     }
-    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    #saveBtn { background: #4caf50; }
+    #backExercises { background: #ff9800; }
+    #backCalendar { background: #f50057; }
   </style>
-
 </head>
 <body>
-  <h1 id="titulo"></h1>
-  <img id="imagen" alt="">
-  <div id="formulario"></div>
-  <div class="botones">
-    <button onclick="guardar()">💾 Guardar</button>
-    <button onclick="window.location.href='index.html'">🏠 Calendario</button>
-    <button onclick="window.location.href='dia.html?fecha='+fechaKey">↩ Ejercicios</button>
+  <h1 id="fechaTitulo"></h1>
+  <div class="form-container">
+    <label for="tiempo">Tiempo:</label>
+    <input type="text" id="tiempo" placeholder="?">
+
+    <label for="peso">Peso:</label>
+    <input type="text" id="peso" placeholder="?">
+
+    <label for="repeticiones">Repeticiones:</label>
+    <input type="text" id="repeticiones" placeholder="?">
+
+    <label for="libre">Libre:</label>
+    <input type="text" id="libre" placeholder="?">
+
+    <button id="saveBtn">💾 Guardar</button>
+    <button id="backExercises">🏋️ Volver a ejercicios</button>
+    <button id="backCalendar">📅 Volver al calendario</button>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const fechaKey = params.get('fecha');
-    const id = parseInt(params.get('id'));
+    const fecha = params.get('fecha');
+    const ejercicioNum = params.get('ejercicio');
+
+    document.getElementById('fechaTitulo').textContent = `${fecha} - Ejercicio ${ejercicioNum}`;
+
+    const tiempoInput = document.getElementById('tiempo');
+    const pesoInput = document.getElementById('peso');
+    const repeticionesInput = document.getElementById('repeticiones');
+    const libreInput = document.getElementById('libre');
+    const saveBtn = document.getElementById('saveBtn');
+
     const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-    const ejercicio = data[fechaKey][id];
-    const imagenes = [
-      "https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg",
-      "https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg",
-      "https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg",
-      "https://images.pexels.com/photos/414029/pexels-photo-414029.jpeg",
-      "https://images.pexels.com/photos/2780761/pexels-photo-2780761.jpeg",
-      "https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg"
-    ];
+    if (data[fecha] && data[fecha][ejercicioNum-1]) {
+      const e = data[fecha][ejercicioNum-1];
+      tiempoInput.value = e.tiempo;
+      pesoInput.value = e.peso;
+      repeticionesInput.value = e.repeticiones;
+      libreInput.value = e.libre;
+    }
 
-    document.getElementById('titulo').textContent = `${ejercicio.ejercicio} - ${fechaKey}`;
-    document.getElementById('imagen').src = imagenes[id];
+    saveBtn.addEventListener('click', () => {
+      const tiempo = tiempoInput.value || '?';
+      const peso = pesoInput.value || '?';
+      const repeticiones = repeticionesInput.value || '?';
+      const libre = libreInput.value || '?';
 
-    const form = document.getElementById('formulario');
-    form.innerHTML = `
-      <div class="campo">Tiempo: <input type="text" id="tiempo" value="${ejercicio.tiempo}"></div>
-      <div class="campo">Peso: <input type="text" id="peso" value="${ejercicio.peso}"></div>
-      <div class="campo">Repeticiones: <input type="text" id="reps" value="${ejercicio.repeticiones}"></div>
-      <div class="campo">Libre: <input type="text" id="libre" value="${ejercicio.libre}"></div>
-    `;
-
-    function guardar() {
-      ejercicio.tiempo = document.getElementById('tiempo').value;
-      ejercicio.peso = document.getElementById('peso').value;
-      ejercicio.repeticiones = document.getElementById('reps').value;
-      ejercicio.libre = document.getElementById('libre').value;
-
-      const tieneDatos = (
-        ejercicio.tiempo.trim() !== '?' ||
-        ejercicio.peso.trim() !== '?' ||
-        ejercicio.repeticiones.trim() !== '?' ||
-        ejercicio.libre.trim() !== '?'
-      );
-
-      if (tieneDatos) {
-        data[fechaKey][id] = ejercicio;
-        localStorage.setItem('entrenamientos', JSON.stringify(data));
-        alert('✅ Datos guardados');
-      } else {
-        alert('No se guardaron datos (todo vacío)');
+      if (!data[fecha]) {
+        data[fecha] = Array(6).fill().map(() => ({
+          tiempo: '?', peso: '?', repeticiones: '?', libre: '?'
+        }));
       }
+
+      data[fecha][ejercicioNum-1] = { tiempo, peso, repeticiones, libre };
+      localStorage.setItem('entrenamientos', JSON.stringify(data));
+      mostrarMensaje('✅ Datos guardados correctamente');
+    });
+
+    document.getElementById('backExercises').addEventListener('click', () => {
+      window.location.href = `dia.html?fecha=${fecha}`;
+    });
+
+    document.getElementById('backCalendar').addEventListener('click', () => {
+      window.location.href = `index.html`;
+    });
+
+    function mostrarMensaje(texto) {
+      const msg = document.createElement('div');
+      msg.textContent = texto;
+      msg.style.position = 'fixed';
+      msg.style.bottom = '20px';
+      msg.style.left = '50%';
+      msg.style.transform = 'translateX(-50%)';
+      msg.style.background = '#4caf50';
+      msg.style.color = '#fff';
+      msg.style.padding = '10px 15px';
+      msg.style.borderRadius = '8px';
+      msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+      msg.style.fontSize = '16px';
+      msg.style.zIndex = '1000';
+      document.body.appendChild(msg);
+
+      setTimeout(() => {
+        msg.style.transition = 'opacity 0.5s';
+        msg.style.opacity = '0';
+        setTimeout(() => msg.remove(), 500);
+      }, 1500);
     }
   </script>
 </body>
