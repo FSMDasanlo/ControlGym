@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalle ejercicio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #00c6ff, #0072ff); color: #fff; text-align:center; margin:0; }
+    h1 { padding:20px; font-size:20px; }
+    img { width:90%; max-width:400px; border-radius:10px; margin:10px 0; }
+    .campo { margin:10px auto; max-width:300px; display:flex; justify-content:space-between; }
+    input { width:100px; padding:5px; border-radius:5px; border:none; }
+    .botones { margin-top:20px; }
+    button {
+      padding:10px 15px;
+      margin:5px;
+      background:#ff5722;
+      color:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+    button:hover { background:#e64a19; }
+  </style>
+</head>
+<body>
+  <h1 id="titulo"></h1>
+  <img id="imagen" alt="">
+  <div id="formulario"></div>
+  <div class="botones">
+    <button onclick="guardar()">💾 Guardar</button>
+    <button onclick="window.location.href='index.html'">🏠 Calendario</button>
+    <button onclick="window.location.href='dia.html?fecha='+fechaKey">↩ Ejercicios</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const fechaKey = params.get('fecha');
+    const id = parseInt(params.get('id'));
+    const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
+    const ejercicio = data[fechaKey][id];
+    const imagenes = [
+      "https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg",
+      "https://images.pexels.com/photos/1552249/pexels-photo-1552249.jpeg",
+      "https://images.pexels.com/photos/2294361/pexels-photo-2294361.jpeg",
+      "https://images.pexels.com/photos/414029/pexels-photo-414029.jpeg",
+      "https://images.pexels.com/photos/2780761/pexels-photo-2780761.jpeg",
+      "https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg"
+    ];
+
+    document.getElementById('titulo').textContent = `${ejercicio.ejercicio} - ${fechaKey}`;
+    document.getElementById('imagen').src = imagenes[id];
+
+    const form = document.getElementById('formulario');
+    form.innerHTML = `
+      <div class="campo">Tiempo: <input type="text" id="tiempo" value="${ejercicio.tiempo}"></div>
+      <div class="campo">Peso: <input type="text" id="peso" value="${ejercicio.peso}"></div>
+      <div class="campo">Repeticiones: <input type="text" id="reps" value="${ejercicio.repeticiones}"></div>
+      <div class="campo">Libre: <input type="text" id="libre" value="${ejercicio.libre}"></div>
+    `;
+
+    function guardar() {
+      ejercicio.tiempo = document.getElementById('tiempo').value;
+      ejercicio.peso = document.getElementById('peso').value;
+      ejercicio.repeticiones = document.getElementById('reps').value;
+      ejercicio.libre = document.getElementById('libre').value;
+
+      const tieneDatos = (
+        ejercicio.tiempo.trim() !== '?' ||
+        ejercicio.peso.trim() !== '?' ||
+        ejercicio.repeticiones.trim() !== '?' ||
+        ejercicio.libre.trim() !== '?'
+      );
+
+      if (tieneDatos) {
+        data[fechaKey][id] = ejercicio;
+        localStorage.setItem('entrenamientos', JSON.stringify(data));
+        alert('✅ Datos guardados');
+      } else {
+        alert('No se guardaron datos (todo vacío)');
+      }
+    }
+  </script>
+</body>
+</html>
