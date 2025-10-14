@@ -13,8 +13,14 @@
       margin: 0;
       padding: 0;
     }
-    h1 { margin-top: 18px; font-size:20px; }
-    .controls { margin: 12px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+    h1 { margin-top: 18px; font-size: 20px; }
+    .controls {
+      margin: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
     select {
       padding: 8px 10px;
       margin: 0;
@@ -53,40 +59,48 @@
     }
     td:hover { background-color: #fff9c4; }
     .empty { background: #f7f7f7; cursor: default; }
-    .day-number { display:block; font-weight:600; }
-    .check { display:block; font-size:12px; color:#00a000; margin-top:4px; }
+    .day-number { display: block; font-weight: 600; }
+    .check { display: block; font-size: 12px; color: #00a000; margin-top: 4px; }
     .stats-container {
-      margin-top: 20px;
+      margin: 20px auto;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
+      width: 90%;
+      max-width: 400px;
     }
     #btnStats {
-      padding:10px 15px;
-      font-size:16px;
-      border:none;
-      border-radius:8px;
-      background:#ff5722;
-      color:#fff;
-      cursor:pointer;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #ff5722;
+      color: #fff;
+      cursor: pointer;
     }
     #statsBox {
-      display:none;
-      background:#fff;
-      color:#000;
-      padding:15px;
-      border-radius:10px;
-      width:90%;
-      max-width:400px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.2);
-      text-align:left;
+      display: none;
+      background: #fff;
+      color: #000;
+      padding: 15px;
+      border-radius: 10px;
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      text-align: left;
+      font-size: 15px;
     }
-    canvas { max-width: 95%; margin-top: 10px; }
-    @media (max-width:420px){
-      th, td { height:48px; font-size:13px; }
-      .controls { gap:6px; }
-      select { font-size:15px; padding:7px 8px; }
+    .stats-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 16px;
+    }
+    .stat-line { margin-bottom: 6px; }
+    @media (max-width: 420px) {
+      th, td { height: 48px; font-size: 13px; }
+      .controls { gap: 6px; }
+      select { font-size: 15px; padding: 7px 8px; }
     }
   </style>
 </head>
@@ -102,19 +116,16 @@
   </div>
 
   <div class="stats-container">
-    <button id="btnStats">📊 Ver estadísticas</button>
+    <button id="btnStats">📊 Ver estadísticas mensuales</button>
     <div id="statsBox"></div>
-    <canvas id="chart" height="200"></canvas>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const mesSelect = document.getElementById('mes');
     const anioSelect = document.getElementById('anio');
     const calendarioDiv = document.getElementById('calendario');
     const statsBox = document.getElementById('statsBox');
     const btnStats = document.getElementById('btnStats');
-    const ctx = document.getElementById('chart');
 
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                    "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -144,7 +155,7 @@
     function mostrarCalendario() {
       const diasSemana = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
       let primerDia = new Date(anioActual, mesActual, 1).getDay();
-      primerDia = (primerDia + 6) % 7;
+      primerDia = (primerDia + 6) % 7; // lunes como primer día
       const ultimoDia = new Date(anioActual, mesActual + 1, 0).getDate();
       const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
 
@@ -179,67 +190,63 @@
 
     mostrarCalendario();
 
-    let chartInstance = null;
-
     btnStats.addEventListener('click', () => {
       const data = JSON.parse(localStorage.getItem('entrenamientos') || '{}');
-      let totalDias = 0;
-      let totalEjercicios = 0;
       const ultimoDiaMes = new Date(anioActual, mesActual + 1, 0).getDate();
-      const labels = [];
-      const valores = [];
+
+      let diasEntrenados = 0;
+      const ejercicioCount = [0,0,0,0,0,0];
+      let totalTiempo = 0;
+      let totalPeso = 0;
+      let countTiempo = 0;
+      let countPeso = 0;
 
       for (let dia = 1; dia <= ultimoDiaMes; dia++) {
         const fechaISO = `${anioActual}-${String(mesActual+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-        labels.push(dia.toString());
-        if (data[fechaISO]) {
-          const ejercicios = data[fechaISO];
-          const ejerciciosHechos = ejercicios.filter(e =>
-            (e.tiempo || '').trim() !== '?' && (e.tiempo || '').trim() !== '' ||
-            (e.peso || '').trim() !== '?' && (e.peso || '').trim() !== '' ||
-            (e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '' ||
-            (e.libre || '').trim() !== '?' && (e.libre || '').trim() !== ''
-          ).length;
-          valores.push(ejerciciosHechos);
-          if (ejerciciosHechos > 0) {
-            totalDias++;
-            totalEjercicios += ejerciciosHechos;
+        const ejercicios = data[fechaISO];
+        if (!ejercicios) continue;
+
+        let entrenado = false;
+        ejercicios.forEach((e, idx) => {
+          const t = (e.tiempo || '').trim();
+          const p = (e.peso || '').trim();
+          const hayT = t !== '' && t !== '?';
+          const hayP = p !== '' && p !== '?';
+          const hayAlgo = hayT || hayP || 
+            ((e.repeticiones || '').trim() !== '?' && (e.repeticiones || '').trim() !== '') ||
+            ((e.libre || '').trim() !== '?' && (e.libre || '').trim() !== '');
+          if (hayAlgo) {
+            ejercicioCount[idx]++;
+            entrenado = true;
           }
-        } else {
-          valores.push(0);
-        }
+          if (hayT && !isNaN(parseFloat(t))) {
+            totalTiempo += parseFloat(t);
+            countTiempo++;
+          }
+          if (hayP && !isNaN(parseFloat(p))) {
+            totalPeso += parseFloat(p);
+            countPeso++;
+          }
+        });
+
+        if (entrenado) diasEntrenados++;
       }
 
-      const promedio = totalDias > 0 ? (totalEjercicios / totalDias).toFixed(1) : 0;
-      statsBox.innerHTML = `
-        <b>Días entrenados:</b> ${totalDias}<br>
-        <b>Total ejercicios:</b> ${totalEjercicios}<br>
-        <b>Promedio por día:</b> ${promedio}
-      `;
-      statsBox.style.display = 'block';
+      const promedioTiempo = countTiempo > 0 ? (totalTiempo / countTiempo).toFixed(1) : 0;
+      const promedioPeso = countPeso > 0 ? (totalPeso / countPeso).toFixed(1) : 0;
 
-      if (chartInstance) chartInstance.destroy();
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Ejercicios por día',
-            data: valores,
-            backgroundColor: '#ff5722'
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true }
-          },
-          scales: {
-            y: { beginAtZero: true, ticks: { precision:0 } }
-          }
-        }
+      let html = `<div class="stats-title">📊 Estadísticas de ${meses[mesActual]} ${anioActual}</div>`;
+      html += `<div class="stat-line"><b>Días entrenados:</b> ${diasEntrenados}</div>`;
+      html += `<div class="stat-line"><b>Veces por ejercicio:</b><br>`;
+      ejercicioCount.forEach((c, i) => {
+        html += `&nbsp;&nbsp;Ejercicio ${i+1}: ${c}<br>`;
       });
+      html += `</div>`;
+      html += `<div class="stat-line"><b>Promedio tiempo:</b> ${promedioTiempo}</div>`;
+      html += `<div class="stat-line"><b>Promedio peso:</b> ${promedioPeso}</div>`;
+
+      statsBox.innerHTML = html;
+      statsBox.style.display = 'block';
     });
   </script>
 </body>
