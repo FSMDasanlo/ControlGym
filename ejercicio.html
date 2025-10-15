@@ -1,123 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ejercicio - ControlGym</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 10px;
-      background: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-      color: #007bff;
-    }
-    #fecha {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    #titulo {
-      text-align: center;
-      font-size: 1.3em;
-      margin-bottom: 10px;
-    }
-    #detalle {
-      font-style: italic;
-      margin-bottom: 15px;
-    }
-    .fondo {
-      width: 100%;
-      height: 200px;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      border-radius: 10px;
-      opacity: 0.4;
-      margin-bottom: 15px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 15px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 5px;
-      text-align: center;
-    }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    #formulario {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 15px;
-    }
-    input {
-      padding: 5px;
-      width: 100px;
-    }
-    button {
-      background: #28a745;
-      color: white;
-      padding: 5px 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #218838;
-    }
-    #volver {
-      display: block;
-      width: 100%;
-      background: #007bff;
-      color: white;
-      padding: 8px;
-      text-align: center;
-      margin-top: 10px;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-    /* Toast */
-    #toast {
-      visibility: hidden;
-      min-width: 200px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 8px;
-      padding: 10px;
-      position: fixed;
-      z-index: 1;
-      left: 50%;
-      bottom: 30px;
-      transform: translateX(-50%);
-      font-size: 0.9em;
-    }
-    #toast.show {
-      visibility: visible;
-      animation: fadein 0.3s, fadeout 0.3s 1.7s;
-    }
-    @keyframes fadein {
-      from { bottom: 0; opacity: 0; }
-      to { bottom: 30px; opacity: 1; }
-    }
-    @keyframes fadeout {
-      from { bottom: 30px; opacity: 1; }
-      to { bottom: 0; opacity: 0; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejercicio - ControlGym</title>
+<style>
+body { font-family: Arial; margin:0; padding:10px; background:#f4f4f4; }
+h1 { text-align:center; color:#007bff; }
+#fecha { text-align:center; font-weight:bold; margin-bottom:5px; }
+#titulo { text-align:center; font-size:1.3em; margin-bottom:10px; }
+#detalle { font-style:italic; margin-bottom:15px; }
+.fondo { width:100%; height:200px; background-size:cover; background-position:center; opacity:0.4; border-radius:10px; margin-bottom:15px; }
+table { width:100%; border-collapse:collapse; margin-bottom:15px; }
+th,td { border:1px solid #ccc; padding:5px; text-align:center; }
+th { background:#007bff; color:white; }
+#formulario { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:15px; }
+input { padding:5px; width:100px; }
+button { background:#28a745; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; }
+button:hover { background:#218838; }
+#volver { display:block; width:100%; text-align:center; background:#007bff; color:white; padding:8px; text-decoration:none; border-radius:5px;}
+#toast { visibility:hidden; min-width:200px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:10px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:0.9em;}
+#toast.show { visibility:visible; animation: fadein 0.3s, fadeout 0.3s 1.7s;}
+@keyframes fadein {from {bottom:0;opacity:0;} to {bottom:30px;opacity:1;}}
+@keyframes fadeout {from {bottom:30px;opacity:1;} to {bottom:0;opacity:0;}}
+</style>
 </head>
 <body>
-
 <h1>Ejercicio</h1>
 <div id="fecha"></div>
 <div id="titulo"></div>
@@ -135,134 +43,67 @@
   <button onclick="guardarDatos()">Guardar</button>
 </div>
 
-<a id="volver" href="index.html">Volver al calendario</a>
+<a id="volver" href="rutinas.html?fecha=">Volver a rutinas</a>
 
-<!-- Toast -->
 <div id="toast">✅ Datos guardados</div>
 
 <script>
-  const rutinas = [
-    {
-      titulo: "Pecho, bíceps y abdominales",
-      imagen: "https://source.unsplash.com/600x400/?bench-press",
-      detalle: [
-        "Press de banca con barra",
-        "Aperturas en banco inclinado con mancuernas",
-        "Press inclinado con mancuernas",
-        "Curl de bíceps con barra",
-        "Crunch en máquina con carga alta"
-      ]
-    },
-    {
-      titulo: "Espalda y tríceps",
-      imagen: "https://source.unsplash.com/600x400/?pullup",
-      detalle: [
-        "Dominadas en barra fija",
-        "Remo con barra",
-        "Press francés",
-        "Extensiones de tríceps en polea alta",
-        "Fondos de tríceps"
-      ]
-    },
-    {
-      titulo: "Hombros, trapecio y piernas",
-      imagen: "https://source.unsplash.com/600x400/?squat",
-      detalle: [
-        "Elevaciones laterales con mancuernas",
-        "Trapecios con polea baja",
-        "Sentadillas con barra",
-        "Extensiones de piernas",
-        "Peso muerto con barra",
-        "Gemelo en máquina"
-      ]
-    },
-    {
-      titulo: "Pecho y bíceps",
-      imagen: "https://source.unsplash.com/600x400/?gym",
-      detalle: [
-        "Press de banca con mancuernas",
-        "Press declinado con mancuernas",
-        "Curl de bíceps sentado con mancuerna",
-        "Curl de bíceps"
-      ]
-    },
-    {
-      titulo: "Espalda y tríceps",
-      imagen: "https://source.unsplash.com/600x400/?lat-pulldown",
-      detalle: [
-        "Remo en polea baja",
-        "Peso muerto",
-        "Extensión vertical alterna con mancuerna",
-        "Flexiones de tríceps"
-      ]
-    },
-    {
-      titulo: "Rodillas",
-      imagen: "https://source.unsplash.com/600x400/?leg",
-      detalle: [
-        "Sentadillas de bajo impacto",
-        "Elevación de piernas",
-        "Ejercicios isométricos"
-      ]
-    }
-  ];
+const rutinas = [
+  {titulo:"Pecho, bíceps y abdominales", imagen:"https://source.unsplash.com/600x400/?bench-press", detalle:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
+  {titulo:"Espalda y tríceps", imagen:"https://source.unsplash.com/600x400/?pullup", detalle:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
+  {titulo:"Hombros, trapecio y piernas", imagen:"https://source.unsplash.com/600x400/?squat", detalle:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
+  {titulo:"Pecho y bíceps", imagen:"https://source.unsplash.com/600x400/?gym", detalle:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
+  {titulo:"Espalda y tríceps", imagen:"https://source.unsplash.com/600x400/?lat-pulldown", detalle:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
+  {titulo:"Rodillas", imagen:"https://source.unsplash.com/600x400/?leg", detalle:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
+];
 
-  function formatearFecha(fechaISO) {
-    const [año, mes, dia] = fechaISO.split("-");
-    return `${dia}-${mes}-${año}`;
-  }
+const params = new URLSearchParams(window.location.search);
+const fecha = params.get('fecha');
+const rutinaIndex = params.get('rutina');
+const rutina = rutinas[rutinaIndex];
 
-  const params = new URLSearchParams(window.location.search);
-  const fecha = params.get('fecha');
-  const rutinaIndex = params.get('rutina');
-  const rutina = rutinas[rutinaIndex];
+document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
+document.getElementById('titulo').textContent = rutina.titulo;
+document.getElementById('detalle').innerHTML = `<ul>${rutina.detalle.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+document.getElementById('fondo').style.backgroundImage = `url(${rutina.imagen})`;
 
-  document.getElementById('fecha').textContent = formatearFecha(fecha);
-  document.getElementById('titulo').textContent = rutina.titulo;
-  document.getElementById('detalle').innerHTML = rutina.detalle.map(i => `• ${i}`).join('<br>');
-  document.getElementById('fondo').style.backgroundImage = `url(${rutina.imagen})`;
+const data = JSON.parse(localStorage.getItem('gymData')||'{}');
+const fechas = Object.keys(data).filter(f=>data[f][rutinaIndex]).sort((a,b)=>new Date(a)-new Date(b));
+const thead = document.getElementById('thead');
+const tbody = document.getElementById('tbody');
 
-  const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+if(fechas.length){
+  thead.innerHTML = `<tr><th>Día</th>${fechas.map(f=>`<th>${f.split('-').reverse().join('-')}</th>`).join('')}<th>Resumen</th></tr>`;
+  const pesos = fechas.map(f=>data[f][rutinaIndex].peso);
+  const reps = fechas.map(f=>data[f][rutinaIndex].reps);
+  const mediaPeso = (pesos.reduce((a,b)=>a+b,0)/pesos.length).toFixed(2);
+  const mediaReps = (reps.reduce((a,b)=>a+b,0)/reps.length).toFixed(0);
+  const filaPeso = `<tr><td>Peso</td>${pesos.map(p=>`<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
+  const filaReps = `<tr><td>Repeticiones</td>${reps.map(r=>`<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
+  const filaDias = `<tr><td>Días</td>${fechas.map(()=>`<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
+  tbody.innerHTML = filaPeso+filaReps+filaDias;
+}else{
+  thead.innerHTML='';
+  tbody.innerHTML='<tr><td colspan="99">No hay datos guardados aún</td></tr>';
+}
 
-  const fechas = Object.keys(data).filter(f => data[f][rutinaIndex]).sort((a,b)=> new Date(a)-new Date(b));
+document.getElementById('volver').href = `rutinas.html?fecha=${fecha}`;
 
-  const thead = document.getElementById('thead');
-  const tbody = document.getElementById('tbody');
+function mostrarToast(){
+  const toast=document.getElementById("toast");
+  toast.className="show";
+  setTimeout(()=>{toast.className=toast.className.replace("show","");},2000);
+}
 
-  if (fechas.length) {
-    thead.innerHTML = `<tr><th>Día</th>${fechas.map(f=>`<th>${formatearFecha(f)}</th>`).join('')}<th>Resumen</th></tr>`;
-    const pesos = fechas.map(f=>data[f][rutinaIndex].peso);
-    const reps = fechas.map(f=>data[f][rutinaIndex].reps);
-    const mediaPeso = (pesos.reduce((a,b)=>a+b,0)/pesos.length).toFixed(2);
-    const mediaReps = (reps.reduce((a,b)=>a+b,0)/reps.length).toFixed(0);
-
-    const filaPeso = `<tr><td>Peso</td>${pesos.map(p=>`<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
-    const filaReps = `<tr><td>Repeticiones</td>${reps.map(r=>`<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
-    const filaDias = `<tr><td>Días</td>${fechas.map(()=>`<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
-
-    tbody.innerHTML = filaPeso + filaReps + filaDias;
-  } else {
-    thead.innerHTML = '';
-    tbody.innerHTML = '<tr><td colspan="99">No hay datos guardados aún</td></tr>';
-  }
-
-  function mostrarToast() {
-    const toast = document.getElementById("toast");
-    toast.className = "show";
-    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
-  }
-
-  function guardarDatos() {
-    const peso = parseFloat(document.getElementById('peso').value) || 0;
-    const reps = parseInt(document.getElementById('reps').value) || 0;
-
-    if (!data[fecha]) data[fecha] = {};
-    data[fecha][rutinaIndex] = { peso, reps };
-    localStorage.setItem('gymData', JSON.stringify(data));
-
-    mostrarToast();
-    setTimeout(() => location.reload(), 500); // recarga después del toast
-  }
+function guardarDatos(){
+  const peso = parseFloat(document.getElementById('peso').value) || 0;
+  const reps = parseInt(document.getElementById('reps').value) || 0;
+  if(!data[fecha]) data[fecha]={};
+  data[fecha][rutinaIndex]={peso,reps};
+  localStorage.setItem('gymData',JSON.stringify(data));
+  mostrarToast();
+  setTimeout(()=>location.reload(),500);
+}
 </script>
 </body>
 </html>

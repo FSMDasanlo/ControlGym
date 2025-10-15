@@ -30,6 +30,15 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
+    #nombres-dias {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      max-width: 500px;
+      margin: auto;
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
     #calendario {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -49,11 +58,6 @@
     }
     .dia:hover {
       background: #e6f0ff;
-    }
-    .nombre-dia {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
     }
     .check {
       position: absolute;
@@ -109,15 +113,17 @@
     <select id="año"></select>
   </div>
 
-  <div class="nombre-dia">Lun</div>
-  <div class="nombre-dia">Mar</div>
-  <div class="nombre-dia">Mié</div>
-  <div class="nombre-dia">Jue</div>
-  <div class="nombre-dia">Vie</div>
-  <div class="nombre-dia">Sáb</div>
-  <div class="nombre-dia">Dom</div>
-  <div id="calendario"></div>
+  <div id="nombres-dias">
+    <div>Lun</div>
+    <div>Mar</div>
+    <div>Mié</div>
+    <div>Jue</div>
+    <div>Vie</div>
+    <div>Sáb</div>
+    <div>Dom</div>
+  </div>
 
+  <div id="calendario"></div>
   <div id="toast">✅ Datos guardados correctamente</div>
 
   <script>
@@ -126,97 +132,84 @@
     const calendario = document.getElementById("calendario");
 
     const meses = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
     ];
 
     const hoy = new Date();
     let mesActual = hoy.getMonth();
     let añoActual = hoy.getFullYear();
 
-    // Inicializar selects
-    meses.forEach((m, i) => {
+    meses.forEach((m,i)=>{
       const option = document.createElement("option");
       option.value = i;
       option.textContent = m;
-      if (i === mesActual) option.selected = true;
+      if(i===mesActual) option.selected=true;
       mesSelect.appendChild(option);
     });
 
-    for (let i = añoActual - 3; i <= añoActual + 3; i++) {
+    for(let i=añoActual-3;i<=añoActual+3;i++){
       const option = document.createElement("option");
-      option.value = i;
-      option.textContent = i;
-      if (i === añoActual) option.selected = true;
+      option.value=i;
+      option.textContent=i;
+      if(i===añoActual) option.selected=true;
       añoSelect.appendChild(option);
     }
 
-    function formatearFecha(d) {
-      const año = d.getFullYear();
-      const mes = String(d.getMonth() + 1).padStart(2, '0');
-      const dia = String(d.getDate()).padStart(2, '0');
+    function formatearFecha(d){
+      const año=d.getFullYear();
+      const mes=String(d.getMonth()+1).padStart(2,'0');
+      const dia=String(d.getDate()).padStart(2,'0');
       return `${año}-${mes}-${dia}`;
     }
 
-    function formatearFechaES(iso) {
-      const [año, mes, dia] = iso.split("-");
-      return `${dia}-${mes}-${año}`;
-    }
+    function generarCalendario(mes,año){
+      calendario.innerHTML="";
+      const primerDia=new Date(año,mes,1);
+      const ultimoDia=new Date(año,mes+1,0);
+      const primerLunes=(primerDia.getDay()+6)%7;
+      const totalDias=ultimoDia.getDate();
+      const data=JSON.parse(localStorage.getItem('gymData')||'{}');
 
-    function generarCalendario(mes, año) {
-      calendario.innerHTML = "";
-      const primerDia = new Date(año, mes, 1);
-      const ultimoDia = new Date(año, mes + 1, 0);
-      const primerLunes = (primerDia.getDay() + 6) % 7;
-
-      const totalDias = ultimoDia.getDate();
-      const data = JSON.parse(localStorage.getItem('gymData') || '{}');
-
-      for (let i = 0; i < primerLunes; i++) {
-        const div = document.createElement("div");
-        div.className = "dia disabled";
+      for(let i=0;i<primerLunes;i++){
+        const div=document.createElement("div");
+        div.className="dia disabled";
         calendario.appendChild(div);
       }
 
-      for (let dia = 1; dia <= totalDias; dia++) {
-        const div = document.createElement("div");
-        div.className = "dia";
-        div.textContent = dia;
-
-        const fechaISO = formatearFecha(new Date(año, mes, dia));
-
-        if (data[fechaISO]) {
-          const check = document.createElement("div");
-          check.className = "check";
-          check.textContent = "✓";
+      for(let dia=1;dia<=totalDias;dia++){
+        const div=document.createElement("div");
+        div.className="dia";
+        div.textContent=dia;
+        const fechaISO=formatearFecha(new Date(año,mes,dia));
+        if(data[fechaISO]){
+          const check=document.createElement("div");
+          check.className="check";
+          check.textContent="✓";
           div.appendChild(check);
         }
-
-        div.addEventListener("click", () => {
-          window.location.href = `rutinas.html?fecha=${fechaISO}`;
+        div.addEventListener("click",()=>{
+          window.location.href=`rutinas.html?fecha=${fechaISO}`;
         });
-
         calendario.appendChild(div);
       }
     }
 
-    mesSelect.addEventListener("change", () => {
-      mesActual = parseInt(mesSelect.value);
-      generarCalendario(mesActual, añoActual);
+    mesSelect.addEventListener("change",()=>{
+      mesActual=parseInt(mesSelect.value);
+      generarCalendario(mesActual,añoActual);
+    });
+    añoSelect.addEventListener("change",()=>{
+      añoActual=parseInt(añoSelect.value);
+      generarCalendario(mesActual,añoActual);
     });
 
-    añoSelect.addEventListener("change", () => {
-      añoActual = parseInt(añoSelect.value);
-      generarCalendario(mesActual, añoActual);
-    });
+    generarCalendario(mesActual,añoActual);
 
-    generarCalendario(mesActual, añoActual);
-
-    // Exponer función toast al guardar
-    window.mostrarToast = function () {
-      const toast = document.getElementById("toast");
-      toast.className = "show";
-      setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
+    window.mostrarToast=function(){
+      const toast=document.getElementById("toast");
+      toast.className="show";
+      setTimeout(()=>toast.className=toast.className.replace("show",""),2000);
     };
   </script>
 </body>
