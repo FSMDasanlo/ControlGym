@@ -2,160 +2,267 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ejercicio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio - ControlGym</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; }
-    header { background:#007bff; color:white; padding:1rem; text-align:center; }
-    .container { max-width:800px; margin:20px auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-    img { width:100%; opacity:0.3; border-radius:8px; margin-top:15px; }
-    ul { list-style: disc; margin-left:20px; font-style:italic; }
-    table { width:100%; margin-top:15px; border-collapse: collapse; }
-    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-    th { background:#f0f0f0; }
-    .form-row { margin-top:15px; display:flex; gap:10px; }
-    input { flex:1; padding:8px; }
-    button { background:#007bff; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer; }
-    .volver { margin-top:15px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    #fecha {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    #titulo {
+      text-align: center;
+      font-size: 1.3em;
+      margin-bottom: 10px;
+    }
+    #detalle {
+      font-style: italic;
+      margin-bottom: 15px;
+    }
+    .fondo {
+      width: 100%;
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 10px;
+      opacity: 0.4;
+      margin-bottom: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    #formulario {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    input {
+      padding: 5px;
+      width: 100px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    #volver {
+      display: block;
+      width: 100%;
+      background: #007bff;
+      color: white;
+      padding: 8px;
+      text-align: center;
+      margin-top: 10px;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    /* Toast */
+    #toast {
+      visibility: hidden;
+      min-width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 0.9em;
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.3s, fadeout 0.3s 1.7s;
+    }
+    @keyframes fadein {
+      from { bottom: 0; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+    @keyframes fadeout {
+      from { bottom: 30px; opacity: 1; }
+      to { bottom: 0; opacity: 0; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h2 id="fecha"></h2>
-    <h3 id="titulo"></h3>
-  </header>
-  <div class="container">
-    <ul id="detalle"></ul>
-    <img id="imagen" src="" alt="">
-    <table>
-      <thead>
-        <tr id="fechas-row"></tr>
-      </thead>
-      <tbody>
-        <tr id="peso-row"></tr>
-        <tr id="reps-row"></tr>
-      </tbody>
-    </table>
-    <div class="form-row">
-      <input type="number" id="peso" placeholder="Peso (kg)">
-      <input type="number" id="reps" placeholder="Repeticiones">
-      <button onclick="guardarDatos()">Guardar</button>
-    </div>
-    <button class="volver" onclick="window.location='index.html'">Volver al calendario</button>
-    <button class="volver" onclick="window.history.back()">Volver a rutinas</button>
-  </div>
 
-  <script>
-    const params=new URLSearchParams(window.location.search);
-    const fecha=params.get('fecha');
-    const rutina=params.get('rutina');
+<h1>Ejercicio</h1>
+<div id="fecha"></div>
+<div id="titulo"></div>
+<div id="detalle"></div>
+<div class="fondo" id="fondo"></div>
 
-    const rutinasData=[
-      { titulo:"Pecho, bíceps y abdominales", detalle:[
+<table>
+  <thead id="thead"></thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div id="formulario">
+  <input type="number" id="peso" placeholder="Peso (kg)">
+  <input type="number" id="reps" placeholder="Repeticiones">
+  <button onclick="guardarDatos()">Guardar</button>
+</div>
+
+<a id="volver" href="index.html">Volver al calendario</a>
+
+<!-- Toast -->
+<div id="toast">✅ Datos guardados</div>
+
+<script>
+  const rutinas = [
+    {
+      titulo: "Pecho, bíceps y abdominales",
+      imagen: "https://source.unsplash.com/600x400/?bench-press",
+      detalle: [
         "Press de banca con barra",
         "Aperturas en banco inclinado con mancuernas",
         "Press inclinado con mancuernas",
         "Curl de bíceps con barra",
         "Crunch en máquina con carga alta"
-      ], img:"https://source.unsplash.com/600x400/?bench-press" },
-      { titulo:"Espalda y tríceps", detalle:[
+      ]
+    },
+    {
+      titulo: "Espalda y tríceps",
+      imagen: "https://source.unsplash.com/600x400/?pullup",
+      detalle: [
         "Dominadas en barra fija",
         "Remo con barra",
         "Press francés",
         "Extensiones de tríceps en polea alta",
         "Fondos de tríceps"
-      ], img:"https://source.unsplash.com/600x400/?pullup" },
-      { titulo:"Hombros, trapecio y piernas", detalle:[
+      ]
+    },
+    {
+      titulo: "Hombros, trapecio y piernas",
+      imagen: "https://source.unsplash.com/600x400/?squat",
+      detalle: [
         "Elevaciones laterales con mancuernas",
         "Trapecios con polea baja",
         "Sentadillas con barra",
         "Extensiones de piernas",
         "Peso muerto con barra",
         "Gemelo en máquina"
-      ], img:"https://source.unsplash.com/600x400/?squat" },
-      { titulo:"Pecho y bíceps", detalle:[
+      ]
+    },
+    {
+      titulo: "Pecho y bíceps",
+      imagen: "https://source.unsplash.com/600x400/?gym",
+      detalle: [
         "Press de banca con mancuernas",
         "Press declinado con mancuernas",
         "Curl de bíceps sentado con mancuerna",
         "Curl de bíceps"
-      ], img:"https://source.unsplash.com/600x400/?gym" },
-      { titulo:"Espalda y tríceps", detalle:[
+      ]
+    },
+    {
+      titulo: "Espalda y tríceps",
+      imagen: "https://source.unsplash.com/600x400/?lat-pulldown",
+      detalle: [
         "Remo en polea baja",
         "Peso muerto",
         "Extensión vertical alterna con mancuerna",
         "Flexiones de tríceps"
-      ], img:"https://source.unsplash.com/600x400/?lat-pulldown" },
-      { titulo:"Rodillas", detalle:[
-        "Sentadillas",
+      ]
+    },
+    {
+      titulo: "Rodillas",
+      imagen: "https://source.unsplash.com/600x400/?leg",
+      detalle: [
+        "Sentadillas de bajo impacto",
         "Elevación de piernas",
         "Ejercicios isométricos"
-      ], img:"https://source.unsplash.com/600x400/?leg" },
-    ];
-
-    const [y,m,d]=fecha.split('-');
-    document.getElementById('fecha').textContent=`${d}-${m}-${y}`;
-    document.getElementById('titulo').textContent=rutinasData[rutina].titulo;
-
-    const ul=document.getElementById('detalle');
-    rutinasData[rutina].detalle.forEach(t=>{
-      const li=document.createElement('li');
-      li.textContent=t;
-      ul.appendChild(li);
-    });
-
-    document.getElementById('imagen').src=rutinasData[rutina].img;
-
-    const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-    if(!data[fecha]) data[fecha]={};
-
-    const rutinaKey=`rutina${rutina}`;
-    if(!data[fecha][rutinaKey]) data[fecha][rutinaKey]={};
-
-    const historial = {};
-    for (const key in data){
-      if(data[key][rutinaKey]){
-        historial[key]=data[key][rutinaKey];
-      }
+      ]
     }
+  ];
 
-    const fechasOrdenadas = Object.keys(historial).sort((a,b)=>new Date(a)-new Date(b));
-    const fechasRow=document.getElementById('fechas-row');
-    const pesoRow=document.getElementById('peso-row');
-    const repsRow=document.getElementById('reps-row');
+  function formatearFecha(fechaISO) {
+    const [año, mes, dia] = fechaISO.split("-");
+    return `${dia}-${mes}-${año}`;
+  }
 
-    fechasRow.innerHTML='<th>Día</th>';
-    pesoRow.innerHTML='<td>Peso</td>';
-    repsRow.innerHTML='<td>Repeticiones</td>';
+  const params = new URLSearchParams(window.location.search);
+  const fecha = params.get('fecha');
+  const rutinaIndex = params.get('rutina');
+  const rutina = rutinas[rutinaIndex];
 
-    let totalPeso=0, totalReps=0, count=0;
+  document.getElementById('fecha').textContent = formatearFecha(fecha);
+  document.getElementById('titulo').textContent = rutina.titulo;
+  document.getElementById('detalle').innerHTML = rutina.detalle.map(i => `• ${i}`).join('<br>');
+  document.getElementById('fondo').style.backgroundImage = `url(${rutina.imagen})`;
 
-    fechasOrdenadas.forEach(key=>{
-      const [yy,mm,dd]=key.split('-');
-      fechasRow.innerHTML+=`<th>${dd}-${mm}-${yy}</th>`;
-      pesoRow.innerHTML+=`<td>${historial[key].peso||'-'}</td>`;
-      repsRow.innerHTML+=`<td>${historial[key].reps||'-'}</td>`;
-      if(historial[key].peso){
-        totalPeso+=Number(historial[key].peso);
-        count++;
-      }
-      if(historial[key].reps){
-        totalReps+=Number(historial[key].reps);
-      }
-    });
+  const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 
-    if(count>0){
-      fechasRow.innerHTML+=`<th>Resumen</th>`;
-      pesoRow.innerHTML+=`<td>${(totalPeso/count).toFixed(2)}</td>`;
-      repsRow.innerHTML+=`<td>${(totalReps/count).toFixed(0)}</td>`;
-    }
+  const fechas = Object.keys(data).filter(f => data[f][rutinaIndex]).sort((a,b)=> new Date(a)-new Date(b));
 
-    function guardarDatos(){
-      const peso=document.getElementById('peso').value;
-      const reps=document.getElementById('reps').value;
-      data[fecha][rutinaKey]={ peso, reps };
-      localStorage.setItem('gymData',JSON.stringify(data));
-      alert('✅ Datos guardados correctamente');
-      location.reload();
-    }
-  </script>
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  if (fechas.length) {
+    thead.innerHTML = `<tr><th>Día</th>${fechas.map(f=>`<th>${formatearFecha(f)}</th>`).join('')}<th>Resumen</th></tr>`;
+    const pesos = fechas.map(f=>data[f][rutinaIndex].peso);
+    const reps = fechas.map(f=>data[f][rutinaIndex].reps);
+    const mediaPeso = (pesos.reduce((a,b)=>a+b,0)/pesos.length).toFixed(2);
+    const mediaReps = (reps.reduce((a,b)=>a+b,0)/reps.length).toFixed(0);
+
+    const filaPeso = `<tr><td>Peso</td>${pesos.map(p=>`<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
+    const filaReps = `<tr><td>Repeticiones</td>${reps.map(r=>`<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
+    const filaDias = `<tr><td>Días</td>${fechas.map(()=>`<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
+
+    tbody.innerHTML = filaPeso + filaReps + filaDias;
+  } else {
+    thead.innerHTML = '';
+    tbody.innerHTML = '<tr><td colspan="99">No hay datos guardados aún</td></tr>';
+  }
+
+  function mostrarToast() {
+    const toast = document.getElementById("toast");
+    toast.className = "show";
+    setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+  }
+
+  function guardarDatos() {
+    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const reps = parseInt(document.getElementById('reps').value) || 0;
+
+    if (!data[fecha]) data[fecha] = {};
+    data[fecha][rutinaIndex] = { peso, reps };
+    localStorage.setItem('gymData', JSON.stringify(data));
+
+    mostrarToast();
+    setTimeout(() => location.reload(), 500); // recarga después del toast
+  }
+</script>
 </body>
 </html>

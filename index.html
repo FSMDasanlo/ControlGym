@@ -1,174 +1,223 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Control Gym</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ControlGym</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f4f4f4;
       margin: 0;
       padding: 0;
-      background: #f4f6f8;
     }
     header {
       background: #007bff;
       color: white;
-      padding: 1rem;
       text-align: center;
-    }
-    .calendar {
-      max-width: 500px;
-      margin: 20px auto;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th {
-      background: #007bff;
-      color: white;
-      padding: 5px;
-    }
-    td {
-      width: 14.28%;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-    }
-    td:hover {
-      background: #e9ecef;
-    }
-    .check {
-      color: green;
+      padding: 15px 0;
+      font-size: 1.5em;
       font-weight: bold;
-      margin-left: 5px;
+    }
+    .selector {
+      text-align: center;
+      margin: 15px 0;
     }
     select {
-      padding: 5px;
-      margin: 10px;
-      font-size: 1rem;
-    }
-    .stats-btn {
-      display: block;
-      margin: 20px auto 0;
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
+      padding: 5px 10px;
+      margin: 0 5px;
+      font-size: 1em;
       border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    #calendario {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      max-width: 500px;
+      margin: auto;
+      padding: 10px;
+    }
+    .dia {
+      background: white;
+      text-align: center;
+      padding: 15px 0;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 1rem;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .dia:hover {
+      background: #e6f0ff;
+    }
+    .nombre-dia {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .check {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      padding: 4px 6px;
+      border-radius: 50%;
+      font-size: 0.8em;
+    }
+    .disabled {
+      color: #bbb;
+      cursor: default;
+      background: #eee;
+    }
+    /* Toast */
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 1em;
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @keyframes fadein {
+      from { bottom: 0; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+    @keyframes fadeout {
+      from { bottom: 30px; opacity: 1; }
+      to { bottom: 0; opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Control Gym</h1>
-  </header>
+  <header>ControlGym</header>
 
-  <div class="calendar">
-    <div style="text-align:center;">
-      <select id="month"></select>
-      <select id="year"></select>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>L</th>
-          <th>M</th>
-          <th>X</th>
-          <th>J</th>
-          <th>V</th>
-          <th>S</th>
-          <th>D</th>
-        </tr>
-      </thead>
-      <tbody id="calendar-body"></tbody>
-    </table>
+  <div class="selector">
+    <select id="mes"></select>
+    <select id="año"></select>
   </div>
 
-  <script>
-    const monthSelect = document.getElementById('month');
-    const yearSelect = document.getElementById('year');
-    const calendarBody = document.getElementById('calendar-body');
+  <div class="nombre-dia">Lun</div>
+  <div class="nombre-dia">Mar</div>
+  <div class="nombre-dia">Mié</div>
+  <div class="nombre-dia">Jue</div>
+  <div class="nombre-dia">Vie</div>
+  <div class="nombre-dia">Sáb</div>
+  <div class="nombre-dia">Dom</div>
+  <div id="calendario"></div>
 
-    const months = [
-      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+  <div id="toast">✅ Datos guardados correctamente</div>
+
+  <script>
+    const mesSelect = document.getElementById("mes");
+    const añoSelect = document.getElementById("año");
+    const calendario = document.getElementById("calendario");
+
+    const meses = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     ];
 
-    for (let i=0;i<12;i++){
-      let opt=document.createElement('option');
-      opt.value=i;
-      opt.textContent=months[i];
-      monthSelect.appendChild(opt);
+    const hoy = new Date();
+    let mesActual = hoy.getMonth();
+    let añoActual = hoy.getFullYear();
+
+    // Inicializar selects
+    meses.forEach((m, i) => {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = m;
+      if (i === mesActual) option.selected = true;
+      mesSelect.appendChild(option);
+    });
+
+    for (let i = añoActual - 3; i <= añoActual + 3; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = i;
+      if (i === añoActual) option.selected = true;
+      añoSelect.appendChild(option);
     }
 
-    const currentYear=new Date().getFullYear();
-    for (let y=currentYear-5;y<=currentYear+5;y++){
-      let opt=document.createElement('option');
-      opt.value=y;
-      opt.textContent=y;
-      yearSelect.appendChild(opt);
+    function formatearFecha(d) {
+      const año = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const dia = String(d.getDate()).padStart(2, '0');
+      return `${año}-${mes}-${dia}`;
     }
 
-    function formatDateToKey(date){
-      const d=String(date.getDate()).padStart(2,'0');
-      const m=String(date.getMonth()+1).padStart(2,'0');
-      const y=date.getFullYear();
-      return `${y}-${m}-${d}`;
+    function formatearFechaES(iso) {
+      const [año, mes, dia] = iso.split("-");
+      return `${dia}-${mes}-${año}`;
     }
 
-    function formatDateToSpanish(key){
-      const [y,m,d]=key.split('-');
-      return `${d}-${m}-${y}`;
-    }
+    function generarCalendario(mes, año) {
+      calendario.innerHTML = "";
+      const primerDia = new Date(año, mes, 1);
+      const ultimoDia = new Date(año, mes + 1, 0);
+      const primerLunes = (primerDia.getDay() + 6) % 7;
 
-    function generateCalendar(month,year){
-      calendarBody.innerHTML='';
-      const firstDay=(new Date(year,month,1).getDay()+6)%7; 
-      const daysInMonth=new Date(year,month+1,0).getDate();
-      let date=1;
+      const totalDias = ultimoDia.getDate();
+      const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 
-      for (let i=0;i<6;i++){
-        const row=document.createElement('tr');
-        for (let j=0;j<7;j++){
-          const cell=document.createElement('td');
-          if (i===0 && j<firstDay){
-            cell.textContent='';
-          } else if (date>daysInMonth){
-            cell.textContent='';
-          } else {
-            const key=`${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
-            cell.textContent=date;
-            cell.addEventListener('click',()=>window.location=`rutinas.html?fecha=${key}`);
+      for (let i = 0; i < primerLunes; i++) {
+        const div = document.createElement("div");
+        div.className = "dia disabled";
+        calendario.appendChild(div);
+      }
 
-            const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-            if(data[key]) {
-              const check=document.createElement('span');
-              check.textContent='✔';
-              check.className='check';
-              cell.appendChild(check);
-            }
-            date++;
-          }
-          row.appendChild(cell);
+      for (let dia = 1; dia <= totalDias; dia++) {
+        const div = document.createElement("div");
+        div.className = "dia";
+        div.textContent = dia;
+
+        const fechaISO = formatearFecha(new Date(año, mes, dia));
+
+        if (data[fechaISO]) {
+          const check = document.createElement("div");
+          check.className = "check";
+          check.textContent = "✓";
+          div.appendChild(check);
         }
-        calendarBody.appendChild(row);
+
+        div.addEventListener("click", () => {
+          window.location.href = `rutinas.html?fecha=${fechaISO}`;
+        });
+
+        calendario.appendChild(div);
       }
     }
 
-    monthSelect.value=new Date().getMonth();
-    yearSelect.value=new Date().getFullYear();
+    mesSelect.addEventListener("change", () => {
+      mesActual = parseInt(mesSelect.value);
+      generarCalendario(mesActual, añoActual);
+    });
 
-    monthSelect.addEventListener('change',()=>generateCalendar(+monthSelect.value,+yearSelect.value));
-    yearSelect.addEventListener('change',()=>generateCalendar(+monthSelect.value,+yearSelect.value));
+    añoSelect.addEventListener("change", () => {
+      añoActual = parseInt(añoSelect.value);
+      generarCalendario(mesActual, añoActual);
+    });
 
-    generateCalendar(new Date().getMonth(),new Date().getFullYear());
+    generarCalendario(mesActual, añoActual);
+
+    // Exponer función toast al guardar
+    window.mostrarToast = function () {
+      const toast = document.getElementById("toast");
+      toast.className = "show";
+      setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
+    };
   </script>
 </body>
 </html>

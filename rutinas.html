@@ -2,105 +2,110 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Rutinas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rutinas - ControlGym</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; }
-    header { background:#007bff; color:white; padding:1rem; text-align:center; }
-    .grid {
-      display:grid;
-      grid-template-columns:1fr;
-      gap:15px;
-      max-width:600px;
-      margin:20px auto;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      padding: 10px;
+    }
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+    #fecha {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: bold;
     }
     .rutina {
-      position:relative;
-      cursor:pointer;
-      border-radius:10px;
-      overflow:hidden;
+      width: 100%;
+      max-width: 500px;
+      height: 180px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 10px auto;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
     }
-    .rutina img {
-      width:100%;
-      display:block;
-      opacity:0.6;
-    }
-    .rutina-title {
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      color:white;
-      font-weight:bold;
-      text-align:center;
-      font-size:1.2rem;
+    .overlay {
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.2em;
+      text-align: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .check {
-      position:absolute;
-      top:10px;
-      right:10px;
-      background:green;
-      color:white;
-      padding:5px;
-      border-radius:50%;
-      font-weight:bold;
-    }
-    .volver {
-      display:block;
-      margin: 20px auto;
-      background:#007bff;
-      color:white;
-      padding:10px 20px;
-      border:none;
-      border-radius:5px;
-      font-size:1rem;
-      cursor:pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      padding: 5px 8px;
+      border-radius: 50%;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h2 id="fecha"></h2>
-  </header>
-  <div class="grid" id="rutinas"></div>
-  <button class="volver" onclick="window.location='index.html'">Volver al calendario</button>
+
+  <h1>Rutinas</h1>
+  <div id="fecha"></div>
+  <div id="contenedor"></div>
 
   <script>
-    const params=new URLSearchParams(window.location.search);
-    const fecha=params.get('fecha');
-    const fechaSpan=document.getElementById('fecha');
-
-    // Formato español dd-mm-aaaa
-    const [y,m,d]=fecha.split('-');
-    fechaSpan.textContent=`${d}-${m}-${y}`;
-
-    const rutinasData=[
-      { titulo:"Pecho, bíceps y abdominales", img:"https://source.unsplash.com/600x400/?bench-press" },
-      { titulo:"Espalda y tríceps", img:"https://source.unsplash.com/600x400/?pullup" },
-      { titulo:"Hombros, trapecio y piernas", img:"https://source.unsplash.com/600x400/?squat" },
-      { titulo:"Pecho y bíceps", img:"https://source.unsplash.com/600x400/?gym" },
-      { titulo:"Espalda y tríceps", img:"https://source.unsplash.com/600x400/?lat-pulldown" },
-      { titulo:"Rodillas", img:"https://source.unsplash.com/600x400/?leg" },
+    const rutinas = [
+      { titulo: "Pecho, bíceps y abdominales", imagen:"https://source.unsplash.com/600x400/?bench-press" },
+      { titulo: "Espalda y tríceps", imagen:"https://source.unsplash.com/600x400/?pullup" },
+      { titulo: "Hombros, trapecio y piernas", imagen:"https://source.unsplash.com/600x400/?squat" },
+      { titulo: "Pecho y bíceps", imagen:"https://source.unsplash.com/600x400/?gym" },
+      { titulo: "Espalda y tríceps", imagen:"https://source.unsplash.com/600x400/?lat-pulldown" },
+      { titulo: "Rodillas", imagen:"https://source.unsplash.com/600x400/?leg" },
     ];
 
-    const container=document.getElementById('rutinas');
-    const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-    const dayData=data[fecha]||{};
+    function formatearFecha(fechaISO) {
+      const [año, mes, dia] = fechaISO.split("-");
+      return `${dia}-${mes}-${año}`;
+    }
 
-    rutinasData.forEach((rutina,i)=>{
-      const div=document.createElement('div');
-      div.className='rutina';
-      div.innerHTML=`
-        <img src="${rutina.img}" alt="${rutina.titulo}">
-        <div class="rutina-title">${rutina.titulo}</div>
-      `;
-      if(dayData[`rutina${i}`]){
-        const check=document.createElement('div');
-        check.textContent='✔';
-        check.className='check';
+    const params = new URLSearchParams(window.location.search);
+    const fecha = params.get('fecha');
+    document.getElementById('fecha').textContent = formatearFecha(fecha);
+
+    const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+
+    rutinas.forEach((rutina, index) => {
+      const div = document.createElement('div');
+      div.className = 'rutina';
+      div.style.backgroundImage = `url(${rutina.imagen})`;
+      div.innerHTML = `<div class="overlay"><h2>${rutina.titulo}</h2></div>`;
+      
+      // Mostrar check si hay datos guardados para esta rutina
+      if (data[fecha] && data[fecha][index]) {
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.textContent = '✓';
         div.appendChild(check);
       }
-      div.addEventListener('click',()=>window.location=`ejercicio.html?fecha=${fecha}&rutina=${i}`);
-      container.appendChild(div);
+
+      div.addEventListener('click', () => {
+        window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${index}`;
+      });
+      document.getElementById('contenedor').appendChild(div);
     });
   </script>
 </body>
