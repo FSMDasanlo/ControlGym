@@ -1,216 +1,127 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ControlGym</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #007bff;
-      color: white;
-      text-align: center;
-      padding: 15px 0;
-      font-size: 1.5em;
-      font-weight: bold;
-    }
-    .selector {
-      text-align: center;
-      margin: 15px 0;
-    }
-    select {
-      padding: 5px 10px;
-      margin: 0 5px;
-      font-size: 1em;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    #nombres-dias {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      max-width: 500px;
-      margin: auto;
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    #calendario {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      max-width: 500px;
-      margin: auto;
-      padding: 10px;
-    }
-    .dia {
-      background: white;
-      text-align: center;
-      padding: 15px 0;
-      border-radius: 8px;
-      cursor: pointer;
-      position: relative;
-      transition: background 0.2s;
-    }
-    .dia:hover {
-      background: #e6f0ff;
-    }
-    .check {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: #28a745;
-      color: white;
-      font-weight: bold;
-      padding: 4px 6px;
-      border-radius: 50%;
-      font-size: 0.8em;
-    }
-    .disabled {
-      color: #bbb;
-      cursor: default;
-      background: #eee;
-    }
-    /* Toast */
-    #toast {
-      visibility: hidden;
-      min-width: 250px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 8px;
-      padding: 12px;
-      position: fixed;
-      z-index: 1;
-      left: 50%;
-      bottom: 30px;
-      transform: translateX(-50%);
-      font-size: 1em;
-    }
-    #toast.show {
-      visibility: visible;
-      animation: fadein 0.5s, fadeout 0.5s 2.5s;
-    }
-    @keyframes fadein {
-      from { bottom: 0; opacity: 0; }
-      to { bottom: 30px; opacity: 1; }
-    }
-    @keyframes fadeout {
-      from { bottom: 30px; opacity: 1; }
-      to { bottom: 0; opacity: 0; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ControlGym</title>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f4f4; margin:0; padding:0; }
+header { background: #007bff; color: white; text-align: center; padding: 15px 0; font-size: 1.5em; font-weight: bold; }
+.selector { text-align: center; margin: 15px 0; }
+select { padding: 5px 10px; margin: 0 5px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; }
+#nombres-dias { display: grid; grid-template-columns: repeat(7, 1fr); max-width:500px; margin:auto; text-align:center; font-weight:bold; margin-bottom:5px; background:#007bff; color:white; border-radius:8px; }
+#nombres-dias div { padding:5px 0; }
+#calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap:5px; max-width:500px; margin:auto; padding:10px; }
+.dia { background: white; text-align: center; padding: 15px 0; border-radius: 8px; cursor: pointer; position: relative; transition: background 0.2s; }
+.dia:hover { background: #e6f0ff; }
+.check { position: absolute; top:5px; right:5px; background:#28a745; color:white; font-weight:bold; padding:4px 6px; border-radius:50%; font-size:0.8em; }
+.disabled { color: #bbb; cursor: default; background: #eee; }
+#toast { visibility:hidden; min-width:250px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:12px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:1em;}
+#toast.show { visibility:visible; animation: fadein 0.5s, fadeout 0.5s 2.5s;}
+@keyframes fadein { from {bottom:0; opacity:0;} to {bottom:30px; opacity:1;} }
+@keyframes fadeout { from {bottom:30px; opacity:1;} to {bottom:0; opacity:0;} }
+</style>
 </head>
 <body>
-  <header>ControlGym</header>
+<header>ControlGym</header>
 
-  <div class="selector">
-    <select id="mes"></select>
-    <select id="año"></select>
-  </div>
+<div class="selector">
+  <select id="mes"></select>
+  <select id="año"></select>
+</div>
 
-  <div id="nombres-dias">
-    <div>Lun</div>
-    <div>Mar</div>
-    <div>Mié</div>
-    <div>Jue</div>
-    <div>Vie</div>
-    <div>Sáb</div>
-    <div>Dom</div>
-  </div>
+<div id="nombres-dias">
+  <div>Lun</div>
+  <div>Mar</div>
+  <div>Mié</div>
+  <div>Jue</div>
+  <div>Vie</div>
+  <div>Sáb</div>
+  <div>Dom</div>
+</div>
 
-  <div id="calendario"></div>
-  <div id="toast">✅ Datos guardados correctamente</div>
+<div id="calendario"></div>
+<div id="toast">✅ Datos guardados correctamente</div>
 
-  <script>
-    const mesSelect = document.getElementById("mes");
-    const añoSelect = document.getElementById("año");
-    const calendario = document.getElementById("calendario");
+<script>
+const mesSelect = document.getElementById("mes");
+const añoSelect = document.getElementById("año");
+const calendario = document.getElementById("calendario");
 
-    const meses = [
-      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-    ];
+const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const hoy = new Date();
+let mesActual = hoy.getMonth();
+let añoActual = hoy.getFullYear();
 
-    const hoy = new Date();
-    let mesActual = hoy.getMonth();
-    let añoActual = hoy.getFullYear();
+meses.forEach((m,i)=>{
+  const option = document.createElement("option");
+  option.value=i;
+  option.textContent=m;
+  if(i===mesActual) option.selected=true;
+  mesSelect.appendChild(option);
+});
 
-    meses.forEach((m,i)=>{
-      const option = document.createElement("option");
-      option.value = i;
-      option.textContent = m;
-      if(i===mesActual) option.selected=true;
-      mesSelect.appendChild(option);
-    });
+for(let i=añoActual-3;i<=añoActual+3;i++){
+  const option=document.createElement("option");
+  option.value=i;
+  option.textContent=i;
+  if(i===añoActual) option.selected=true;
+  añoSelect.appendChild(option);
+}
 
-    for(let i=añoActual-3;i<=añoActual+3;i++){
-      const option = document.createElement("option");
-      option.value=i;
-      option.textContent=i;
-      if(i===añoActual) option.selected=true;
-      añoSelect.appendChild(option);
+function formatearFecha(d){
+  const año=d.getFullYear();
+  const mes=String(d.getMonth()+1).padStart(2,'0');
+  const dia=String(d.getDate()).padStart(2,'0');
+  return `${año}-${mes}-${dia}`;
+}
+
+function generarCalendario(mes,año){
+  calendario.innerHTML="";
+  const primerDia=new Date(año,mes,1);
+  const ultimoDia=new Date(año,mes+1,0);
+  const primerLunes=(primerDia.getDay()+6)%7;
+  const totalDias=ultimoDia.getDate();
+  const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+
+  for(let i=0;i<primerLunes;i++){
+    const div=document.createElement("div");
+    div.className="dia disabled";
+    calendario.appendChild(div);
+  }
+
+  for(let dia=1;dia<=totalDias;dia++){
+    const div=document.createElement("div");
+    div.className="dia";
+    div.textContent=dia;
+    const fechaISO=formatearFecha(new Date(año,mes,dia));
+    if(data[fechaISO]){
+      const check=document.createElement("div");
+      check.className="check";
+      check.textContent="✓";
+      div.appendChild(check);
     }
+    div.addEventListener("click",()=>window.location.href=`rutinas.html?fecha=${fechaISO}`);
+    calendario.appendChild(div);
+  }
+}
 
-    function formatearFecha(d){
-      const año=d.getFullYear();
-      const mes=String(d.getMonth()+1).padStart(2,'0');
-      const dia=String(d.getDate()).padStart(2,'0');
-      return `${año}-${mes}-${dia}`;
-    }
+mesSelect.addEventListener("change",()=>{
+  mesActual=parseInt(mesSelect.value);
+  generarCalendario(mesActual,añoActual);
+});
+añoSelect.addEventListener("change",()=>{
+  añoActual=parseInt(añoSelect.value);
+  generarCalendario(mesActual,añoActual);
+});
 
-    function generarCalendario(mes,año){
-      calendario.innerHTML="";
-      const primerDia=new Date(año,mes,1);
-      const ultimoDia=new Date(año,mes+1,0);
-      const primerLunes=(primerDia.getDay()+6)%7;
-      const totalDias=ultimoDia.getDate();
-      const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+generarCalendario(mesActual,añoActual);
 
-      for(let i=0;i<primerLunes;i++){
-        const div=document.createElement("div");
-        div.className="dia disabled";
-        calendario.appendChild(div);
-      }
-
-      for(let dia=1;dia<=totalDias;dia++){
-        const div=document.createElement("div");
-        div.className="dia";
-        div.textContent=dia;
-        const fechaISO=formatearFecha(new Date(año,mes,dia));
-        if(data[fechaISO]){
-          const check=document.createElement("div");
-          check.className="check";
-          check.textContent="✓";
-          div.appendChild(check);
-        }
-        div.addEventListener("click",()=>{
-          window.location.href=`rutinas.html?fecha=${fechaISO}`;
-        });
-        calendario.appendChild(div);
-      }
-    }
-
-    mesSelect.addEventListener("change",()=>{
-      mesActual=parseInt(mesSelect.value);
-      generarCalendario(mesActual,añoActual);
-    });
-    añoSelect.addEventListener("change",()=>{
-      añoActual=parseInt(añoSelect.value);
-      generarCalendario(mesActual,añoActual);
-    });
-
-    generarCalendario(mesActual,añoActual);
-
-    window.mostrarToast=function(){
-      const toast=document.getElementById("toast");
-      toast.className="show";
-      setTimeout(()=>toast.className=toast.className.replace("show",""),2000);
-    };
-  </script>
+window.mostrarToast=function(){
+  const toast=document.getElementById("toast");
+  toast.className="show";
+  setTimeout(()=>toast.className=toast.className.replace("show",""),2000);
+};
+</script>
 </body>
 </html>
