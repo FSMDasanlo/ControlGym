@@ -1,117 +1,161 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Ejercicio</title>
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#f5f5f5; text-align:center;}
-    h1, h2 { margin:10px 0; }
-    .detalle { font-style: italic; text-align:left; max-width:600px; margin:10px auto;}
-    ul { padding-left:20px; }
-    .imagen {
-      position:relative;
-      height:200px;
-      background-size:cover;
-      background-position:center;
-      opacity:0.3;
-    }
-    table { margin: 20px auto; border-collapse: collapse; max-width:90%;}
-    th, td { border: 1px solid #ccc; padding: 5px; text-align: center;}
-    th { background:#eee; }
-    .form { margin:20px 0; }
-    input { padding:5px; margin:5px; }
-    button { padding:10px 20px; margin:10px 5px; background:#28a745; color:white; border:none; border-radius:5px; }
-    .volver { background:#007bff; }
+    body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; }
+    header { background:#007bff; color:white; padding:1rem; text-align:center; }
+    .container { max-width:800px; margin:20px auto; background:white; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+    img { width:100%; opacity:0.3; border-radius:8px; margin-top:15px; }
+    ul { list-style: disc; margin-left:20px; font-style:italic; }
+    table { width:100%; margin-top:15px; border-collapse: collapse; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#f0f0f0; }
+    .form-row { margin-top:15px; display:flex; gap:10px; }
+    input { flex:1; padding:8px; }
+    button { background:#007bff; color:white; padding:10px; border:none; border-radius:5px; cursor:pointer; }
+    .volver { margin-top:15px; }
   </style>
 </head>
 <body>
-  <h1 id="fecha"></h1>
-  <h2 id="titulo"></h2>
-  <div class="detalle" id="detalle"></div>
-  <div class="imagen" id="imagen"></div>
-
-  <table id="tabla"></table>
-
-  <div class="form">
-    <input type="number" id="peso" placeholder="Peso (kg)">
-    <input type="number" id="reps" placeholder="Repeticiones">
-    <button id="guardar">Guardar</button>
+  <header>
+    <h2 id="fecha"></h2>
+    <h3 id="titulo"></h3>
+  </header>
+  <div class="container">
+    <ul id="detalle"></ul>
+    <img id="imagen" src="" alt="">
+    <table>
+      <thead>
+        <tr id="fechas-row"></tr>
+      </thead>
+      <tbody>
+        <tr id="peso-row"></tr>
+        <tr id="reps-row"></tr>
+      </tbody>
+    </table>
+    <div class="form-row">
+      <input type="number" id="peso" placeholder="Peso (kg)">
+      <input type="number" id="reps" placeholder="Repeticiones">
+      <button onclick="guardarDatos()">Guardar</button>
+    </div>
+    <button class="volver" onclick="window.location='index.html'">Volver al calendario</button>
+    <button class="volver" onclick="window.history.back()">Volver a rutinas</button>
   </div>
 
-  <button class="volver" onclick="window.location.href='rutinas.html?fecha='+fecha">Volver a rutinas</button>
-  <button class="volver" onclick="window.location.href='index.html'">Volver al calendario</button>
-
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const fecha = params.get('fecha');
-    const rutinaIndex = parseInt(params.get('rutina'));
+    const params=new URLSearchParams(window.location.search);
+    const fecha=params.get('fecha');
+    const rutina=params.get('rutina');
 
-    function formatearFecha(fechaISO){
-      const [año, mes, dia] = fechaISO.split("-");
-      return `${dia}-${mes}-${año}`;
-    }
-
-    document.getElementById('fecha').textContent = formatearFecha(fecha) + "\n";
-
-    const rutinas = [
-      { titulo:"Pecho, bíceps y abdominales", detalle:["Press de banca con barra","aperturas en banco inclinado con mancuernas","press inclinado con mancuernas","curl de bíceps con barra","crunch en máquina con carga alta"], imagen:"https://source.unsplash.com/featured/?benchpress" },
-      { titulo:"Espalda y tríceps", detalle:["Dominadas en barra fija","remo con barra","press francés","extensiones de tríceps en polea alta","fondos de tríceps"], imagen:"https://source.unsplash.com/featured/?pullup" },
-      { titulo:"Hombros, trapecio y piernas", detalle:["Elevaciones laterales con mancuernas","trapecios con polea baja","sentadillas con barra","extensiones de piernas","peso muerto con barra","gemelo en máquina"], imagen:"https://source.unsplash.com/featured/?squat" },
-      { titulo:"Pecho y bíceps", detalle:["Press de banca con mancuernas","press declinado con mancuernas","curl de bíceps sentado con mancuerna","curl de bíceps"], imagen:"https://source.unsplash.com/featured/?gym" },
-      { titulo:"Espalda y tríceps", detalle:["Remo en polea baja","peso muerto","extensión vertical alterna con mancuerna","flexiones de tríceps"], imagen:"https://source.unsplash.com/featured/?latpulldown" },
-      { titulo:"Rodillas", detalle:["Rutinas de bajo impacto como sentadillas","elevación de piernas","ejercicios isométricos"], imagen:"https://source.unsplash.com/featured/?leg" },
+    const rutinasData=[
+      { titulo:"Pecho, bíceps y abdominales", detalle:[
+        "Press de banca con barra",
+        "Aperturas en banco inclinado con mancuernas",
+        "Press inclinado con mancuernas",
+        "Curl de bíceps con barra",
+        "Crunch en máquina con carga alta"
+      ], img:"https://source.unsplash.com/600x400/?bench-press" },
+      { titulo:"Espalda y tríceps", detalle:[
+        "Dominadas en barra fija",
+        "Remo con barra",
+        "Press francés",
+        "Extensiones de tríceps en polea alta",
+        "Fondos de tríceps"
+      ], img:"https://source.unsplash.com/600x400/?pullup" },
+      { titulo:"Hombros, trapecio y piernas", detalle:[
+        "Elevaciones laterales con mancuernas",
+        "Trapecios con polea baja",
+        "Sentadillas con barra",
+        "Extensiones de piernas",
+        "Peso muerto con barra",
+        "Gemelo en máquina"
+      ], img:"https://source.unsplash.com/600x400/?squat" },
+      { titulo:"Pecho y bíceps", detalle:[
+        "Press de banca con mancuernas",
+        "Press declinado con mancuernas",
+        "Curl de bíceps sentado con mancuerna",
+        "Curl de bíceps"
+      ], img:"https://source.unsplash.com/600x400/?gym" },
+      { titulo:"Espalda y tríceps", detalle:[
+        "Remo en polea baja",
+        "Peso muerto",
+        "Extensión vertical alterna con mancuerna",
+        "Flexiones de tríceps"
+      ], img:"https://source.unsplash.com/600x400/?lat-pulldown" },
+      { titulo:"Rodillas", detalle:[
+        "Sentadillas",
+        "Elevación de piernas",
+        "Ejercicios isométricos"
+      ], img:"https://source.unsplash.com/600x400/?leg" },
     ];
 
-    const rutina = rutinas[rutinaIndex];
-    document.getElementById('titulo').textContent = rutina.titulo;
-    document.getElementById('detalle').innerHTML = `<ul>${rutina.detalle.map(d=>`<li>${d}</li>`).join('')}</ul>`;
-    document.getElementById('imagen').style.backgroundImage=`url(${rutina.imagen})`;
+    const [y,m,d]=fecha.split('-');
+    document.getElementById('fecha').textContent=`${d}-${m}-${y}`;
+    document.getElementById('titulo').textContent=rutinasData[rutina].titulo;
 
-    const registros = JSON.parse(localStorage.getItem('gymData')||'{}');
-    if(!registros[fecha]) registros[fecha]={};
-    if(!registros[fecha][rutinaIndex]) registros[fecha][rutinaIndex]={fechas:[], pesos:[], reps:[]};
+    const ul=document.getElementById('detalle');
+    rutinasData[rutina].detalle.forEach(t=>{
+      const li=document.createElement('li');
+      li.textContent=t;
+      ul.appendChild(li);
+    });
 
-    const datos = registros[fecha][rutinaIndex];
+    document.getElementById('imagen').src=rutinasData[rutina].img;
 
-    function renderTabla(){
-      const tabla = document.getElementById('tabla');
-      tabla.innerHTML='';
-      if(datos.fechas.length===0) return;
+    const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+    if(!data[fecha]) data[fecha]={};
 
-      // Ordenar por fecha
-      const indices = datos.fechas
-        .map((f,i)=>({f: new Date(f), i}))
-        .sort((a,b)=>a.f - b.f)
-        .map(obj=>obj.i);
+    const rutinaKey=`rutina${rutina}`;
+    if(!data[fecha][rutinaKey]) data[fecha][rutinaKey]={};
 
-      const fechasOrdenadas = indices.map(i=>datos.fechas[i]);
-      const pesosOrdenados = indices.map(i=>datos.pesos[i]);
-      const repsOrdenados = indices.map(i=>datos.reps[i]);
-
-      const thead = tabla.insertRow();
-      thead.innerHTML = `<th>Día</th>${fechasOrdenadas.map(f=>`<th>${formatearFecha(f)}</th>`).join('')}<th>Resumen</th>`;
-
-      const rowPeso = tabla.insertRow();
-      rowPeso.innerHTML = `<td>Peso</td>${pesosOrdenados.map(p=>`<td>${p}</td>`).join('')}<td>${(pesosOrdenados.reduce((a,b)=>a+b,0)/pesosOrdenados.length).toFixed(2)}</td>`;
-
-      const rowReps = tabla.insertRow();
-      rowReps.innerHTML = `<td>Repeticiones</td>${repsOrdenados.map(r=>`<td>${r}</td>`).join('')}<td>${(repsOrdenados.reduce((a,b)=>a+b,0)/repsOrdenados.length).toFixed(0)}</td>`;
+    const historial = {};
+    for (const key in data){
+      if(data[key][rutinaKey]){
+        historial[key]=data[key][rutinaKey];
+      }
     }
 
-    renderTabla();
+    const fechasOrdenadas = Object.keys(historial).sort((a,b)=>new Date(a)-new Date(b));
+    const fechasRow=document.getElementById('fechas-row');
+    const pesoRow=document.getElementById('peso-row');
+    const repsRow=document.getElementById('reps-row');
 
-    document.getElementById('guardar').addEventListener('click',()=>{
-      const peso = parseFloat(document.getElementById('peso').value)||0;
-      const reps = parseInt(document.getElementById('reps').value)||0;
-      const hoyISO = fecha;
-      datos.fechas.push(hoyISO);
-      datos.pesos.push(peso);
-      datos.reps.push(reps);
-      localStorage.setItem('gymData',JSON.stringify(registros));
-      renderTabla();
-      alert('Datos guardados correctamente 💪');
+    fechasRow.innerHTML='<th>Día</th>';
+    pesoRow.innerHTML='<td>Peso</td>';
+    repsRow.innerHTML='<td>Repeticiones</td>';
+
+    let totalPeso=0, totalReps=0, count=0;
+
+    fechasOrdenadas.forEach(key=>{
+      const [yy,mm,dd]=key.split('-');
+      fechasRow.innerHTML+=`<th>${dd}-${mm}-${yy}</th>`;
+      pesoRow.innerHTML+=`<td>${historial[key].peso||'-'}</td>`;
+      repsRow.innerHTML+=`<td>${historial[key].reps||'-'}</td>`;
+      if(historial[key].peso){
+        totalPeso+=Number(historial[key].peso);
+        count++;
+      }
+      if(historial[key].reps){
+        totalReps+=Number(historial[key].reps);
+      }
     });
+
+    if(count>0){
+      fechasRow.innerHTML+=`<th>Resumen</th>`;
+      pesoRow.innerHTML+=`<td>${(totalPeso/count).toFixed(2)}</td>`;
+      repsRow.innerHTML+=`<td>${(totalReps/count).toFixed(0)}</td>`;
+    }
+
+    function guardarDatos(){
+      const peso=document.getElementById('peso').value;
+      const reps=document.getElementById('reps').value;
+      data[fecha][rutinaKey]={ peso, reps };
+      localStorage.setItem('gymData',JSON.stringify(data));
+      alert('✅ Datos guardados correctamente');
+      location.reload();
+    }
   </script>
 </body>
 </html>

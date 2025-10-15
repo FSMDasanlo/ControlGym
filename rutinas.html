@@ -1,88 +1,106 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Rutinas</title>
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#f5f5f5; }
-    h1 { text-align:center; margin:20px 0;}
-    .contenedor { display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:10px; padding:10px;}
+    body { font-family: Arial, sans-serif; margin:0; background:#f4f6f8; }
+    header { background:#007bff; color:white; padding:1rem; text-align:center; }
+    .grid {
+      display:grid;
+      grid-template-columns:1fr;
+      gap:15px;
+      max-width:600px;
+      margin:20px auto;
+    }
     .rutina {
       position:relative;
-      height:120px;
-      background-size:cover;
-      background-position:center;
       cursor:pointer;
-      border-radius:8px;
+      border-radius:10px;
       overflow:hidden;
     }
-    .overlay {
+    .rutina img {
+      width:100%;
+      display:block;
+      opacity:0.6;
+    }
+    .rutina-title {
       position:absolute;
-      top:0; left:0; right:0; bottom:0;
-      background-color:rgba(0,0,0,0.4);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
       color:white;
       font-weight:bold;
       text-align:center;
-      font-size:1em;
-      padding:5px;
+      font-size:1.2rem;
     }
-    .check-icon {
+    .check {
       position:absolute;
-      top:5px;
-      right:5px;
-      font-size:1.2em;
-      color:lime;
+      top:10px;
+      right:10px;
+      background:green;
+      color:white;
+      padding:5px;
+      border-radius:50%;
+      font-weight:bold;
     }
-    button { margin:20px auto; display:block; padding:10px 20px; font-size:16px; background:#007bff; color:white; border:none; border-radius:5px;}
+    .volver {
+      display:block;
+      margin: 20px auto;
+      background:#007bff;
+      color:white;
+      padding:10px 20px;
+      border:none;
+      border-radius:5px;
+      font-size:1rem;
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
-  <h1 id="fecha"></h1>
-  <div class="contenedor" id="contenedor"></div>
-  <button onclick="window.location.href='index.html'">Volver al calendario</button>
+  <header>
+    <h2 id="fecha"></h2>
+  </header>
+  <div class="grid" id="rutinas"></div>
+  <button class="volver" onclick="window.location='index.html'">Volver al calendario</button>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const fecha = params.get('fecha');
+    const params=new URLSearchParams(window.location.search);
+    const fecha=params.get('fecha');
+    const fechaSpan=document.getElementById('fecha');
 
-    function formatearFecha(fechaISO){
-      const [año, mes, dia] = fechaISO.split("-");
-      return `${dia}-${mes}-${año}`;
-    }
+    // Formato español dd-mm-aaaa
+    const [y,m,d]=fecha.split('-');
+    fechaSpan.textContent=`${d}-${m}-${y}`;
 
-    document.getElementById('fecha').textContent = formatearFecha(fecha);
-
-    const rutinas = [
-      { titulo: "Pecho, bíceps y abdominales", imagen:"https://source.unsplash.com/featured/?benchpress" },
-      { titulo: "Espalda y tríceps", imagen:"https://source.unsplash.com/featured/?pullup" },
-      { titulo: "Hombros, trapecio y piernas", imagen:"https://source.unsplash.com/featured/?squat" },
-      { titulo: "Pecho y bíceps", imagen:"https://source.unsplash.com/featured/?gym" },
-      { titulo: "Espalda y tríceps", imagen:"https://source.unsplash.com/featured/?latpulldown" },
-      { titulo: "Rodillas", imagen:"https://source.unsplash.com/featured/?leg" },
+    const rutinasData=[
+      { titulo:"Pecho, bíceps y abdominales", img:"https://source.unsplash.com/600x400/?bench-press" },
+      { titulo:"Espalda y tríceps", img:"https://source.unsplash.com/600x400/?pullup" },
+      { titulo:"Hombros, trapecio y piernas", img:"https://source.unsplash.com/600x400/?squat" },
+      { titulo:"Pecho y bíceps", img:"https://source.unsplash.com/600x400/?gym" },
+      { titulo:"Espalda y tríceps", img:"https://source.unsplash.com/600x400/?lat-pulldown" },
+      { titulo:"Rodillas", img:"https://source.unsplash.com/600x400/?leg" },
     ];
 
-    const registros = JSON.parse(localStorage.getItem('gymData')||'{}');
-    const contenedor = document.getElementById('contenedor');
+    const container=document.getElementById('rutinas');
+    const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+    const dayData=data[fecha]||{};
 
-    rutinas.forEach((rutina, index)=>{
-      const div = document.createElement('div');
+    rutinasData.forEach((rutina,i)=>{
+      const div=document.createElement('div');
       div.className='rutina';
-      div.style.backgroundImage=`url(${rutina.imagen})`;
-      div.innerHTML=`<div class="overlay"><h2>${rutina.titulo}</h2></div>`;
-      if(registros[fecha] && registros[fecha][index]) {
-        const check = document.createElement('div');
-        check.className='check-icon';
-        check.textContent='✔️';
+      div.innerHTML=`
+        <img src="${rutina.img}" alt="${rutina.titulo}">
+        <div class="rutina-title">${rutina.titulo}</div>
+      `;
+      if(dayData[`rutina${i}`]){
+        const check=document.createElement('div');
+        check.textContent='✔';
+        check.className='check';
         div.appendChild(check);
       }
-      div.addEventListener('click',()=>{
-        window.location.href=`ejercicio.html?fecha=${fecha}&rutina=${index}`;
-      });
-      contenedor.appendChild(div);
+      div.addEventListener('click',()=>window.location=`ejercicio.html?fecha=${fecha}&rutina=${i}`);
+      container.appendChild(div);
     });
   </script>
 </body>

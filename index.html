@@ -1,99 +1,174 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Control Gym</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:0; text-align:center;}
-    h1 { color:#333; margin-top:20px;}
-    #controls { margin: 20px 0; }
-    select { padding:5px; margin:0 5px; font-size:16px; }
-    table { margin: 0 auto; border-collapse: collapse; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background:#eee; }
-    td.check::after {
-      content: "✔️";
-      color: green;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
     }
-    button { padding:10px 20px; margin-top:20px; font-size:16px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;}
+    header {
+      background: #007bff;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .calendar {
+      max-width: 500px;
+      margin: 20px auto;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #007bff;
+      color: white;
+      padding: 5px;
+    }
+    td {
+      width: 14.28%;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+    td:hover {
+      background: #e9ecef;
+    }
+    .check {
+      color: green;
+      font-weight: bold;
+      margin-left: 5px;
+    }
+    select {
+      padding: 5px;
+      margin: 10px;
+      font-size: 1rem;
+    }
+    .stats-btn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Control Gym</h1>
-  <div id="controls">
-    <select id="mes"></select>
-    <select id="anio"></select>
+  <header>
+    <h1>Control Gym</h1>
+  </header>
+
+  <div class="calendar">
+    <div style="text-align:center;">
+      <select id="month"></select>
+      <select id="year"></select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>L</th>
+          <th>M</th>
+          <th>X</th>
+          <th>J</th>
+          <th>V</th>
+          <th>S</th>
+          <th>D</th>
+        </tr>
+      </thead>
+      <tbody id="calendar-body"></tbody>
+    </table>
   </div>
-  <div id="calendario"></div>
 
   <script>
-    const hoy = new Date();
-    const mesSelect = document.getElementById('mes');
-    const anioSelect = document.getElementById('anio');
-    const calendarioDiv = document.getElementById('calendario');
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+    const calendarBody = document.getElementById('calendar-body');
 
-    for(let m=0;m<12;m++){
-      const opt = document.createElement('option');
-      opt.value = m;
-      opt.textContent = new Date(2000,m).toLocaleString('es-ES',{month:'long'});
-      if(m===hoy.getMonth()) opt.selected=true;
-      mesSelect.appendChild(opt);
+    const months = [
+      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+    ];
+
+    for (let i=0;i<12;i++){
+      let opt=document.createElement('option');
+      opt.value=i;
+      opt.textContent=months[i];
+      monthSelect.appendChild(opt);
     }
 
-    const añoActual = hoy.getFullYear();
-    for(let a=añoActual-2;a<=añoActual+2;a++){
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      if(a===añoActual) opt.selected=true;
-      anioSelect.appendChild(opt);
+    const currentYear=new Date().getFullYear();
+    for (let y=currentYear-5;y<=currentYear+5;y++){
+      let opt=document.createElement('option');
+      opt.value=y;
+      opt.textContent=y;
+      yearSelect.appendChild(opt);
     }
 
-    mesSelect.addEventListener('change',renderCalendar);
-    anioSelect.addEventListener('change',renderCalendar);
-
-    function formatearFechaISO(fecha){
-      const [año, mes, dia] = fecha.split("-");
-      return `${dia}-${mes}-${año}`;
+    function formatDateToKey(date){
+      const d=String(date.getDate()).padStart(2,'0');
+      const m=String(date.getMonth()+1).padStart(2,'0');
+      const y=date.getFullYear();
+      return `${y}-${m}-${d}`;
     }
 
-    function renderCalendar(){
-      const mes = parseInt(mesSelect.value);
-      const anio = parseInt(anioSelect.value);
-      const primerDia = new Date(anio,mes,1);
-      const ultimoDia = new Date(anio,mes+1,0);
-      const inicio = (primerDia.getDay()+6)%7;
-      const tabla = document.createElement('table');
-      const encabezado = tabla.insertRow();
-      ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d=>{
-        const th = document.createElement('th');
-        th.textContent = d;
-        encabezado.appendChild(th);
-      });
+    function formatDateToSpanish(key){
+      const [y,m,d]=key.split('-');
+      return `${d}-${m}-${y}`;
+    }
 
-      let fila = tabla.insertRow();
-      for(let i=0;i<inicio;i++) fila.insertCell();
+    function generateCalendar(month,year){
+      calendarBody.innerHTML='';
+      const firstDay=(new Date(year,month,1).getDay()+6)%7; 
+      const daysInMonth=new Date(year,month+1,0).getDate();
+      let date=1;
 
-      const registros = JSON.parse(localStorage.getItem('gymData')||'{}');
+      for (let i=0;i<6;i++){
+        const row=document.createElement('tr');
+        for (let j=0;j<7;j++){
+          const cell=document.createElement('td');
+          if (i===0 && j<firstDay){
+            cell.textContent='';
+          } else if (date>daysInMonth){
+            cell.textContent='';
+          } else {
+            const key=`${year}-${String(month+1).padStart(2,'0')}-${String(date).padStart(2,'0')}`;
+            cell.textContent=date;
+            cell.addEventListener('click',()=>window.location=`rutinas.html?fecha=${key}`);
 
-      for(let d=1; d<=ultimoDia.getDate(); d++){
-        if(fila.cells.length===7) fila = tabla.insertRow();
-        const celda = fila.insertCell();
-        celda.textContent=d;
-        const fechaISO = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        if(registros[fechaISO]) celda.classList.add('check');
-        celda.style.cursor='pointer';
-        celda.onclick=()=>{
-          window.location.href=`rutinas.html?fecha=${fechaISO}`;
-        };
+            const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+            if(data[key]) {
+              const check=document.createElement('span');
+              check.textContent='✔';
+              check.className='check';
+              cell.appendChild(check);
+            }
+            date++;
+          }
+          row.appendChild(cell);
+        }
+        calendarBody.appendChild(row);
       }
-
-      calendarioDiv.innerHTML='';
-      calendarioDiv.appendChild(tabla);
     }
 
-    renderCalendar();
+    monthSelect.value=new Date().getMonth();
+    yearSelect.value=new Date().getFullYear();
+
+    monthSelect.addEventListener('change',()=>generateCalendar(+monthSelect.value,+yearSelect.value));
+    yearSelect.addEventListener('change',()=>generateCalendar(+monthSelect.value,+yearSelect.value));
+
+    generateCalendar(new Date().getMonth(),new Date().getFullYear());
   </script>
 </body>
 </html>
