@@ -31,13 +31,44 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   font-size:20px;
   color:limegreen;
 }
+
+.boton-volver {
+  display: block;
+  width: 90%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 12px;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+.boton-volver.rutinas {
+  background: linear-gradient(45deg, #6c757d, #5a6268);
+  color: white;
+}
+.boton-volver.ejercicios {
+  background: linear-gradient(45deg, #28a745, #218838);
+  color: white;
+}
+.boton-volver:hover {
+  opacity: 0.9;
+}
+.boton-volver i {
+  margin-right: 8px;
+}
 </style>
 </head>
 <body>
 <h1>Selecciona un ejercicio</h1>
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
-<a id="volverRutinas" href="rutinas.html?fecha=${fecha}" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#6c757d; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Rutinas</a>
+<a class="boton-volver rutinas" href="rutinas.html?fecha=${fecha}">
+  <i>🏠</i> Volver a Rutinas
+</a>
+
 <div id="lista"></div>
 
 <script>
@@ -74,5 +105,6 @@ rutina.ejercicios.forEach((ej,i)=>{
   cont.appendChild(btn);
 });
 </script>
+
 </body>
 </html>

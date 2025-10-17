@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ControlGym - Calendario</title>
+<link rel="manifest" href="manifest.json">
+
 <style>
 body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
 h1 { text-align: center; padding: 10px; background: #007bff; color: white; }
@@ -113,5 +115,13 @@ function generarCalendario(){
 mesSelect.onchange=anioSelect.onchange=generarCalendario;
 generarCalendario();
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker registrado'))
+    .catch(error => console.error('Error al registrar SW:', error));
+}
+</script>
+
 </body>
 </html>

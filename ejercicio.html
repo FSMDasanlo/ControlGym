@@ -21,6 +21,35 @@ button:hover { background:#218838;}
 #toast.show { visibility:visible; animation: fadein 0.3s, fadeout 0.3s 1.7s;}
 @keyframes fadein {from {bottom:0;opacity:0;} to {bottom:30px;opacity:1;}}
 @keyframes fadeout {from {bottom:30px;opacity:1;} to {bottom:0;opacity:0;}}
+
+.boton-volver {
+  display: block;
+  width: 90%;
+  max-width: 500px;
+  margin: 10px auto;
+  padding: 12px;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+.boton-volver.rutinas {
+  background: linear-gradient(45deg, #6c757d, #5a6268);
+  color: white;
+}
+.boton-volver.ejercicios {
+  background: linear-gradient(45deg, #28a745, #218838);
+  color: white;
+}
+.boton-volver:hover {
+  opacity: 0.9;
+}
+.boton-volver i {
+  margin-right: 8px;
+}
+
 </style>
 </head>
 <body>
@@ -40,8 +69,12 @@ button:hover { background:#218838;}
   <button onclick="guardarDatos()">Guardar</button>
 </div>
 
-<a id="volverEjercicios" href="#" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#28a745; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Ejercicios</a>
-<a id="volverRutinas" href="rutinas.html?fecha=${fecha}" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#6c757d; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Rutinas</a>
+<a id="volverEjercicios" class="boton-volver ejercicios" href="#">
+  <i>↩️</i> Volver a Ejercicios
+</a>
+<a id="volverRutinas" class="boton-volver rutinas" href="#">
+  <i>🏠</i> Volver a Rutinas
+</a>
 
 <div id="toast">✅ Datos guardados</div>
 
