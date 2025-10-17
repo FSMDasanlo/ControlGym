@@ -54,15 +54,43 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   background: linear-gradient(45deg, #28a745, #218838);
   color: white;
 }
+
+.boton-volver.calendario {
+  background: linear-gradient(45deg, #17a2b8, #138496);
+  color: white;
+}
+.botones-volver {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 90%;
+  max-width: 500px;
+  margin: 10px auto;
+}
+
+.botones-volver .boton-volver {
+  flex: 1;
+  padding: 10px;
+  font-size: 1em;
+}
+
 </style>
 </head>
 <body>
 <h1>Selecciona un ejercicio</h1>
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
-<a class="boton-volver rutinas" id="volverRutinas">
-  <i>🏠</i> Volver a Rutinas
-</a>
+
+<div class="botones-volver">
+  <a class="boton-volver rutinas" id="volverRutinas" href="#">
+    <i>🏠</i> Rutinas
+  </a>
+  <a class="boton-volver calendario" id="volverCalendario" href="index.html">
+    <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px; vertical-align: middle; margin-right: 6px;">
+    Calendario
+  </a>
+</div>
+
 <div id="lista"></div>
 <button class="boton-ejercicio boton-add" onclick="agregarEjercicio()">+ Añadir ejercicio</button>
 
