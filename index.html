@@ -1,128 +1,117 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ControlGym</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ControlGym - Calendario</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f4f4f4; margin:0; padding:0; }
-header { background: #007bff; color: white; text-align: center; padding: 15px 0; font-size: 1.5em; font-weight: bold; }
-.selector { text-align: center; margin: 15px 0; }
-select { padding: 5px 10px; margin: 0 5px; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; }
-#nombres-dias { display: grid; grid-template-columns: repeat(7, 1fr); max-width:500px; margin:auto; text-align:center; font-weight:bold; margin-bottom:5px; background:#004d4d; color:white; border-radius:3px; }
-#nombres-dias div { padding:5px 0; }
-#calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap:5px; max-width:500px; margin:auto; padding:10px; }
-.dia { background: white; text-align: center; padding: 15px 0; border-radius: 8px; cursor: pointer; position: relative; transition: background 0.2s; }
-.dia:hover { background: #e6f0ff; }
-.check { position: absolute; top:5px; right:5px; background:#28a745; color:white; font-weight:bold; padding:4px 6px; border-radius:50%; font-size:0.8em; }
-.disabled { color: #bbb; cursor: default; background: #eee; }
-#toast { visibility:hidden; min-width:250px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:12px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:1em;}
-#toast.show { visibility:visible; animation: fadein 0.5s, fadeout 0.5s 2.5s;}
-@keyframes fadein { from {bottom:0; opacity:0;} to {bottom:30px; opacity:1;} }
-@keyframes fadeout { from {bottom:30px; opacity:1;} to {bottom:0; opacity:0;} }
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+h1 { text-align: center; padding: 10px; background: #007bff; color: white; }
+#controles { text-align: center; margin: 10px 0; }
+select { padding: 5px; margin: 0 5px; }
+#nombres-dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #007bff;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
+#nombres-dias div { padding: 5px 0; }
+#calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  max-width: 600px;
+  margin: auto;
+}
+.dia {
+  background: white;
+  padding: 15px 0;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  font-size: 16px;
+}
+.dia:hover { background: #e0e0e0; }
+.check {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  color: green;
+  font-size: 14px;
+}
+#nombres-dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #007bff;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  max-width: 600px;     /* Añadido */
+  margin: auto;         /* Añadido */
+}
+
 </style>
 </head>
 <body>
-<header>ControlGym</header>
-
-<div class="selector">
+<h1>ControlGym</h1>
+<div id="controles">
   <select id="mes"></select>
-  <select id="año"></select>
+  <select id="anio"></select>
 </div>
-
 <div id="nombres-dias">
-  <div>Lun</div>
-  <div>Mar</div>
-  <div>Mié</div>
-  <div>Jue</div>
-  <div>Vie</div>
-  <div>Sáb</div>
-  <div>Dom</div>
+  <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
 </div>
-
 <div id="calendario"></div>
-<div id="toast">✅ Datos guardados correctamente</div>
 
 <script>
-const mesSelect = document.getElementById("mes");
-const añoSelect = document.getElementById("año");
-const calendario = document.getElementById("calendario");
+const mesSelect=document.getElementById('mes');
+const anioSelect=document.getElementById('anio');
+const calendario=document.getElementById('calendario');
+const hoy=new Date();
+const data=JSON.parse(localStorage.getItem('gymData')||'{}');
 
-const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const hoy = new Date();
-let mesActual = hoy.getMonth();
-let añoActual = hoy.getFullYear();
-
-meses.forEach((m,i)=>{
-  const option = document.createElement("option");
-  option.value=i;
-  option.textContent=m;
-  if(i===mesActual) option.selected=true;
-  mesSelect.appendChild(option);
-});
-
-for(let i=añoActual-3;i<=añoActual+3;i++){
-  const option=document.createElement("option");
-  option.value=i;
-  option.textContent=i;
-  if(i===añoActual) option.selected=true;
-  añoSelect.appendChild(option);
+for(let i=0;i<12;i++){
+  const opt=document.createElement('option');
+  opt.value=i;
+  opt.textContent=new Date(0,i).toLocaleString('es',{month:'long'});
+  if(i===hoy.getMonth()) opt.selected=true;
+  mesSelect.appendChild(opt);
+}
+for(let i=hoy.getFullYear()-1;i<=hoy.getFullYear()+1;i++){
+  const opt=document.createElement('option');
+  opt.value=i;
+  opt.textContent=i;
+  if(i===hoy.getFullYear()) opt.selected=true;
+  anioSelect.appendChild(opt);
 }
 
-function formatearFecha(d){
-  const año=d.getFullYear();
-  const mes=String(d.getMonth()+1).padStart(2,'0');
-  const dia=String(d.getDate()).padStart(2,'0');
-  return `${año}-${mes}-${dia}`;
-}
-
-function generarCalendario(mes,año){
-  calendario.innerHTML="";
-  const primerDia=new Date(año,mes,1);
-  const ultimoDia=new Date(año,mes+1,0);
-  const primerLunes=(primerDia.getDay()+6)%7;
-  const totalDias=ultimoDia.getDate();
-  const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-
-  for(let i=0;i<primerLunes;i++){
-    const div=document.createElement("div");
-    div.className="dia disabled";
-    calendario.appendChild(div);
-  }
-
-  for(let dia=1;dia<=totalDias;dia++){
-    const div=document.createElement("div");
-    div.className="dia";
+function generarCalendario(){
+  calendario.innerHTML='';
+  const mes=parseInt(mesSelect.value);
+  const anio=parseInt(anioSelect.value);
+  const primerDia=new Date(anio,mes,1);
+  const ultimoDia=new Date(anio,mes+1,0);
+  let inicio=(primerDia.getDay()+6)%7; 
+  for(let i=0;i<inicio;i++) calendario.appendChild(document.createElement('div'));
+  for(let dia=1;dia<=ultimoDia.getDate();dia++){
+    const div=document.createElement('div');
+    div.className='dia';
     div.textContent=dia;
-    const fechaISO=formatearFecha(new Date(año,mes,dia));
-    if(data[fechaISO]){
-      const check=document.createElement("div");
-      check.className="check";
-      check.textContent="✓";
+    const fechaStr=`${anio}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    if(data[fechaStr]) {
+      const check=document.createElement('div');
+      check.className='check';
+      check.textContent='✓';
       div.appendChild(check);
     }
-    div.addEventListener("click",()=>window.location.href=`rutinas.html?fecha=${fechaISO}`);
+    div.onclick=()=>window.location.href=`rutinas.html?fecha=${fechaStr}`;
     calendario.appendChild(div);
   }
 }
-
-mesSelect.addEventListener("change",()=>{
-  mesActual=parseInt(mesSelect.value);
-  generarCalendario(mesActual,añoActual);
-});
-añoSelect.addEventListener("change",()=>{
-  añoActual=parseInt(añoSelect.value);
-  generarCalendario(mesActual,añoActual);
-});
-
-generarCalendario(mesActual,añoActual);
-
-window.mostrarToast=function(){
-  const toast=document.getElementById("toast");
-  toast.className="show";
-  setTimeout(()=>toast.className=toast.className.replace("show",""),2000);
-};
+mesSelect.onchange=anioSelect.onchange=generarCalendario;
+generarCalendario();
 </script>
 </body>
 </html>
-

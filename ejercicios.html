@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejercicios</title>
+<style>
+body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
+h1 { text-align:center; color:#007bff; padding:10px;}
+#fecha, #tituloRutina { text-align:center; font-weight:bold; margin-bottom:10px;}
+.boton-ejercicio {
+  display:block;
+  width:90%;
+  max-width:500px;
+  margin:10px auto;
+  padding:15px;
+  background:#007bff;
+  color:white;
+  font-size:1.1em;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
+  position:relative;
+}
+.boton-ejercicio:hover { background:#0056b3; }
+.check {
+  position:absolute;
+  top:10px;
+  right:10px;
+  font-size:20px;
+  color:limegreen;
+}
+</style>
+</head>
+<body>
+<h1>Selecciona un ejercicio</h1>
+<div id="fecha"></div>
+<div id="tituloRutina"></div>
+<div id="lista"></div>
+
+<script>
+const rutinas=[
+{titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
+{titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
+{titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
+{titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
+{titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
+{titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
+];
+
+const params=new URLSearchParams(window.location.search);
+const fecha=params.get('fecha');
+const rutinaIndex=params.get('rutina');
+const rutina=rutinas[rutinaIndex];
+document.getElementById('fecha').textContent=fecha.split('-').reverse().join('-');
+document.getElementById('tituloRutina').textContent=rutina.titulo;
+
+const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+const cont=document.getElementById('lista');
+
+rutina.ejercicios.forEach((ej,i)=>{
+  const btn=document.createElement('button');
+  btn.className='boton-ejercicio';
+  btn.textContent=ej;
+  if(data[fecha] && data[fecha][rutinaIndex] && data[fecha][rutinaIndex][i]){
+    const check=document.createElement('div');
+    check.className='check';
+    check.textContent='✓';
+    btn.appendChild(check);
+  }
+  btn.onclick=()=>window.location.href=`ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
+  cont.appendChild(btn);
+});
+</script>
+</body>
+</html>

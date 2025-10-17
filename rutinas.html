@@ -3,52 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rutinas - ControlGym</title>
+<title>Rutinas</title>
 <style>
-body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
-header { background:#007bff; color:white; text-align:center; padding:15px; font-size:1.5em; font-weight:bold; }
-.rutina { position: relative; margin:10px auto; max-width:500px; border-radius:30px; overflow:hidden; cursor:pointer; }
-.rutina img { width:100%; opacity:0.6; display:block; }
-.rutina .titulo { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-weight:bold; font-size:2.0em; color:#004d4d; text-align:center; }
-.check { position:absolute; top:5px; right:5px; background:#28a745; color:white; font-weight:bold; padding:4px 6px; border-radius:50%; font-size:0.8em; }
-#volver { display:block; width:100%; max-width:500px; margin:10px auto; text-align:center; background:#007bff; color:white; padding:8px; text-decoration:none; border-radius:5px;}
+body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
+h1 { text-align:center; color:#007bff; padding:10px;}
+#fecha { text-align:center; font-weight:bold; margin-bottom:10px;}
+.rutina { position:relative; margin:10px auto; max-width:500px; cursor:pointer; }
+.rutina img { width:100%; opacity:0.5; border-radius:10px; }
+.rutina span { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:1.2em; font-weight:bold; color:black; text-align:center; }
+.check { position:absolute; top:10px; right:10px; color:green; font-size:20px; }
 </style>
 </head>
 <body>
-<header>Rutinas</header>
-<div id="rutinas"></div>
-<a id="volver" href="index.html">Volver al calendario</a>
+<h1>Selecciona una rutina</h1>
+<div id="fecha"></div>
+<div id="contenedor"></div>
+
 <script>
-const rutinasData = [
-  {titulo:"Pecho, bíceps y abdominales", imagen:"img/rutina1.jpg"},
-  {titulo:"Espalda y tríceps", imagen:"img/rutina2.jpg"},
-  {titulo:"Hombros, trapecio y piernas", imagen:"img/rutina3.jpg"},
-  {titulo:"Pecho y bíceps", imagen:"img/rutina4.jpg"},
-  {titulo:"Espalda y tríceps", imagen:"img/rutina5.jpg"},
-  {titulo:"Rodillas", imagen:"img/rutina6.jpg"}
+const rutinas=[
+{titulo:"Pecho, bíceps y abdominales", imagen:"img/rutina1.jpg"},
+{titulo:"Espalda y tríceps", imagen:"img/rutina2.jpg"},
+{titulo:"Hombros, trapecio y piernas", imagen:"img/rutina3.jpg"},
+{titulo:"Pecho y bíceps", imagen:"img/rutina4.jpg"},
+{titulo:"Espalda y tríceps", imagen:"img/rutina5.jpg"},
+{titulo:"Rodillas", imagen:"img/rutina6.jpg"}
 ];
+const params=new URLSearchParams(window.location.search);
+const fecha=params.get('fecha');
+document.getElementById('fecha').textContent=fecha.split('-').reverse().join('-');
+const cont=document.getElementById('contenedor');
+const data=JSON.parse(localStorage.getItem('gymData')||'{}');
 
-const params = new URLSearchParams(window.location.search);
-const fecha = params.get('fecha');
-const data = JSON.parse(localStorage.getItem('gymData')||'{}');
-const cont = document.getElementById('rutinas');
-
-rutinasData.forEach((r,i)=>{
+rutinas.forEach((r,i)=>{
   const div=document.createElement('div');
   div.className='rutina';
-  div.innerHTML=`<img src="${r.imagen}"><div class="titulo">${r.titulo}</div>`;
-  if(data[fecha] && data[fecha][i]){
+  div.innerHTML=`<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;
+  if(data[fecha] && data[fecha][i]) {
     const check=document.createElement('div');
     check.className='check';
     check.textContent='✓';
     div.appendChild(check);
   }
-  div.addEventListener('click',()=>window.location.href=`ejercicio.html?fecha=${fecha}&rutina=${i}`);
+  div.onclick=()=>window.location.href=`ejercicios.html?fecha=${fecha}&rutina=${i}`;
   cont.appendChild(div);
 });
 </script>
 </body>
 </html>
-
-
-
