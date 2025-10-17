@@ -37,6 +37,7 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 <h1>Selecciona un ejercicio</h1>
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
+<a id="volverRutinas" href="rutinas.html?fecha=${fecha}" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#6c757d; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Rutinas</a>
 <div id="lista"></div>
 
 <script>
@@ -63,7 +64,7 @@ rutina.ejercicios.forEach((ej,i)=>{
   const btn=document.createElement('button');
   btn.className='boton-ejercicio';
   btn.textContent=ej;
-  if(data[fecha] && data[fecha][rutinaIndex] && data[fecha][rutinaIndex][i]){
+  if(data[fecha] && data[fecha][rutinaIndex] && Array.isArray(data[fecha][rutinaIndex][i]) && data[fecha][rutinaIndex][i].length > 0){
     const check=document.createElement('div');
     check.className='check';
     check.textContent='✓';

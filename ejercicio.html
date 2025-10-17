@@ -24,7 +24,7 @@ button:hover { background:#218838;}
 </style>
 </head>
 <body>
-<<h1 id="tituloPrincipal">Ejercicio</h1>
+<h1 id="tituloPrincipal">Ejercicio</h1>
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
 <div id="tituloEjercicio"></div>
@@ -40,7 +40,8 @@ button:hover { background:#218838;}
   <button onclick="guardarDatos()">Guardar</button>
 </div>
 
-<a id="volver" href="#">Volver</a>
+<a id="volverEjercicios" href="#" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#28a745; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Ejercicios</a>
+<a id="volverRutinas" href="rutinas.html?fecha=${fecha}" style="display:block; width:90%; max-width:500px; margin:10px auto; background:#6c757d; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;">← Volver a Rutinas</a>
 
 <div id="toast">✅ Datos guardados</div>
 
@@ -64,22 +65,29 @@ const ejercicioNombre=rutina.ejercicios[ejercicioIndex];
 document.getElementById('fecha').textContent=fecha.split('-').reverse().join('-');
 document.getElementById('tituloPrincipal').textContent = rutina.titulo;
 document.getElementById('tituloEjercicio').textContent=ejercicioNombre;
-document.getElementById('volver').href=`ejercicios.html?fecha=${fecha}&rutina=${rutinaIndex}`;
+document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutina=${rutinaIndex}`;
+document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
 const data=JSON.parse(localStorage.getItem('gymData')||'{}');
 const thead=document.getElementById('thead');
 const tbody=document.getElementById('tbody');
 
 const fechas=Object.keys(data)
-.filter(f=>data[f][rutinaIndex] && data[f][rutinaIndex][ejercicioIndex])
+.filter(f=>data[f][rutinaIndex] && Array.isArray(data[f][rutinaIndex][ejercicioIndex]))
 .sort((a,b)=>new Date(a)-new Date(b));
 
 if(fechas.length){
   thead.innerHTML=`<tr><th>Día</th>${fechas.map(f=>`<th>${f.split('-').reverse().join('-')}</th>`).join('')}<th>Resumen</th></tr>`;
-  const pesos=fechas.map(f=>data[f][rutinaIndex][ejercicioIndex].peso);
-  const reps=fechas.map(f=>data[f][rutinaIndex][ejercicioIndex].reps);
-  const mediaPeso=(pesos.reduce((a,b)=>a+b,0)/pesos.length).toFixed(2);
-  const mediaReps=(reps.reduce((a,b)=>a+b,0)/reps.length).toFixed(0);
+
+  const pesos = fechas.map(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.peso).join(', '));
+  const reps = fechas.map(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.reps).join(', '));
+
+  const todosPesos = fechas.flatMap(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.peso));
+  const todosReps = fechas.flatMap(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.reps));
+
+  const mediaPeso = (todosPesos.reduce((a,b)=>a+b,0)/todosPesos.length).toFixed(2);
+  const mediaReps = (todosReps.reduce((a,b)=>a+b,0)/todosReps.length).toFixed(0);
+
   const filaPeso=`<tr><td>Peso</td>${pesos.map(p=>`<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
   const filaReps=`<tr><td>Repeticiones</td>${reps.map(r=>`<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
   const filaDias=`<tr><td>Días</td>${fechas.map(()=>`<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
@@ -100,7 +108,8 @@ function guardarDatos(){
   const reps=parseInt(document.getElementById('reps').value)||0;
   if(!data[fecha]) data[fecha]={};
   if(!data[fecha][rutinaIndex]) data[fecha][rutinaIndex]={};
-  data[fecha][rutinaIndex][ejercicioIndex]={peso,reps};
+  if(!data[fecha][rutinaIndex][ejercicioIndex]) data[fecha][rutinaIndex][ejercicioIndex]=[];
+  data[fecha][rutinaIndex][ejercicioIndex].push({peso,reps});
   localStorage.setItem('gymData',JSON.stringify(data));
   mostrarToast();
   setTimeout(()=>location.reload(),500);

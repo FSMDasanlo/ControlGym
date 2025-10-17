@@ -38,7 +38,11 @@ rutinas.forEach((r,i)=>{
   const div=document.createElement('div');
   div.className='rutina';
   div.innerHTML=`<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;
-  if(data[fecha] && data[fecha][i]) {
+  if (
+    data[fecha] &&
+    data[fecha][i] &&
+    Object.values(data[fecha][i]).some(ej => Array.isArray(ej) && ej.length > 0)
+  ) {
     const check=document.createElement('div');
     check.className='check';
     check.textContent='✓';
