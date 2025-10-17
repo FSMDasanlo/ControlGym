@@ -16,7 +16,6 @@ th { background:#007bff; color:white; }
 input { padding:5px; width:120px; }
 button { background:#28a745; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;}
 button:hover { background:#218838;}
-#volver { display:block; width:90%; max-width:500px; margin:10px auto; background:#007bff; color:white; text-align:center; padding:8px; border-radius:5px; text-decoration:none;}
 #toast { visibility:hidden; min-width:200px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:10px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:0.9em;}
 #toast.show { visibility:visible; animation: fadein 0.3s, fadeout 0.3s 1.7s;}
 @keyframes fadein {from {bottom:0;opacity:0;} to {bottom:30px;opacity:1;}}
@@ -50,12 +49,20 @@ button:hover { background:#218838;}
   margin-right: 8px;
 }
 
+#tituloEjercicio {
+  font-size: 1.2em;
+  font-style: italic;
+  color: #004d4d;
+}
+
+
 </style>
+
 </head>
 <body>
 <h1 id="tituloPrincipal">Ejercicio</h1>
 <div id="fecha"></div>
-<div id="tituloRutina"></div>
+<-- <div id="tituloRutina"></div> -->
 <div id="tituloEjercicio"></div>
 
 <table>
@@ -79,74 +86,82 @@ button:hover { background:#218838;}
 <div id="toast">✅ Datos guardados</div>
 
 <script>
-const rutinas=[
-{titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
-{titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
-{titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
-{titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
-{titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
-{titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
+const rutinas = [
+  {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
+  {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
+  {titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
+  {titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
+  {titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
+  {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
 ];
 
-const params=new URLSearchParams(window.location.search);
-const fecha=params.get('fecha');
-const rutinaIndex=params.get('rutina');
-const ejercicioIndex=params.get('ejercicio');
-const rutina=rutinas[rutinaIndex];
-const ejercicioNombre=rutina.ejercicios[ejercicioIndex];
+const params = new URLSearchParams(window.location.search);
+const fecha = params.get('fecha');
+const rutinaIndex = params.get('rutina');
+const ejercicioIndex = params.get('ejercicio');
 
-document.getElementById('fecha').textContent=fecha.split('-').reverse().join('-');
+const rutina = rutinas[rutinaIndex];
+const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
+const personalizados = customExercises[rutinaIndex] || [];
+const todosEjercicios = [...rutina.ejercicios, ...personalizados];
+const ejercicioNombre = todosEjercicios[ejercicioIndex];
+
+document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 document.getElementById('tituloPrincipal').textContent = rutina.titulo;
-document.getElementById('tituloEjercicio').textContent=ejercicioNombre;
+// document.getElementById('tituloRutina').textContent = rutina.titulo;
+document.getElementById('tituloEjercicio').textContent = ejercicioNombre;
 document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutina=${rutinaIndex}`;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
-const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-const thead=document.getElementById('thead');
-const tbody=document.getElementById('tbody');
+const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+const thead = document.getElementById('thead');
+const tbody = document.getElementById('tbody');
 
-const fechas=Object.keys(data)
-.filter(f=>data[f][rutinaIndex] && Array.isArray(data[f][rutinaIndex][ejercicioIndex]))
-.sort((a,b)=>new Date(a)-new Date(b));
+const fechas = Object.keys(data)
+  .filter(f => data[f][rutinaIndex] && Array.isArray(data[f][rutinaIndex][ejercicioNombre]))
+  .sort((a, b) => new Date(a) - new Date(b));
 
-if(fechas.length){
-  thead.innerHTML=`<tr><th>Día</th>${fechas.map(f=>`<th>${f.split('-').reverse().join('-')}</th>`).join('')}<th>Resumen</th></tr>`;
+if (fechas.length) {
+  thead.innerHTML = `<tr><th>Día</th>${fechas.map(f => `<th>${f.split('-').reverse().join('-')}</th>`).join('')}<th>Resumen</th></tr>`;
 
-  const pesos = fechas.map(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.peso).join(', '));
-  const reps = fechas.map(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.reps).join(', '));
+  const pesos = fechas.map(f => data[f][rutinaIndex][ejercicioNombre].map(r => r.peso).join(', '));
+  const reps = fechas.map(f => data[f][rutinaIndex][ejercicioNombre].map(r => r.reps).join(', '));
 
-  const todosPesos = fechas.flatMap(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.peso));
-  const todosReps = fechas.flatMap(f => data[f][rutinaIndex][ejercicioIndex].map(r => r.reps));
+  const todosPesos = fechas.flatMap(f => data[f][rutinaIndex][ejercicioNombre].map(r => r.peso));
+  const todosReps = fechas.flatMap(f => data[f][rutinaIndex][ejercicioNombre].map(r => r.reps));
 
-  const mediaPeso = (todosPesos.reduce((a,b)=>a+b,0)/todosPesos.length).toFixed(2);
-  const mediaReps = (todosReps.reduce((a,b)=>a+b,0)/todosReps.length).toFixed(0);
+  const mediaPeso = (todosPesos.reduce((a, b) => a + b, 0) / todosPesos.length).toFixed(2);
+  const mediaReps = (todosReps.reduce((a, b) => a + b, 0) / todosReps.length).toFixed(0);
 
-  const filaPeso=`<tr><td>Peso</td>${pesos.map(p=>`<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
-  const filaReps=`<tr><td>Repeticiones</td>${reps.map(r=>`<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
-  const filaDias=`<tr><td>Días</td>${fechas.map(()=>`<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
-  tbody.innerHTML=filaPeso+filaReps+filaDias;
-}else{
-  thead.innerHTML='';
-  tbody.innerHTML='<tr><td colspan="99">No hay datos guardados aún</td></tr>';
+  const filaPeso = `<tr><td>Peso</td>${pesos.map(p => `<td>${p}</td>`).join('')}<td>${mediaPeso}</td></tr>`;
+  const filaReps = `<tr><td>Repeticiones</td>${reps.map(r => `<td>${r}</td>`).join('')}<td>${mediaReps}</td></tr>`;
+  const filaDias = `<tr><td>Días</td>${fechas.map(() => `<td>✓</td>`).join('')}<td>${fechas.length} días</td></tr>`;
+  tbody.innerHTML = filaPeso + filaReps + filaDias;
+} else {
+  thead.innerHTML = '';
+  tbody.innerHTML = '<tr><td colspan="99">No hay datos guardados aún</td></tr>';
 }
 
-function mostrarToast(){
-  const toast=document.getElementById("toast");
-  toast.className="show";
-  setTimeout(()=>{toast.className=toast.className.replace("show","");},2000);
+function mostrarToast() {
+  const toast = document.getElementById("toast");
+  toast.className = "show";
+  setTimeout(() => {
+    toast.className = toast.className.replace("show", "");
+  }, 2000);
 }
 
-function guardarDatos(){
-  const peso=parseFloat(document.getElementById('peso').value)||0;
-  const reps=parseInt(document.getElementById('reps').value)||0;
-  if(!data[fecha]) data[fecha]={};
-  if(!data[fecha][rutinaIndex]) data[fecha][rutinaIndex]={};
-  if(!data[fecha][rutinaIndex][ejercicioIndex]) data[fecha][rutinaIndex][ejercicioIndex]=[];
-  data[fecha][rutinaIndex][ejercicioIndex].push({peso,reps});
-  localStorage.setItem('gymData',JSON.stringify(data));
+function guardarDatos() {
+  const peso = parseFloat(document.getElementById('peso').value) || 0;
+  const reps = parseInt(document.getElementById('reps').value) || 0;
+  if (!data[fecha]) data[fecha] = {};
+  if (!data[fecha][rutinaIndex]) data[fecha][rutinaIndex] = {};
+  if (!data[fecha][rutinaIndex][ejercicioNombre]) data[fecha][rutinaIndex][ejercicioNombre] = [];
+  data[fecha][rutinaIndex][ejercicioNombre].push({ peso, reps });
+  localStorage.setItem('gymData', JSON.stringify(data));
   mostrarToast();
-  setTimeout(()=>location.reload(),500);
+  setTimeout(() => location.reload(), 500);
 }
+
 </script>
 </body>
 </html>

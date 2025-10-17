@@ -31,7 +31,6 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   font-size:20px;
   color:limegreen;
 }
-
 .boton-volver {
   display: block;
   width: 90%;
@@ -49,15 +48,11 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   background: linear-gradient(45deg, #6c757d, #5a6268);
   color: white;
 }
-.boton-volver.ejercicios {
+.boton-volver:hover { opacity: 0.9; }
+.boton-volver i { margin-right: 8px; }
+.boton-add {
   background: linear-gradient(45deg, #28a745, #218838);
   color: white;
-}
-.boton-volver:hover {
-  opacity: 0.9;
-}
-.boton-volver i {
-  margin-right: 8px;
 }
 </style>
 </head>
@@ -65,46 +60,67 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 <h1>Selecciona un ejercicio</h1>
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
-<a class="boton-volver rutinas" href="rutinas.html?fecha=${fecha}">
+<a class="boton-volver rutinas" id="volverRutinas">
   <i>🏠</i> Volver a Rutinas
 </a>
-
 <div id="lista"></div>
+<button class="boton-ejercicio boton-add" onclick="agregarEjercicio()">+ Añadir ejercicio</button>
 
 <script>
-const rutinas=[
-{titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
-{titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
-{titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
-{titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
-{titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
-{titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
+const rutinas = [
+  {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
+  {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
+  {titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
+  {titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
+  {titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
+  {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
 ];
 
-const params=new URLSearchParams(window.location.search);
-const fecha=params.get('fecha');
-const rutinaIndex=params.get('rutina');
-const rutina=rutinas[rutinaIndex];
-document.getElementById('fecha').textContent=fecha.split('-').reverse().join('-');
-document.getElementById('tituloRutina').textContent=rutina.titulo;
+const params = new URLSearchParams(window.location.search);
+const fecha = params.get('fecha');
+const rutinaIndex = params.get('rutina');
+const rutina = rutinas[rutinaIndex];
+document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
+document.getElementById('tituloRutina').textContent = rutina.titulo;
+document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
-const data=JSON.parse(localStorage.getItem('gymData')||'{}');
-const cont=document.getElementById('lista');
+const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
+const personalizados = customExercises[rutinaIndex] || [];
+const todosEjercicios = [...rutina.ejercicios, ...personalizados];
+const cont = document.getElementById('lista');
 
-rutina.ejercicios.forEach((ej,i)=>{
-  const btn=document.createElement('button');
-  btn.className='boton-ejercicio';
-  btn.textContent=ej;
-  if(data[fecha] && data[fecha][rutinaIndex] && Array.isArray(data[fecha][rutinaIndex][i]) && data[fecha][rutinaIndex][i].length > 0){
-    const check=document.createElement('div');
-    check.className='check';
-    check.textContent='✓';
-    btn.appendChild(check);
+function renderLista() {
+  cont.innerHTML = '';
+  todosEjercicios.forEach((ej, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'boton-ejercicio';
+    btn.textContent = ej;
+
+    // Verificar si hay datos guardados por nombre
+    if (data[fecha] && data[fecha][rutinaIndex] && Array.isArray(data[fecha][rutinaIndex][ej]) && data[fecha][rutinaIndex][ej].length > 0) {
+      const check = document.createElement('div');
+      check.className = 'check';
+      check.textContent = '✓';
+      btn.appendChild(check);
+    }
+
+    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
+    cont.appendChild(btn);
+  });
+}
+
+function agregarEjercicio() {
+  const nuevo = prompt('Nombre del nuevo ejercicio:');
+  if (nuevo && nuevo.trim() !== '') {
+    if (!customExercises[rutinaIndex]) customExercises[rutinaIndex] = [];
+    customExercises[rutinaIndex].push(nuevo.trim());
+    localStorage.setItem('customExercises', JSON.stringify(customExercises));
+    location.reload(); // ← refresca la pantalla
   }
-  btn.onclick=()=>window.location.href=`ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
-  cont.appendChild(btn);
-});
-</script>
+}
 
+renderLista();
+</script>
 </body>
 </html>
