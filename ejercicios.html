@@ -8,72 +8,98 @@
 body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
 h1 { text-align:center; color:#007bff; padding:10px;}
 #fecha, #tituloRutina { text-align:center; font-weight:bold; margin-bottom:10px;}
+
+/* Contenedor del ejercicio */
+.ejercicio-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 90%;
+  max-width: 500px;
+  margin: 8px auto;
+}
+
+/* Botón de vídeo */
+.boton-video {
+  flex: 0 0 40px;
+  height: 40px;
+  background: #17a2b8;
+  color: white;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.boton-video:hover { background: #117a8b; }
+
+/* Botón de ejercicio */
 .boton-ejercicio {
-  display:block;
-  width:90%;
-  max-width:500px;
-  margin:10px auto;
-  padding:15px;
-  background:#007bff;
-  color:white;
-  font-size:1.1em;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  text-align:center;
-  position:relative;
+  flex: 1;
+  padding: 10px;
+  background: #007bff;
+  color: white;
+  font-size: 1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  position: relative;
 }
 .boton-ejercicio:hover { background:#0056b3; }
+
 .check {
   position:absolute;
-  top:10px;
-  right:10px;
-  font-size:20px;
+  top:8px;
+  right:8px;
+  font-size:18px;
   color:limegreen;
 }
-.boton-volver {
-  display: block;
+
+/* Botones superiores */
+.botones-volver {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
   width: 90%;
   max-width: 500px;
   margin: 10px auto;
-  padding: 12px;
-  font-size: 1.1em;
+}
+
+.boton-volver {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.9em;
   font-weight: bold;
   text-align: center;
-  border-radius: 10px;
+  border-radius: 8px;
   text-decoration: none;
   transition: background 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
+
+.boton-volver i,
+.boton-volver img {
+  margin-right: 4px;
+}
+
 .boton-volver.rutinas {
   background: linear-gradient(45deg, #6c757d, #5a6268);
   color: white;
 }
-.boton-volver:hover { opacity: 0.9; }
-.boton-volver i { margin-right: 8px; }
-.boton-add {
-  background: linear-gradient(45deg, #28a745, #218838);
-  color: white;
-}
-
 .boton-volver.calendario {
   background: linear-gradient(45deg, #17a2b8, #138496);
   color: white;
 }
-.botones-volver {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  width: 90%;
-  max-width: 500px;
-  margin: 10px auto;
+.boton-volver.add {
+  background: linear-gradient(45deg, #28a745, #218838);
+  color: white;
 }
 
-.botones-volver .boton-volver {
-  flex: 1;
-  padding: 10px;
-  font-size: 1em;
-}
-
+.boton-volver:hover { opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -81,20 +107,25 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
 
+<!-- Botones superiores -->
 <div class="botones-volver">
   <a class="boton-volver rutinas" id="volverRutinas" href="#">
     <i>🏠</i> Rutinas
   </a>
   <a class="boton-volver calendario" id="volverCalendario" href="index.html">
-    <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px; vertical-align: middle; margin-right: 6px;">
+    <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px;">
     Calendario
   </a>
+  <button class="boton-volver add" onclick="agregarEjercicio()">
+    <i>➕</i> Añadir
+  </button>
 </div>
 
+<!-- Lista de ejercicios -->
 <div id="lista"></div>
-<button class="boton-ejercicio boton-add" onclick="agregarEjercicio()">+ Añadir ejercicio</button>
 
 <script>
+// Rutinas base
 const rutinas = [
   {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
   {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
@@ -103,6 +134,17 @@ const rutinas = [
   {titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
   {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
 ];
+
+// 📽️ enlaces de ejemplo (puedes modificarlos)
+const videos = {
+  0: [
+    "https://www.youtube.com/watch?v=fqsTgdTPRQU", // "Press de banca con barra"
+    "https://www.youtube.com/watch?v=fHmiVMFfKkE", //Aperturas en banco inclinado con mancuernas
+    "https://www.youtube.com/shorts/a64mtMHyPfY", // Press inclinado con mancuernas
+    "https://www.youtube.com/watch?v=ijkl9012",
+    "https://www.youtube.com/watch?v=mnop3456"
+  ]
+};
 
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
@@ -121,12 +163,32 @@ const cont = document.getElementById('lista');
 function renderLista() {
   cont.innerHTML = '';
   todosEjercicios.forEach((ej, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ejercicio-item';
+
+    // ▶️ Botón de vídeo
+    const videoBtn = document.createElement('button');
+    videoBtn.className = 'boton-video';
+    videoBtn.innerHTML = '▶';
+    videoBtn.onclick = (e) => {
+      e.stopPropagation();
+      const url = (videos[rutinaIndex] && videos[rutinaIndex][i]) || null;
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        alert('No hay vídeo asociado a este ejercicio todavía.');
+      }
+    };
+
+    // 💪 Botón del ejercicio
     const btn = document.createElement('button');
     btn.className = 'boton-ejercicio';
     btn.textContent = ej;
 
-    // Verificar si hay datos guardados por nombre
-    if (data[fecha] && data[fecha][rutinaIndex] && Array.isArray(data[fecha][rutinaIndex][ej]) && data[fecha][rutinaIndex][ej].length > 0) {
+    // ✅ check si hay datos guardados
+    if (data[fecha] && data[fecha][rutinaIndex] &&
+        Array.isArray(data[fecha][rutinaIndex][i]) &&
+        data[fecha][rutinaIndex][i].length > 0) {
       const check = document.createElement('div');
       check.className = 'check';
       check.textContent = '✓';
@@ -134,7 +196,10 @@ function renderLista() {
     }
 
     btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
-    cont.appendChild(btn);
+
+    wrapper.appendChild(videoBtn);
+    wrapper.appendChild(btn);
+    cont.appendChild(wrapper);
   });
 }
 
@@ -144,7 +209,7 @@ function agregarEjercicio() {
     if (!customExercises[rutinaIndex]) customExercises[rutinaIndex] = [];
     customExercises[rutinaIndex].push(nuevo.trim());
     localStorage.setItem('customExercises', JSON.stringify(customExercises));
-    location.reload(); // ← refresca la pantalla
+    location.reload();
   }
 }
 
