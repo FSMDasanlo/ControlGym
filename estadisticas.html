@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas</title>
+<style>
+body {
+  font-family: Arial;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+h1 {
+  color: #007bff;
+  margin-top: 20px;
+}
+#fecha {
+  font-weight: bold;
+  margin: 10px 0;
+}
+table {
+  margin-top: 0;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+th, td {
+  padding: 6px;
+  text-align: center;
+  font-size: 0.9em;
+  word-wrap: break-word;
+}
+th {
+  background: #007bff;
+  color: white;
+}
+.botones {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px;
+  flex-wrap: wrap;
+}
+.boton {
+  background: linear-gradient(45deg, #28a745, #218838);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+.boton:hover {
+  transform: scale(1.05);
+}
+.modo-tiempo {
+  margin: 20px auto 40px;
+  background: rgba(255,255,255,0.9);
+  color: black;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+}
+.modo-tiempo select, .modo-tiempo input {
+  margin: 10px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+#botonEstadisticas {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+#botonEstadisticas:hover {
+  background: #218838;
+}
+footer {
+  background: rgba(0,0,0,0.6);
+  padding: 10px;
+  font-size: 0.9em;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+.tabla-contenedor {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 0 auto;
+  width: 90%;
+  max-width: 600px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+}
+</style>
+</head>
+<body>
+<h1>📊 Estadísticas</h1>
+<div id="fecha"></div>
+<div class="botones">
+  <a class="boton" id="volverRutinas">🏋️ Ir a Rutinas</a>
+  <a class="boton" href="index.html">📅 Ir al Calendario</a>
+</div>
+
+<div class="modo-tiempo">
+  <label>Ver estadísticas por:</label>
+  <select id="modo">
+    <option value="diario">Diario</option>
+    <option value="semanal">Semanal</option>
+    <option value="mensual">Mensual</option>
+    <option value="rango">Rango personalizado</option>
+  </select>
+  <div id="filtros"></div>
+  <button onclick="procesarEstadisticas()" id="botonEstadisticas">Ver estadísticas</button>
+</div>
+
+<div class="tabla-contenedor">
+  <table>
+    <thead>
+      <tr><th>Ejercicio</th><th>Media Peso</th><th>Media Reps</th><th>Días</th></tr>
+    </thead>
+    <tbody id="tablaEstadisticas"></tbody>
+  </table>
+</div>
+
+<footer>
+  Copyright DasanloSoft, 2025
+</footer>
+
+<script>
+const hoy = new Date();
+const yyyy = hoy.getFullYear();
+const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+const dd = String(hoy.getDate()).padStart(2, '0');
+const fecha = `${yyyy}-${mm}-${dd}`;
+document.getElementById('fecha').textContent = `Fecha: ${dd}-${mm}-${yyyy}`;
+document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
+
+const modoSelector = document.getElementById('modo');
+modoSelector.addEventListener('change', e => {
+  const modo = e.target.value;
+  const filtros = document.getElementById('filtros');
+  filtros.innerHTML = '';
+
+  if (modo === 'diario') {
+    filtros.innerHTML = `<input type="date" id="fechaDiaria">`;
+  } else if (modo === 'semanal') {
+    filtros.innerHTML = `<input type="week" id="semana">`;
+  } else if (modo === 'mensual') {
+    filtros.innerHTML = `<input type="month" id="mes">`;
+  } else if (modo === 'rango') {
+    filtros.innerHTML = `
+      <label>Desde:</label><input type="date" id="inicio">
+      <label>Hasta:</label><input type="date" id="fin">
+    `;
+  }
+});
+modoSelector.dispatchEvent(new Event('change')); // 👈 activa filtro inicial
+
+function generarEstadisticas(data) {
+  const tablaContenedor = document.querySelector('.tabla-contenedor');
+  const tabla = document.getElementById('tablaEstadisticas');
+  tabla.innerHTML = '';
+  tablaContenedor.style.display = 'block';
+
+  const resumen = {};
+
+  Object.entries(data).forEach(([fecha, rutinas]) => {
+    Object.values(rutinas).forEach(rutina => {
+      Object.entries(rutina).forEach(([ejercicio, registros]) => {
+        if (!Array.isArray(registros)) return;
+
+        if (!resumen[ejercicio]) {
+          resumen[ejercicio] = { pesos: [], reps: [], dias: new Set() };
+        }
+
+        registros.forEach(r => {
+          if (typeof r.peso === 'number') resumen[ejercicio].pesos.push(r.peso);
+          if (typeof r.reps === 'number') resumen[ejercicio].reps.push(r.reps);
+          resumen[ejercicio].dias.add(fecha);
+        });
+      });
+    });
+  });
+
+  if (Object.keys(resumen).length === 0) {
+    tabla.innerHTML = `<tr><td colspan="4">No hay datos disponibles para las fechas seleccionadas</td></tr>`;
+    return;
+  }
+
+  Object.entries(resumen).forEach(([ejercicio, datos]) => {
+    const mediaPeso = (datos.pesos.reduce((a,b) => a+b,0)/datos.pesos.length).toFixed(2);
+    const mediaReps = (datos.reps.reduce((a,b) => a+b,0)/datos.reps.length).toFixed(0);
+    const dias = datos.dias.size;
+
+    const fila = document.createElement('tr');
+    fila.innerHTML = `<td>${ejercicio}</td><td>${mediaPeso}</td><td>${mediaReps}</td><td>${dias}</td>`;
+    tabla.appendChild(fila);
+  });
+}
+
+
+function procesarEstadisticas() {
+  const modo = document.getElementById('modo').value;
+  const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+
+  let fechasFiltradas = Object.keys(data);
+
+  if (modo === 'diario') {
+    const fecha = document.getElementById('fechaDiaria').value; // yyyy-mm-dd
+    fechasFiltradas = fecha ? [fecha] : [];
+
+  } else if (modo === 'semanal') {
+    const semana = document.getElementById('semana').value;
+    if (semana) {
+      const [año, semanaNum] = semana.split('-W');
+      const inicio = new Date(año, 0, (semanaNum - 1) * 7 + 1);
+      const fin = new Date(inicio);
+      fin.setDate(inicio.getDate() + 6);
+
+      fechasFiltradas = fechasFiltradas.filter(f => {
+        const d = new Date(f);
+        return d >= inicio && d <= fin;
+      });
+    }
+
+  } else if (modo === 'mensual') {
+    const mes = document.getElementById('mes').value; // yyyy-mm
+    if (mes) {
+      fechasFiltradas = fechasFiltradas.filter(f => f.startsWith(mes));
+    }
+
+  } else if (modo === 'rango') {
+    const inicioStr = document.getElementById('inicio').value;
+    const finStr = document.getElementById('fin').value;
+    if (inicioStr && finStr) {
+      const inicio = new Date(inicioStr);
+      const fin = new Date(finStr);
+
+      fechasFiltradas = fechasFiltradas.filter(f => {
+        const d = new Date(f);
+        return d >= inicio && d <= fin;
+      });
+    } else {
+      fechasFiltradas = [];
+    }
+  }
+
+  const datosFiltrados = {};
+  fechasFiltradas.forEach(f => {
+    datosFiltrados[f] = data[f];
+  });
+
+  generarEstadisticas(datosFiltrados);
+}
+
+</script>
+</body>
+</html>

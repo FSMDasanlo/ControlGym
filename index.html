@@ -3,126 +3,294 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ControlGym - Calendario</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#007bff">
-
-
+<title>Inicio</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
-h1 { text-align: center; padding: 10px; background: #007bff; color: white; }
-#controles { text-align: center; margin: 10px 0; }
-select { padding: 5px; margin: 0 5px; }
-#nombres-dias {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  background: #007bff;
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: url('img/fondo.jpg') no-repeat center center fixed;
+  background-size: cover;
   color: white;
   text-align: center;
-  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
-#nombres-dias div { padding: 5px 0; }
-#calendario {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+header {
+  margin-top: 30px;
+  animation: fadeInDown 1s ease-out;
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.logo {
+  width: 220px;
+  max-width: 90%;
+  height: auto;
+  margin-top: 10px;
+}
+.boton {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  padding: 14px 24px;
+  font-size: 1.2em;
+  border-radius: 10px;
+  text-decoration: none;
+  margin: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+}
+.boton:hover {
+  transform: scale(1.05);
+}
+.contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.calendario {
+  background: rgba(255,255,255,0.9);
+  color: black;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 10px;
   max-width: 600px;
-  margin: auto;
 }
-.dia {
-  background: white;
-  padding: 15px 0;
-  text-align: center;
-  cursor: pointer;
+.calendario table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.calendario th {
+  background: #007bff;
+  color: white;
+  padding: 8px;
+}
+.calendario td {
+  padding: 8px;
+  border: 1px solid #ddd; /* cuadrícula suave */
   position: relative;
-  font-size: 16px;
 }
-.dia:hover { background: #e0e0e0; }
+.calendario td button {
+  background: none;
+  color: black;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.calendario td button.hoy {
+  background: #007bff;
+  color: white;
+}
 .check {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
+  top: 4px;
+  right: 6px;
   color: green;
   font-size: 14px;
-}
-#nombres-dias {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  background: #007bff;
-  color: white;
-  text-align: center;
   font-weight: bold;
-  max-width: 600px;     /* Añadido */
-  margin: auto;         /* Añadido */
+}
+td[data-tooltip] {
+  position: relative;
+}
+td[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.8em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 10;
+}
+td[data-tooltip]:hover::after {
+  opacity: 1;
+}
+.descripcion {
+  font-style: italic;
+  font-size: 0.9em;
+  margin: 20px auto;
+  max-width: 600px;
+  background: rgba(0,0,0,1);
+  padding: 10px;
+  border-radius: 10px;
+}
+footer {
+  background: rgba(0,0,0,0.6);
+  padding: 10px;
+  font-size: 0.9em;
+}
+
+td[data-tooltip] {
+  position: relative;
+}
+td[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.8em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 10;
+}
+td[data-tooltip]:hover::after {
+  opacity: 1;
 }
 
 </style>
 </head>
 <body>
-<h1>ControlGym</h1>
-<div id="controles">
-  <select id="mes"></select>
-  <select id="anio"></select>
+<header>
+  <img src="img/logocompleto.png" alt="Logo" class="logo">
+</header>
+
+<div class="contenido">
+  <div class="calendario">
+    <label for="mes">Mes:</label>
+    <select id="mes"></select>
+    <label for="anio">Año:</label>
+    <select id="anio"></select>
+    <div id="calendarioTabla"></div>
+  </div>
+
+  <a class="boton" href="estadisticas.html">📊 Ver estadísticas</a>
 </div>
-<div id="nombres-dias">
-  <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+
+  
+<div class="descripcion">
+  ControlGym, te permite llevar un control de tus ejercicios diarios.<br>
+  Te ofrece una serie de rutinas, y posibilidad de crear tus propios ejercicios.<br>
+  Guardar tus marcas personales diarias y obtener estadísticas.
 </div>
-<div id="calendario"></div>
+
+<footer>
+  Copyright DasanloSoft, 2025
+</footer>
 
 <script>
-const mesSelect=document.getElementById('mes');
-const anioSelect=document.getElementById('anio');
-const calendario=document.getElementById('calendario');
-const hoy=new Date();
-const data=JSON.parse(localStorage.getItem('gymData')||'{}');
+const meses = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
+const diasSemana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const hoy = new Date();
+const mesActual = hoy.getMonth();
+const añoActual = hoy.getFullYear();
 
-for(let i=0;i<12;i++){
-  const opt=document.createElement('option');
-  opt.value=i;
-  opt.textContent=new Date(0,i).toLocaleString('es',{month:'long'});
-  if(i===hoy.getMonth()) opt.selected=true;
-  mesSelect.appendChild(opt);
-}
-for(let i=hoy.getFullYear()-1;i<=hoy.getFullYear()+1;i++){
-  const opt=document.createElement('option');
-  opt.value=i;
-  opt.textContent=i;
-  if(i===hoy.getFullYear()) opt.selected=true;
-  anioSelect.appendChild(opt);
+const selectMes = document.getElementById('mes');
+const selectAnio = document.getElementById('anio');
+const calendarioTabla = document.getElementById('calendarioTabla');
+
+// Rellenar meses
+meses.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = m;
+  if (i === mesActual) opt.selected = true;
+  selectMes.appendChild(opt);
+});
+
+// Rellenar años (rango 2020–2030)
+for (let y = 2020; y <= 2030; y++) {
+  const opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  if (y === añoActual) opt.selected = true;
+  selectAnio.appendChild(opt);
 }
 
-function generarCalendario(){
-  calendario.innerHTML='';
-  const mes=parseInt(mesSelect.value);
-  const anio=parseInt(anioSelect.value);
-  const primerDia=new Date(anio,mes,1);
-  const ultimoDia=new Date(anio,mes+1,0);
-  let inicio=(primerDia.getDay()+6)%7; 
-  for(let i=0;i<inicio;i++) calendario.appendChild(document.createElement('div'));
-  for(let dia=1;dia<=ultimoDia.getDate();dia++){
-    const div=document.createElement('div');
-    div.className='dia';
-    div.textContent=dia;
-    const fechaStr=`${anio}-${String(mes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
-    if(data[fechaStr]) {
-      const check=document.createElement('div');
-      check.className='check';
-      check.textContent='✓';
-      div.appendChild(check);
-    }
-    div.onclick=()=>window.location.href=`rutinas.html?fecha=${fechaStr}`;
-    calendario.appendChild(div);
+function renderCalendario(mes, anio) {
+  calendarioTabla.innerHTML = '';
+  const fecha = new Date(anio, mes, 1);
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+  const primerDiaSemana = (fecha.getDay() + 6) % 7;
+
+  const data = JSON.parse(localStorage.getItem('gymData') || {});
+  const hoyStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  diasSemana.forEach(dia => {
+    const th = document.createElement('th');
+    th.textContent = dia;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  let tr = document.createElement('tr');
+  for (let i = 0; i < primerDiaSemana; i++) {
+    tr.appendChild(document.createElement('td'));
   }
-}
-mesSelect.onchange=anioSelect.onchange=generarCalendario;
-generarCalendario();
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker registrado'))
-    .catch(error => console.error('Error al registrar SW:', error));
+  for (let d = 1; d <= diasEnMes; d++) {
+    const td = document.createElement('td');
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+    const btn = document.createElement('button');
+    btn.textContent = d;
+    btn.onclick = () => {
+      window.location.href = `rutinas.html?fecha=${fechaStr}`;
+    };
+
+    if (fechaStr === hoyStr) {
+      btn.classList.add('hoy');
+    }
+
+    if (data[fechaStr]) {
+      const resumen = Object.entries(data[fechaStr])
+        .map(([_, ejercicios]) =>
+          Object.keys(ejercicios).filter(e => Array.isArray(ejercicios[e]) && ejercicios[e].length > 0)
+        )
+        .flat()
+        .join(', ');
+
+      if (resumen) {
+        td.setAttribute('data-tooltip', resumen);
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.textContent = '✓';
+        td.appendChild(check);
+      }
+    }
+
+    td.appendChild(btn);
+    tr.appendChild(td);
+    if ((primerDiaSemana + d) % 7 === 0) {
+      tbody.appendChild(tr);
+      tr = document.createElement('tr');
+    }
+  }
+
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+  calendarioTabla.appendChild(table);
 }
+
+
+renderCalendario(mesActual, añoActual);
 </script>
-
 </body>
 </html>
