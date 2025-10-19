@@ -8,14 +8,40 @@
 body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
 h1 { text-align:center; color:#007bff; padding:10px;}
 #fecha, #tituloRutina, #tituloEjercicio { text-align:center; font-weight:bold; margin-bottom:10px;}
-#tituloEjercicio { font-size:1.2em; }
+#tituloEjercicio { font-size:1.2em; font-style: italic; color: #004d4d; }
+
+#videoEjercicio {
+  text-align: center;
+  margin-bottom: 15px;
+}
+#videoEjercicio iframe {
+  width: 90%;
+  max-width: 500px;
+  height: 280px;
+  border-radius: 8px;
+}
+#videoEjercicio a {
+  display: inline-block;
+  background: #17a2b8;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+#videoEjercicio a:hover {
+  background: #117a8b;
+}
+
 table { width:95%; margin:auto; border-collapse:collapse; margin-top:15px; }
 th, td { border:1px solid #ccc; padding:5px; text-align:center; }
 th { background:#007bff; color:white; }
+
 #formulario { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:15px;}
 input { padding:5px; width:120px; }
 button { background:#28a745; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;}
 button:hover { background:#218838;}
+
 #toast { visibility:hidden; min-width:200px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:10px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:0.9em;}
 #toast.show { visibility:visible; animation: fadein 0.3s, fadeout 0.3s 1.7s;}
 @keyframes fadein {from {bottom:0;opacity:0;} to {bottom:30px;opacity:1;}}
@@ -48,22 +74,13 @@ button:hover { background:#218838;}
 .boton-volver i {
   margin-right: 8px;
 }
-
-#tituloEjercicio {
-  font-size: 1.2em;
-  font-style: italic;
-  color: #004d4d;
-}
-
-
 </style>
-
 </head>
 <body>
 <h1 id="tituloPrincipal">Ejercicio</h1>
 <div id="fecha"></div>
-<-- <div id="tituloRutina"></div> -->
 <div id="tituloEjercicio"></div>
+<div id="videoEjercicio"></div>
 
 <table>
   <thead id="thead"></thead>
@@ -95,23 +112,60 @@ const rutinas = [
   {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
 ];
 
+const videos = {
+  0: [
+    "https://www.youtube.com/watch?v=fqsTgdTPRQU",
+    "https://www.youtube.com/watch?v=fHmiVMFfKkE",
+    "https://www.youtube.com/shorts/a64mtMHyPfY",
+    "https://www.tiktok.com/@emilioborn/video/7160711985947004206?lang=es",
+    "https://www.youtube.com/watch?v=_m9lZOfi_W0"
+  ],
+  1: [
+    "https://www.youtube.com/watch?v=XZ9TKvUz-ZE",
+    "https://www.youtube.com/watch?v=MwCJGBu8PFk",
+    "https://www.youtube.com/shorts/BTkLgHG7kzo",
+    "https://www.youtube.com/watch?v=cGEPFQ99pyQ",
+    "https://www.tiktok.com/@priscilla_bc/video/7289431203256585504?lang=es-419"
+  ]
+};
+
+const customVideos = JSON.parse(localStorage.getItem('customVideos') || '{}');
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
-const rutinaIndex = params.get('rutina');
-const ejercicioIndex = params.get('ejercicio');
+const rutinaIndex = parseInt(params.get('rutina'));
+const ejercicioIndex = parseInt(params.get('ejercicio'));
 
 const rutina = rutinas[rutinaIndex];
 const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
 const personalizados = customExercises[rutinaIndex] || [];
 const todosEjercicios = [...rutina.ejercicios, ...personalizados];
+const todosVideos = [
+  ...(videos[rutinaIndex] || []),
+  ...(customVideos[rutinaIndex] || [])
+];
+
 const ejercicioNombre = todosEjercicios[ejercicioIndex];
+const videoUrl = todosVideos[ejercicioIndex] || null;
 
 document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 document.getElementById('tituloPrincipal').textContent = rutina.titulo;
-// document.getElementById('tituloRutina').textContent = rutina.titulo;
 document.getElementById('tituloEjercicio').textContent = ejercicioNombre;
 document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutina=${rutinaIndex}`;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
+
+if (videoUrl) {
+  let embedHtml = '';
+  if (videoUrl.includes('youtube.com/watch')) {
+    const videoId = new URL(videoUrl).searchParams.get('v');
+    embedHtml = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+  } else if (videoUrl.includes('youtube.com/shorts/')) {
+    const videoId = videoUrl.split('/shorts/')[1];
+    embedHtml = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+  } else {
+    embedHtml = `<a href="${videoUrl}" target="_blank">▶ Ver vídeo del ejercicio</a>`;
+  }
+  document.getElementById('videoEjercicio').innerHTML = embedHtml;
+}
 
 const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 const thead = document.getElementById('thead');
@@ -119,6 +173,7 @@ const tbody = document.getElementById('tbody');
 
 const fechas = Object.keys(data)
   .filter(f => data[f][rutinaIndex] && Array.isArray(data[f][rutinaIndex][ejercicioNombre]))
+  .map(f => f)
   .sort((a, b) => new Date(a) - new Date(b));
 
 if (fechas.length) {
@@ -161,7 +216,6 @@ function guardarDatos() {
   mostrarToast();
   setTimeout(() => location.reload(), 500);
 }
-
 </script>
 </body>
 </html>

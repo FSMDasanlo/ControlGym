@@ -9,7 +9,6 @@ body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
 h1 { text-align:center; color:#007bff; padding:10px;}
 #fecha, #tituloRutina { text-align:center; font-weight:bold; margin-bottom:10px;}
 
-/* Contenedor del ejercicio */
 .ejercicio-item {
   display: flex;
   align-items: center;
@@ -20,7 +19,6 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   margin: 8px auto;
 }
 
-/* Botón de vídeo */
 .boton-video {
   flex: 0 0 40px;
   height: 40px;
@@ -33,7 +31,6 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 }
 .boton-video:hover { background: #117a8b; }
 
-/* Botón de ejercicio */
 .boton-ejercicio {
   flex: 1;
   padding: 10px;
@@ -56,7 +53,6 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   color:limegreen;
 }
 
-/* Botones superiores */
 .botones-volver {
   display: flex;
   justify-content: center;
@@ -107,7 +103,6 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 <div id="fecha"></div>
 <div id="tituloRutina"></div>
 
-<!-- Botones superiores -->
 <div class="botones-volver">
   <a class="boton-volver rutinas" id="volverRutinas" href="#">
     <i>🏠</i> Rutinas
@@ -121,11 +116,9 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   </button>
 </div>
 
-<!-- Lista de ejercicios -->
 <div id="lista"></div>
 
 <script>
-// Rutinas base
 const rutinas = [
   {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
   {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
@@ -135,17 +128,31 @@ const rutinas = [
   {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
 ];
 
-// 📽️ enlaces de ejemplo (puedes modificarlos)
 const videos = {
   0: [
-    "https://www.youtube.com/watch?v=fqsTgdTPRQU", // "Press de banca con barra"
-    "https://www.youtube.com/watch?v=fHmiVMFfKkE", //Aperturas en banco inclinado con mancuernas
-    "https://www.youtube.com/shorts/a64mtMHyPfY", // Press inclinado con mancuernas
-    "https://www.youtube.com/watch?v=ijkl9012",
-    "https://www.youtube.com/watch?v=mnop3456"
+    "https://www.youtube.com/watch?v=fqsTgdTPRQU",
+    "https://www.youtube.com/watch?v=fHmiVMFfKkE",
+    "https://www.youtube.com/shorts/a64mtMHyPfY",
+    "https://www.youtube.com/watch?v=IKxDIDNV890", // Curl de bíceps con barra
+    "https://www.youtube.com/watch?v=_m9lZOfi_W0",
+  ],
+  1: [
+    "https://www.youtube.com/watch?v=XZ9TKvUz-ZE",
+    "https://www.youtube.com/watch?v=MwCJGBu8PFk",
+    "https://www.youtube.com/shorts/BTkLgHG7kzo",
+    "https://www.youtube.com/watch?v=cGEPFQ99pyQ",
+    "https://www.youtube.com/watch?v=H6r0fh2-YNU", // Fondos de tríceps
+  ],
+
+  2: [
+    "https://www.youtube.com/watch?v=OCoQIC9ojAA", // Elevaciones laterales con mancuernas
+    "https://www.youtube.com/watch?v=cTRcA2sJqeM", // Trapecios con polea baja
+    "https://www.youtube.com/watch?v=dsCuiccYNGs", // Sentadillas con barra
+    "https://www.youtube.com/watch?v=J-Y-Z0EU9Ic", // Extensiones de piernas
+    "https://www.youtube.com/watch?v=0XL4cZR2Ink", // Peso muerto con barra
+	"https://www.youtube.com/watch?v=Mr4W1DCj05U", // Gemelo en máquina
   ]
 };
-
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
 const rutinaIndex = params.get('rutina');
@@ -156,8 +163,15 @@ document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
 const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
+const customVideos = JSON.parse(localStorage.getItem('customVideos') || '{}');
+
 const personalizados = customExercises[rutinaIndex] || [];
 const todosEjercicios = [...rutina.ejercicios, ...personalizados];
+const todosVideos = [
+  ...(videos[rutinaIndex] || []),
+  ...(customVideos[rutinaIndex] || [])
+];
+
 const cont = document.getElementById('lista');
 
 function renderLista() {
@@ -166,24 +180,50 @@ function renderLista() {
     const wrapper = document.createElement('div');
     wrapper.className = 'ejercicio-item';
 
-    // ▶️ Botón de vídeo
-    const videoBtn = document.createElement('button');
-    videoBtn.className = 'boton-video';
-    videoBtn.innerHTML = '▶';
-    videoBtn.onclick = (e) => {
-      e.stopPropagation();
-      const url = (videos[rutinaIndex] && videos[rutinaIndex][i]) || null;
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        alert('No hay vídeo asociado a este ejercicio todavía.');
-      }
-    };
+    const esPersonalizado = i >= rutina.ejercicios.length;
+    const tieneVideo = !esPersonalizado && todosVideos[i];
+
+    // ▶️ Botón de vídeo (solo si tiene vídeo y no es personalizado)
+    if (tieneVideo) {
+      const videoBtn = document.createElement('button');
+      videoBtn.className = 'boton-video';
+      videoBtn.innerHTML = '▶';
+      videoBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.open(todosVideos[i], '_blank');
+      };
+      wrapper.appendChild(videoBtn);
+    }
+
+    // ❌ Botón de eliminar (solo para personalizados)
+    if (esPersonalizado) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '❌';
+      deleteBtn.style.background = '#dc3545';
+      deleteBtn.style.color = 'white';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.borderRadius = '50%';
+      deleteBtn.style.width = '32px';
+      deleteBtn.style.height = '32px';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.title = 'Eliminar ejercicio';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm(`¿Eliminar "${ej}" de la rutina?`)) {
+          personalizados.splice(i - rutina.ejercicios.length, 1);
+          customExercises[rutinaIndex] = personalizados;
+          localStorage.setItem('customExercises', JSON.stringify(customExercises));
+          location.reload();
+        }
+      };
+      wrapper.appendChild(deleteBtn);
+    }
 
     // 💪 Botón del ejercicio
     const btn = document.createElement('button');
     btn.className = 'boton-ejercicio';
     btn.textContent = ej;
+    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
 
     // ✅ check si hay datos guardados
     if (data[fecha] && data[fecha][rutinaIndex] &&
@@ -195,13 +235,11 @@ function renderLista() {
       btn.appendChild(check);
     }
 
-    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
-
-    wrapper.appendChild(videoBtn);
     wrapper.appendChild(btn);
     cont.appendChild(wrapper);
   });
 }
+
 
 function agregarEjercicio() {
   const nuevo = prompt('Nombre del nuevo ejercicio:');
@@ -212,6 +250,7 @@ function agregarEjercicio() {
     location.reload();
   }
 }
+
 
 renderLista();
 </script>
