@@ -26,7 +26,7 @@ header {
   to { opacity: 1; transform: translateY(0); }
 }
 .logo {
-  width: 220px;
+  width: 260px;
   max-width: 90%;
   height: auto;
   margin-top: 10px;
@@ -72,7 +72,7 @@ header {
 }
 .calendario td {
   padding: 8px;
-  border: 1px solid #ddd; /* cuadrícula suave */
+  border: 1px solid #ddd;
   position: relative;
 }
 .calendario td button {
@@ -121,55 +121,31 @@ td[data-tooltip]:hover::after {
 .descripcion {
   font-style: italic;
   font-size: 0.9em;
+  color:#004d4d;
   margin: 20px auto;
   max-width: 600px;
-  background: rgba(0,0,0,1);
+  background: rgba(0,0.5,0.5,0.2);
   padding: 10px;
   border-radius: 10px;
 }
 footer {
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.9);
   padding: 10px;
   font-size: 0.9em;
 }
-
-td[data-tooltip] {
-  position: relative;
-}
-td[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  font-size: 0.8em;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-  z-index: 10;
-}
-td[data-tooltip]:hover::after {
-  opacity: 1;
-}
-
 .marca {
-  color: #ffbf00; /* ámbar */
+  color: #ffbf00;
   font-weight: bold;
+  font-size: 1.3em
 }
-
 .rojo {
-  color: #cc0000; /* rojo oscuro */
+  color: #cc0000;
+  font-size: 1.3em
 }
-
 .verde {
-  color: #228B22; /* verde oscuro */
+  color: #228B22;
+  font-size: 1.3em
 }
-
 </style>
 </head>
 <body>
@@ -195,9 +171,9 @@ td[data-tooltip]:hover::after {
   Guardar tus marcas personales diarias y obtener estadísticas.
 </div>
 
-
 <footer>
-  Copyright DasanloSoft, 2025
+  &copy;
+ DasanloSoft, 2025
 </footer>
 
 <script>
@@ -213,6 +189,11 @@ const añoActual = hoy.getFullYear();
 const selectMes = document.getElementById('mes');
 const selectAnio = document.getElementById('anio');
 const calendarioTabla = document.getElementById('calendarioTabla');
+
+// Inicializar gymData si no existe
+if (!localStorage.getItem('gymData')) {
+  localStorage.setItem('gymData', '{}');
+}
 
 // Rellenar meses
 meses.forEach((m, i) => {
@@ -238,7 +219,7 @@ function renderCalendario(mes, anio) {
   const diasEnMes = new Date(anio, mes + 1, 0).getDate();
   const primerDiaSemana = (fecha.getDay() + 6) % 7;
 
-  const data = JSON.parse(localStorage.getItem('gymData') || {});
+  const data = JSON.parse(localStorage.getItem('gymData') || '{}');
   const hoyStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
 
   const table = document.createElement('table');
@@ -302,6 +283,12 @@ function renderCalendario(mes, anio) {
   calendarioTabla.appendChild(table);
 }
 
+selectMes.addEventListener('change', () => {
+  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
+});
+selectAnio.addEventListener('change', () => {
+  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
+});
 
 renderCalendario(mesActual, añoActual);
 </script>
