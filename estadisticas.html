@@ -44,7 +44,7 @@ th {
   flex-wrap: wrap;
 }
 .boton {
-  background: linear-gradient(45deg, #28a745, #218838);
+  background: linear-gradient(45deg, #28a745, #004d4d);
   color: white;
   padding: 10px 16px;
   border-radius: 8px;
@@ -83,6 +83,12 @@ th {
 #botonEstadisticas:hover {
   background: #218838;
 }
+
+#botonEstadisticas {
+  display: none;
+}
+
+
 footer {
   background: rgba(0,0,0,0.6);
   padding: 10px;
@@ -119,7 +125,7 @@ footer {
     <option value="rango">Rango personalizado</option>
   </select>
   <div id="filtros"></div>
-  <button onclick="procesarEstadisticas()" id="botonEstadisticas">Ver estadísticas</button>
+  <!--<button onclick="procesarEstadisticas()" id="botonEstadisticas">Ver estadísticas</button>-->
 </div>
 
 <div class="tabla-contenedor">
@@ -162,8 +168,16 @@ modoSelector.addEventListener('change', e => {
       <label>Hasta:</label><input type="date" id="fin">
     `;
   }
+
+  // 🆕 Escuchar cambios en cualquier input de fecha y actualizar automáticamente
+  filtros.querySelectorAll('input').forEach(input => {
+    input.addEventListener('change', procesarEstadisticas);
+  });
+
+  // Ejecutar al cambiar el modo
+  procesarEstadisticas();
 });
-modoSelector.dispatchEvent(new Event('change')); // 👈 activa filtro inicial
+modoSelector.dispatchEvent(new Event('change')); // activa filtro inicial
 
 function generarEstadisticas(data) {
   const tablaContenedor = document.querySelector('.tabla-contenedor');
@@ -207,7 +221,6 @@ function generarEstadisticas(data) {
   });
 }
 
-
 function procesarEstadisticas() {
   const modo = document.getElementById('modo').value;
   const data = JSON.parse(localStorage.getItem('gymData') || '{}');
@@ -215,7 +228,7 @@ function procesarEstadisticas() {
   let fechasFiltradas = Object.keys(data);
 
   if (modo === 'diario') {
-    const fecha = document.getElementById('fechaDiaria').value; // yyyy-mm-dd
+    const fecha = document.getElementById('fechaDiaria').value;
     fechasFiltradas = fecha ? [fecha] : [];
 
   } else if (modo === 'semanal') {
@@ -233,7 +246,7 @@ function procesarEstadisticas() {
     }
 
   } else if (modo === 'mensual') {
-    const mes = document.getElementById('mes').value; // yyyy-mm
+    const mes = document.getElementById('mes').value;
     if (mes) {
       fechasFiltradas = fechasFiltradas.filter(f => f.startsWith(mes));
     }
@@ -261,7 +274,7 @@ function procesarEstadisticas() {
 
   generarEstadisticas(datosFiltrados);
 }
-
 </script>
+
 </body>
 </html>
