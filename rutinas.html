@@ -16,11 +16,27 @@ h1 {
   color: #007bff;
   padding: 10px;
 }
-#fecha {
-  text-align: center;
-  font-weight: bold;
+#fecha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 10px;
 }
+
+#icono-calendario {
+  width: 28px;             /* agrandado un poco */
+  height: 28px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  border: none;
+}
+
+#icono-calendario:hover {
+  transform: scale(1.15);
+  opacity: 0.8;
+}
+
 .rutina {
   position: relative;
   margin: 6px auto;
@@ -29,12 +45,11 @@ h1 {
 }
 .rutina img {
   width: 100%;
-  height: 120px; /* antes era automático */
+  height: 120px;
   object-fit: cover;
   opacity: 0.4;
   border-radius: 10px;
   transition: opacity 0.3s;
-
 }
 .rutina:hover img {
   opacity: 0.6;
@@ -67,8 +82,19 @@ h1 {
 </head>
 <body>
 <h1>Selecciona una rutina</h1>
-<div id="fecha"></div>
+
+<!-- Contenedor de fecha + icono calendario -->
+<div id="fecha-container">
+  <div id="fecha"></div>
+  <img src="img/newcalendar.png" 
+       alt="Calendario" 
+       id="icono-calendario" 
+       title="Seleccionar otra fecha">
+</div>
+
 <div id="contenedor"></div>
+
+
 
 <script>
 const rutinas = [
@@ -83,6 +109,11 @@ const rutinas = [
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
 document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
+
+// Cambiado: ahora el calendario es solo la imagen con id "icono-calendario"
+document.getElementById('icono-calendario').onclick = () => {
+  window.location.href = 'index.html';
+};
 
 const cont = document.getElementById('contenedor');
 const data = JSON.parse(localStorage.getItem('gymData') || '{}');
@@ -107,5 +138,6 @@ rutinas.forEach((r, i) => {
   cont.appendChild(div);
 });
 </script>
+
 </body>
 </html>
