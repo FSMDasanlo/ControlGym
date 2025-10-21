@@ -119,6 +119,7 @@ const cont = document.getElementById('contenedor');
 const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 
 rutinas.forEach((r, i) => {
+	if (r.titulo === "Rodillas") return; // no mostramos
   const div = document.createElement('div');
   div.className = 'rutina';
   div.innerHTML = `<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;

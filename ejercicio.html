@@ -64,6 +64,13 @@ button:hover { background:#218838;}
 }
 .btn-filtro { background: #17a2b8; color: white; padding:6px 12px; border: none; border-radius:6px; cursor:pointer; font-size:0.9em; font-weight:bold; transition: background 0.3s; }
 .btn-filtro:hover { background:#117a8b; }
+
+td.max-valor {
+  background: #ffc107; /* amarillo brillante */
+  color: black;
+  font-weight: bold;
+}
+
 </style>
 </head>
 <body>
@@ -175,17 +182,23 @@ function actualizarTabla() {
     tbody.innerHTML = `<tr><td colspan="4">No hay datos guardados aún</td></tr>`;
     tfoot.innerHTML = '';
   } else {
-    tbody.innerHTML = registros.map((r, i) => `
-      <tr data-fecha="${r.fecha}" data-idx="${r.index}">
-        <td contenteditable="true" class="edit-fecha">${r.fecha.split('-').reverse().join('-')}</td>
-        <td contenteditable="true" class="edit-peso">${r.peso}</td>
-        <td contenteditable="true" class="edit-reps">${r.reps}</td>
-        <td>
-          <button class="boton-accion edit" onclick="editarFila(this)">💾</button>
-          <button class="boton-accion" onclick="eliminarFila('${r.fecha}', ${r.index})">🗑️</button>
-        </td>
-      </tr>
-    `).join('');
+  // Calcular máximos
+const maxPeso = Math.max(...registros.map(r => r.peso));
+const maxReps = Math.max(...registros.map(r => r.reps));
+
+// Pintar filas
+tbody.innerHTML = registros.map((r, i) => `
+  <tr data-fecha="${r.fecha}" data-idx="${r.index}">
+    <td contenteditable="true" class="edit-fecha">${r.fecha.split('-').reverse().join('-')}</td>
+    <td contenteditable="true" class="edit-peso ${r.peso === maxPeso ? 'max-valor' : ''}">${r.peso}</td>
+    <td contenteditable="true" class="edit-reps ${r.reps === maxReps ? 'max-valor' : ''}">${r.reps}</td>
+    <td>
+      <button class="boton-accion edit" onclick="editarFila(this)">💾</button>
+      <button class="boton-accion" onclick="eliminarFila('${r.fecha}', ${r.index})">🗑️</button>
+    </td>
+  </tr>
+`).join('');
+
     actualizarResumen();
   }
 }
