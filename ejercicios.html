@@ -94,13 +94,21 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   background: linear-gradient(45deg, #28a745, #218838);
   color: white;
 }
-
 .boton-volver:hover { opacity: 0.9; }
 
-
+#user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+#user-greeting { font-weight: bold; }
+#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+#logout-btn:hover { background: #c82333; }
 </style>
 </head>
 <body>
+
+<div id="user-header">
+  <span id="user-greeting"></span>
+  <button id="logout-btn">Cerrar Sesión</button>
+</div>
+
 <h1><div id="tituloRutina"></div></h1>
 <div id="fecha"></div>
 
@@ -112,7 +120,7 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   <a class="boton-volver rutinas" id="volverRutinas" href="#">
     <i>🏠</i> Rutinas
   </a>
-  <a class="boton-volver calendario" id="volverCalendario" href="index.html">
+  <a class="boton-volver calendario" id="volverCalendario" href="controlgym.html">
     <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px;">
     Calendario
   </a>
@@ -123,8 +131,31 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 
 <div id="lista"></div>
 
-<script>
-const rutinas = [
+<script type="module">
+  import { db, auth } from './firebase-config.js';
+  import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+
+  let userId = null;
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      userId = user.uid;
+      const greeting = document.getElementById('user-greeting');
+      if (greeting) {
+        greeting.textContent = `Hola, ${user.displayName || user.email}`;
+      }
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = 'index.html');
+      });
+      initializeApp();
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+  async function initializeApp() {
+  (async function() { // IIFE asíncrona
+  const rutinas = [
   {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
   {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
   {titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
@@ -183,9 +214,16 @@ document.getElementById('fecha').textContent = fecha.split('-').reverse().join('
 document.getElementById('tituloRutina').textContent = rutina.titulo;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
-const data = JSON.parse(localStorage.getItem('gymData') || '{}');
-const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
-const customVideos = JSON.parse(localStorage.getItem('customVideos') || '{}');
+// Cargar datos de Firestore
+const docRefRegistro = doc(db, "users", userId, "registros", fecha);
+const docSnapRegistro = await getDoc(docRefRegistro);
+const data = { [fecha]: docSnapRegistro.exists() ? docSnapRegistro.data() : {} };
+
+const docRefCustom = doc(db, "users", userId, "personalizados", "ejercicios");
+const docSnapCustom = await getDoc(docRefCustom);
+const customExercises = docSnapCustom.exists() ? docSnapCustom.data() : {};
+
+const customVideos = {}; // Asumimos que no se usa en esta página o se migrará después
 
 const personalizados = customExercises[rutinaIndex] || [];
 const todosEjercicios = [...rutina.ejercicios, ...personalizados];
@@ -233,8 +271,8 @@ function renderLista() {
         e.stopPropagation();
         if (confirm(`¿Eliminar "${ej}" de la rutina?`)) {
           personalizados.splice(i - rutina.ejercicios.length, 1);
-          customExercises[rutinaIndex] = personalizados;
-          localStorage.setItem('customExercises', JSON.stringify(customExercises));
+          const nuevosCustom = { ...customExercises, [rutinaIndex]: personalizados };
+          setDoc(doc(db, "users", userId, "personalizados", "ejercicios"), nuevosCustom).then(() => location.reload());
           location.reload();
         }
       };
@@ -249,8 +287,8 @@ function renderLista() {
 
     // ✅ check si hay datos guardados
     if (data[fecha] && data[fecha][rutinaIndex] &&
-        Array.isArray(data[fecha][rutinaIndex][i]) &&
-        data[fecha][rutinaIndex][i].length > 0) {
+        data[fecha][rutinaIndex][ej] && // Usamos el nombre del ejercicio
+        Array.isArray(data[fecha][rutinaIndex][ej]) && data[fecha][rutinaIndex][ej].length > 0) {
       const check = document.createElement('div');
       check.className = 'check';
       check.textContent = '✓';
@@ -263,18 +301,22 @@ function renderLista() {
 }
 
 
-function agregarEjercicio() {
+async function agregarEjercicio() {
   const nuevo = prompt('Nombre del nuevo ejercicio:');
   if (nuevo && nuevo.trim() !== '') {
-    if (!customExercises[rutinaIndex]) customExercises[rutinaIndex] = [];
-    customExercises[rutinaIndex].push(nuevo.trim());
-    localStorage.setItem('customExercises', JSON.stringify(customExercises));
-    location.reload();
+    const nuevosPersonalizados = [...(customExercises[rutinaIndex] || []), nuevo.trim()];
+    const nuevosCustom = { ...customExercises, [rutinaIndex]: nuevosPersonalizados };
+    await setDoc(doc(db, "users", userId, "personalizados", "ejercicios"), nuevosCustom);
+    window.agregarEjercicio = agregarEjercicio;
+    renderLista();
   }
 }
 
+window.agregarEjercicio = agregarEjercicio;
 
 renderLista();
+})();
+}
 </script>
 </body>
 </html>

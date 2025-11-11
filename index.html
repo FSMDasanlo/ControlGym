@@ -1,296 +1,205 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inicio</title>
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: url('img/fondo.jpg') no-repeat center center fixed;
-  background-size: cover;
-  color: white;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-header {
-  margin-top: 10px;
-  animation: fadeInDown 1s ease-out;
-}
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.logo {
-  width: 260px;
-  max-width: 90%;
-  height: auto;
-  margin-top: 5px;
-}
-.boton {
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: white;
-  padding: 14px 24px;
-  font-size: 1.2em;
-  border-radius: 10px;
-  text-decoration: none;
-  margin: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  transition: transform 0.2s;
-}
-.boton:hover {
-  transform: scale(1.05);
-}
-.contenido {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.calendario {
-  background: rgba(255,255,255,0.9);
-  color: black;
-  padding: 20px;
-  border-radius: 10px;
-  margin-top: 2px;
-  max-width: 600px;
-}
-.calendario table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-.calendario th {
-  background: #007bff;
-  color: white;
-  padding: 8px;
-}
-.calendario td {
-  padding: 8px;
-  border: 1px solid #ddd;
-  position: relative;
-}
-.calendario td button {
-  background: none;
-  color: black;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.calendario td button.hoy {
-  background: #007bff;
-  color: white;
-}
-.check {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  color: green;
-  font-size: 14px;
-  font-weight: bold;
-}
-td[data-tooltip] {
-  position: relative;
-}
-td[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  font-size: 0.8em;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-  z-index: 10;
-}
-td[data-tooltip]:hover::after {
-  opacity: 1;
-}
-.descripcion {
-  font-style: italic;
-  font-size: 0.9em;
-  color:#004d4d;
-  margin: 20px auto;
-  max-width: 600px;
-  background: rgba(0,0.5,0.5,0.2);
-  padding: 10px;
-  border-radius: 10px;
-}
-footer {
-  background: rgba(0,0,0,0.9);
-  padding: 10px;
-  font-size: 0.9em;
-}
-.marca {
-  color: #ffbf00;
-  font-weight: bold;
-  font-size: 1.3em
-}
-.rojo {
-  color: #cc0000;
-  font-size: 1.3em
-}
-.verde {
-  color: #228B22;
-  font-size: 1.3em
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ControlGym - Acceso</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #212529; /* Un fondo oscuro y neutro */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .login-container {
+      background: rgba(0, 0, 0, 0.75);
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      color: white;
+      width: 320px;
+      max-width: 90%;
+      text-align: center;
+    }
+    .login-container img {
+      width: 200px;
+      height: auto; /* Asegura que la altura se ajuste a la anchura */
+      max-width: 100%; /* Evita que la imagen se desborde en pantallas muy pequeñas */
+      margin-bottom: 20px;
+    }
+    .login-container h2 {
+      margin-bottom: 25px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #555;
+      background: #333;
+      color: white;
+      box-sizing: border-box;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    #error-message {
+      color: #ffc107;
+      margin-top: 15px;
+      font-size: 0.9em;
+      min-height: 20px;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <img src="img/logocompleto.png" alt="Logo" class="logo">
-</header>
 
-<div class="contenido">
-  <div class="calendario">
-    <label for="mes">Mes:</label>
-    <select id="mes"></select>
-    <label for="anio">Año:</label>
-    <select id="anio"></select>
-    <div id="calendarioTabla"></div>
+  <div class="login-container">
+    <img src="img/logocompleto.png" alt="Logo ControlGym">
+    <h2>Iniciar Sesión</h2>
+    <form id="login-form" onsubmit="return false;">
+      <div class="input-group">
+        <label for="name">Nombre (para nuevos registros)</label>
+        <input type="text" id="name" placeholder="Tu nombre o apodo">
+      </div>
+      <div class="input-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="input-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" required>
+      </div>
+      <button id="login-btn" class="btn btn-primary">Acceder</button>
+      <button id="register-btn" class="btn btn-secondary" type="button">Registrar Nuevo Usuario</button>
+    </form>
+    <div id="error-message"></div>
   </div>
 
-  <a class="boton" href="estadisticas.html">📊 Ver estadísticas</a>
-</div>
-
-<div class="descripcion">
-  <span class="rojo">C</span><span class="verde">ontrol</span><span class="rojo">G</span><span class="marca">ym</span>, te permite llevar un control de tus ejercicios diarios.<br>
-  Te ofrece una serie de rutinas, y posibilidad de crear tus propios ejercicios.<br>
-  Guardar tus marcas personales diarias y obtener estadísticas.
-</div>
-
-<footer>
-  &copy;
- DasanloSoft, 2025
-</footer>
-
-<script>
-const meses = [
-  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-];
-const diasSemana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-const hoy = new Date();
-const mesActual = hoy.getMonth();
-const añoActual = hoy.getFullYear();
-
-const selectMes = document.getElementById('mes');
-const selectAnio = document.getElementById('anio');
-const calendarioTabla = document.getElementById('calendarioTabla');
-
-// Inicializar gymData si no existe
-if (!localStorage.getItem('gymData')) {
-  localStorage.setItem('gymData', '{}');
-}
-
-// Rellenar meses
-meses.forEach((m, i) => {
-  const opt = document.createElement('option');
-  opt.value = i;
-  opt.textContent = m;
-  if (i === mesActual) opt.selected = true;
-  selectMes.appendChild(opt);
-});
-
-// Rellenar años (rango 2020–2030)
-for (let y = 2020; y <= 2030; y++) {
-  const opt = document.createElement('option');
-  opt.value = y;
-  opt.textContent = y;
-  if (y === añoActual) opt.selected = true;
-  selectAnio.appendChild(opt);
-}
-
-function renderCalendario(mes, anio) {
-  calendarioTabla.innerHTML = '';
-  const fecha = new Date(anio, mes, 1);
-  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
-  const primerDiaSemana = (fecha.getDay() + 6) % 7;
-
-  const data = JSON.parse(localStorage.getItem('gymData') || '{}');
-  const hoyStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-
-  const table = document.createElement('table');
-  const thead = document.createElement('thead');
-  const trHead = document.createElement('tr');
-  diasSemana.forEach(dia => {
-    const th = document.createElement('th');
-    th.textContent = dia;
-    trHead.appendChild(th);
-  });
-  thead.appendChild(trHead);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  let tr = document.createElement('tr');
-  for (let i = 0; i < primerDiaSemana; i++) {
-    tr.appendChild(document.createElement('td'));
-  }
-
-  for (let d = 1; d <= diasEnMes; d++) {
-    const td = document.createElement('td');
-    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-
-    const btn = document.createElement('button');
-    btn.textContent = d;
-    btn.onclick = () => {
-      window.location.href = `rutinas.html?fecha=${fechaStr}`;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+    
+    // Tu configuración de Firebase, que ya tenemos en firebase-config.js
+    // ¡Importante! Necesitaremos la configuración aquí también.
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYut-MRdq5Sdn_U5IQv4l_EF1X0JJ4e70",
+      authDomain: "controlgym-4190e.firebaseapp.com",
+      projectId: "controlgym-4190e",
+      storageBucket: "controlgym-4190e.firebasestorage.app",
+      messagingSenderId: "488604272453",
+      appId: "1:488604272453:web:c83ad35e9be910a2f2a02c"
     };
 
-    if (fechaStr === hoyStr) {
-      btn.classList.add('hoy');
-    }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    if (data[fechaStr]) {
-      const resumen = Object.entries(data[fechaStr])
-        .map(([_, ejercicios]) =>
-          Object.keys(ejercicios).filter(e => Array.isArray(ejercicios[e]) && ejercicios[e].length > 0)
-        )
-        .flat()
-        .join(', ');
-
-      if (resumen) {
-        td.setAttribute('data-tooltip', resumen);
-        const check = document.createElement('div');
-        check.className = 'check';
-        check.textContent = '✓';
-        td.appendChild(check);
+    // Redirección inteligente: si el usuario ya está logueado, lo mandamos a la app.
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = 'controlgym.html';
       }
-    }
+    });
 
-    td.appendChild(btn);
-    tr.appendChild(td);
-    if ((primerDiaSemana + d) % 7 === 0) {
-      tbody.appendChild(tr);
-      tr = document.createElement('tr');
-    }
-  }
+    // --- Lógica de la página ---
 
-  tbody.appendChild(tr);
-  table.appendChild(tbody);
-  calendarioTabla.appendChild(table);
-}
+    const emailInput = document.getElementById('email');
+    const nameInput = document.getElementById('name');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const errorMessageDiv = document.getElementById('error-message');
 
-selectMes.addEventListener('change', () => {
-  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
-});
-selectAnio.addEventListener('change', () => {
-  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
-});
+    const showError = (message) => {
+      errorMessageDiv.textContent = message;
+    };
 
-renderCalendario(mesActual, añoActual);
-</script>
+    // Prevenir el envío del formulario por defecto
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+    });
+
+    // Evento para el botón de Acceder
+    loginBtn.addEventListener('click', async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      showError('');
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = 'controlgym.html';
+      } catch (error) {
+        console.error("Error de login:", error.code);
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          showError('Email o contraseña incorrectos.');
+        } else {
+          showError('Error al intentar acceder.');
+        }
+      }
+    });
+
+    // Evento para el botón de Registrar
+    registerBtn.addEventListener('click', async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      const name = nameInput.value.trim();
+      showError('');
+
+      if (!name) {
+        showError('Por favor, introduce un nombre para el registro.');
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Ahora actualizamos el perfil del usuario con su nombre
+        await updateProfile(userCredential.user, {
+          displayName: name
+        });
+
+        alert(`¡Bienvenido, ${name}! Usuario registrado con éxito.`);
+        window.location.href = 'controlgym.html';
+      } catch (error) {
+        if (error.code === 'auth/email-already-in-use') showError('El email ya está en uso.');
+        else if (error.code === 'auth/weak-password') showError('La contraseña debe tener al menos 6 caracteres.');
+        else showError('Error al registrar el usuario.');
+      }
+    });
+
+  </script>
+
 </body>
 </html>

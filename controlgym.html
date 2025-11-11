@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ControlGym - Calendario</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+  h1 { text-align: center; color: #007bff; }
+  #controles { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px; flex-wrap: wrap; }
+  select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+  #calendario { width: 95%; max-width: 800px; margin: auto; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th, td { border: 1px solid #ddd; padding: 5px; text-align: center; height: 80px; vertical-align: top; position: relative; }
+  th { background: #007bff; color: white; height: auto; padding: 10px; }
+  td button { width: 30px; height: 30px; border-radius: 50%; border: none; background: #e9ecef; cursor: pointer; font-weight: bold; }
+  td button:hover { background: #ced4da; }
+  td button.hoy { background: #ffc107; border: 2px solid #e0a800; }
+  .check { position: absolute; top: 5px; right: 5px; color: green; font-size: 1.2em; }
+  td[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    z-index: 10;
+    font-size: 0.8em;
+    white-space: pre-wrap;
+    width: max-content;
+    max-width: 200px;
+  }
+  .botones-footer { display: flex; justify-content: center; gap: 20px; margin: 20px; }
+  .boton-stats { background: linear-gradient(45deg, #17a2b8, #138496); color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+  #user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+  #user-greeting { font-weight: bold; }
+  #logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+  #logout-btn:hover { background: #c82333; }
+  footer { text-align: center; padding: 15px; background: #343a40; color: white; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div id="user-header">
+  <span id="user-greeting"></span>
+  <button id="logout-btn">Cerrar Sesión</button>
+</div>
+
+<h1>📅 Calendario de Entrenamiento</h1>
+
+<div id="controles">
+  <select id="mes"></select>
+  <select id="anio"></select>
+</div>
+
+<div id="calendario">
+  <div id="calendarioTabla"></div>
+</div>
+
+<div class="botones-footer">
+  <a href="estadisticas.html" class="boton-stats">📊 Ver Estadísticas</a>
+</div>
+
+<footer>
+  &copy;
+ DasanloSoft, 2025
+</footer>
+<script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+
+    let userId = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        const greeting = document.getElementById('user-greeting');
+        if (greeting) {
+          greeting.textContent = `Hola, ${user.displayName || user.email}`;
+        }
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          signOut(auth).then(() => window.location.href = 'index.html');
+        });
+        initializeApp();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    async function initializeApp() {
+    (async function() { // IIFE asíncrona
+  const meses = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
+const diasSemana = ["L", "M", "X", "J", "V", "S", "D"];
+const hoy = new Date();
+const mesActual = hoy.getMonth();
+const añoActual = hoy.getFullYear();
+
+const selectMes = document.getElementById('mes');
+const selectAnio = document.getElementById('anio');
+const calendarioTabla = document.getElementById('calendarioTabla');
+
+// Rellenar meses
+meses.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = m;
+  if (i === mesActual) opt.selected = true;
+  selectMes.appendChild(opt);
+});
+
+// Rellenar años (rango 2020–2030)
+for (let y = 2020; y <= 2030; y++) {
+  const opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  if (y === añoActual) opt.selected = true;
+  selectAnio.appendChild(opt);
+}
+
+async function renderCalendario(mes, anio) {
+  calendarioTabla.innerHTML = '';
+  const fecha = new Date(anio, mes, 1);
+  const diasEnMes = new Date(anio, mes + 1, 0).getDate();
+  const primerDiaSemana = (fecha.getDay() + 6) % 7;
+
+  const hoyStr = `${añoActual}-${String(mesActual+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+  // Cargar datos de Firestore
+  const data = {};
+  const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
+  querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const trHead = document.createElement('tr');
+  diasSemana.forEach(dia => {
+    const th = document.createElement('th');
+    th.textContent = dia;
+    trHead.appendChild(th);
+  });
+  thead.appendChild(trHead);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  let tr = document.createElement('tr');
+  for (let i = 0; i < primerDiaSemana; i++) {
+    tr.appendChild(document.createElement('td'));
+  }
+
+  for (let d = 1; d <= diasEnMes; d++) {
+    const td = document.createElement('td');
+    const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+    const btn = document.createElement('button');
+    btn.textContent = d;
+    btn.onclick = () => {
+      window.location.href = `rutinas.html?fecha=${fechaStr}`;
+    };
+
+    if (fechaStr === hoyStr) {
+      btn.classList.add('hoy');
+    }
+
+    if (data[fechaStr]) {
+      const resumen = Object.entries(data[fechaStr])
+        .map(([_, ejercicios]) =>
+          Object.keys(ejercicios).filter(e => Array.isArray(ejercicios[e]) && ejercicios[e].length > 0)
+        )
+        .flat()
+        .join(', ');
+
+      if (resumen) {
+        td.setAttribute('data-tooltip', resumen);
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.textContent = '✓';
+        td.appendChild(check);
+      }
+    }
+
+    td.appendChild(btn);
+    tr.appendChild(td);
+    if ((primerDiaSemana + d) % 7 === 0) {
+      tbody.appendChild(tr);
+      tr = document.createElement('tr');
+    }
+  }
+
+  tbody.appendChild(tr);
+  table.appendChild(tbody);
+  calendarioTabla.appendChild(table);
+}
+
+selectMes.addEventListener('change', () => {
+  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
+});
+selectAnio.addEventListener('change', () => {
+  renderCalendario(parseInt(selectMes.value), parseInt(selectAnio.value));
+});
+
+await renderCalendario(mesActual, añoActual);
+})();
+    }
+
+</script>
+</body>
+</html>

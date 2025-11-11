@@ -70,10 +70,18 @@ td.max-valor {
   color: black;
   font-weight: bold;
 }
-
+#user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+#user-greeting { font-weight: bold; }
+#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+#logout-btn:hover { background: #c82333; }
 </style>
 </head>
 <body>
+
+<div id="user-header">
+  <span id="user-greeting"></span>
+  <button id="logout-btn">Cerrar Sesión</button>
+</div>
 
 <h1 id="tituloPrincipal">Ejercicio</h1>
 <div id="fecha"></div>
@@ -104,12 +112,32 @@ td.max-valor {
 <div id="toast">✅ Datos guardados</div>
 
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
 
-<!-- Aquí va tu script JS (el que ya tenías con la gráfica y la tabla) -->
+<script type="module">
+  import { db, auth } from './firebase-config.js';
+  import { doc, getDoc, setDoc, getDocs, collection, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
 
-<script>
+  let userId = null;
 
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      userId = user.uid;
+      const greeting = document.getElementById('user-greeting');
+      if (greeting) {
+        greeting.textContent = `Hola, ${user.displayName || user.email}`;
+      }
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = 'index.html');
+      });
+      initializeApp();
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+async function initializeApp() {
+(async function() { // IIFE asíncrona
 const rutinas = [
   {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
   {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
@@ -162,14 +190,18 @@ const videos = {
   ]
 };
 
-const customVideos = JSON.parse(localStorage.getItem('customVideos') || '{}');
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
 const rutinaIndex = parseInt(params.get('rutina'));
 const ejercicioIndex = parseInt(params.get('ejercicio'));
 
 const rutina = rutinas[rutinaIndex];
-const customExercises = JSON.parse(localStorage.getItem('customExercises') || '{}');
+
+const docRefCustomEjercicios = doc(db, "users", userId, "personalizados", "ejercicios");
+const docSnapCustomEjercicios = await getDoc(docRefCustomEjercicios);
+const customExercises = docSnapCustomEjercicios.exists() ? docSnapCustomEjercicios.data() : {};
+const customVideos = {}; // Aún no se usa, pero si se usara, también necesitaría el userId
+
 const personalizados = customExercises[rutinaIndex] || [];
 const todosEjercicios = [...rutina.ejercicios, ...personalizados];
 const todosVideos = [
@@ -200,16 +232,20 @@ if (videoUrl) {
   document.getElementById('videoEjercicio').innerHTML = embedHtml;
 }
 
-const data = JSON.parse(localStorage.getItem('gymData') || '{}');
 const thead = document.getElementById('thead');
 const tbody = document.getElementById('tbody');
 const tfoot = document.getElementById('tfoot');
 
 thead.innerHTML = `<tr><th>Fecha</th><th>Peso (kg)</th><th>Repeticiones</th><th>Acciones</th></tr>`;
 
-// Construimos registros desde localStorage
+// Construimos registros desde Firestore
 let registros = [];
-for (const f in data) {
+const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
+const data = {};
+querySnapshot.forEach(doc => {
+    data[doc.id] = doc.data();
+});
+for (const f in data) { // f es la fecha (ID del documento)
   const ejer = data[f]?.[rutinaIndex]?.[ejercicioNombre];
   if (Array.isArray(ejer)) {
     ejer.forEach((r, i) => registros.push({ fecha: f, peso: r.peso, reps: r.reps, index: i }));
@@ -257,45 +293,76 @@ function actualizarResumen(){
 actualizarTabla();
 
 // Funciones para guardar, editar y eliminar
-function guardarDatos(){
+async function guardarDatos(){
   const peso = parseFloat(document.getElementById('peso').value) || 0;
   const reps = parseInt(document.getElementById('reps').value) || 0;
-  if (!data[fecha]) data[fecha] = {};
-  if (!data[fecha][rutinaIndex]) data[fecha][rutinaIndex] = {};
-  if (!data[fecha][rutinaIndex][ejercicioNombre]) data[fecha][rutinaIndex][ejercicioNombre] = [];
-  data[fecha][rutinaIndex][ejercicioNombre].push({peso, reps});
-  localStorage.setItem('gymData', JSON.stringify(data));
+
+  const docRef = doc(db, "users", userId, "registros", fecha);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const datosActuales = docSnap.data();
+    const registrosEjercicio = datosActuales[rutinaIndex]?.[ejercicioNombre] || [];
+    registrosEjercicio.push({ peso, reps });
+    await updateDoc(docRef, {
+      [`${rutinaIndex}.${ejercicioNombre}`]: registrosEjercicio
+    });
+  } else {
+    const nuevoDato = {
+      [rutinaIndex]: {
+        [ejercicioNombre]: [{ peso, reps }]
+      }
+    };
+    await setDoc(docRef, nuevoDato);
+  }
+
   mostrarToast("✅ Datos guardados");
   setTimeout(()=> location.reload(),500);
 }
 
-function eliminarFila(f, idx){
+async function eliminarFila(f, idx){
   if (!confirm("¿Eliminar este registro?")) return;
-  data[f][rutinaIndex][ejercicioNombre].splice(idx,1);
-  if (!data[f][rutinaIndex][ejercicioNombre].length) delete data[f][rutinaIndex][ejercicioNombre];
-  localStorage.setItem('gymData', JSON.stringify(data));
+  const docRef = doc(db, "users", userId, "registros", f);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return;
+
+  const datosActuales = docSnap.data();
+  const registrosEjercicio = datosActuales[rutinaIndex]?.[ejercicioNombre] || [];
+  registrosEjercicio.splice(idx, 1);
+
+  if (registrosEjercicio.length === 0) {
+    await updateDoc(docRef, { [`${rutinaIndex}.${ejercicioNombre}`]: deleteField() });
+  } else {
+    await updateDoc(docRef, { [`${rutinaIndex}.${ejercicioNombre}`]: registrosEjercicio });
+  }
   location.reload();
 }
 
-function editarFila(btn){
+async function editarFila(btn){
   const fila = btn.closest('tr');
   const fOriginal = fila.dataset.fecha;
   const idx = parseInt(fila.dataset.idx);
   const nuevaFecha = fila.querySelector('.edit-fecha').textContent.split('-').reverse().join('-');
   const nuevoPeso = parseFloat(fila.querySelector('.edit-peso').textContent);
   const nuevasReps = parseInt(fila.querySelector('.edit-reps').textContent);
-  if (!data[fOriginal] || !data[fOriginal][rutinaIndex] || !data[fOriginal][rutinaIndex][ejercicioNombre]) return;
-  const registro = data[fOriginal][rutinaIndex][ejercicioNombre][idx];
-  registro.peso = nuevoPeso;
-  registro.reps = nuevasReps;
-  if (nuevaFecha !== fOriginal){
-    if (!data[nuevaFecha]) data[nuevaFecha] = {};
-    if (!data[nuevaFecha][rutinaIndex]) data[nuevaFecha][rutinaIndex] = {};
-    if (!data[nuevaFecha][rutinaIndex][ejercicioNombre]) data[nuevaFecha][rutinaIndex][ejercicioNombre] = [];
-    data[nuevaFecha][rutinaIndex][ejercicioNombre].push(registro);
-    data[fOriginal][rutinaIndex][ejercicioNombre].splice(idx,1);
+
+  // Elimina el registro antiguo
+  await eliminarFila(fOriginal, idx);
+
+  // Guarda el nuevo registro (simulando un guardado normal)
+  const docRef = doc(db, "users", userId, "registros", nuevaFecha);
+  const docSnap = await getDoc(docRef);
+  const datosNuevos = docSnap.exists() ? docSnap.data() : {};
+  if (!datosNuevos[rutinaIndex]) datosNuevos[rutinaIndex] = {};
+  if (!datosNuevos[rutinaIndex][ejercicioNombre]) datosNuevos[rutinaIndex][ejercicioNombre] = [];
+  datosNuevos[rutinaIndex][ejercicioNombre].push({ peso: nuevoPeso, reps: nuevasReps });
+
+  if (docSnap.exists()) {
+    await updateDoc(docRef, datosNuevos);
+  } else {
+    await setDoc(docRef, datosNuevos);
   }
-  localStorage.setItem('gymData', JSON.stringify(data));
+
   mostrarToast("💾 Cambios guardados");
   setTimeout(()=> location.reload(),500);
 }
@@ -307,6 +374,11 @@ function mostrarToast(text){
   setTimeout(()=> toast.className = toast.className.replace("show",""),2000);
 }
 
+// Exponer funciones al scope global para los onclick
+window.guardarDatos = guardarDatos;
+window.eliminarFila = eliminarFila;
+window.editarFila = editarFila;
+
 // ===================== Gráfica =====================
 let vistaActual = '2m';
 let grafica = null;
@@ -317,6 +389,7 @@ function alternarVista() {
     vistaActual === '2m' ? '📈 Histórico' : '📅 Dos últimos meses';
   generarGrafica();
 }
+window.alternarVista = alternarVista; // Hacemos la función accesible globalmente
 
 function generarGrafica() {
   const ctx = document.getElementById('graficaProgreso');
@@ -350,6 +423,8 @@ function generarGrafica() {
 
 // Inicializamos gráfica
 generarGrafica();
+})();
+}
 </script>
 
 </body>

@@ -78,9 +78,19 @@ h1 {
   padding: 2px 6px;
   font-weight: bold;
 }
+#user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+#user-greeting { font-weight: bold; }
+#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+#logout-btn:hover { background: #c82333; }
 </style>
 </head>
 <body>
+
+<div id="user-header">
+  <span id="user-greeting"></span>
+  <button id="logout-btn">Cerrar Sesión</button>
+</div>
+
 <h1>Selecciona una rutina</h1>
 
 <!-- Contenedor de fecha + icono calendario -->
@@ -94,51 +104,76 @@ h1 {
 
 <div id="contenedor"></div>
 
+<script type="module">
+  import { db, auth } from './firebase-config.js';
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Usuario logueado, procedemos a cargar la página
+      initializeApp(user.uid);
+      const greeting = document.getElementById('user-greeting');
+      if (greeting) {
+        greeting.textContent = `Hola, ${user.displayName || user.email}`;
+      }
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = 'index.html');
+      });
+    } else {
+      // No hay usuario, redirigir al login
+      window.location.href = 'index.html';
+    }
+  });
+  
+  async function initializeApp(userId) {
+  (async function() { // IIFE asíncrona
+    const rutinas = [
+      {titulo:"Pecho, bíceps y abdominales", imagen:"img/rutina1.jpg"},
+      {titulo:"Espalda y tríceps", imagen:"img/rutina2.jpg"},
+      {titulo:"Hombros, trapecio y piernas", imagen:"img/rutina3.jpg"},
+      {titulo:"Pecho y bíceps", imagen:"img/rutina4.jpg"},
+      {titulo:"Espalda y tríceps 2", imagen:"img/rutina5.jpg"},
+      {titulo:"Rodillas", imagen:"img/rutina6.jpg"}
+    ];
 
+    const params = new URLSearchParams(window.location.search);
+    const fecha = params.get('fecha');
+    document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 
-<script>
-const rutinas = [
-  {titulo:"Pecho, bíceps y abdominales", imagen:"img/rutina1.jpg"},
-  {titulo:"Espalda y tríceps", imagen:"img/rutina2.jpg"},
-  {titulo:"Hombros, trapecio y piernas", imagen:"img/rutina3.jpg"},
-  {titulo:"Pecho y bíceps", imagen:"img/rutina4.jpg"},
-  {titulo:"Espalda y tríceps 2", imagen:"img/rutina5.jpg"},
-  {titulo:"Rodillas", imagen:"img/rutina6.jpg"}
-];
+    // Cambiado: ahora el calendario es solo la imagen con id "icono-calendario"
+    document.getElementById('icono-calendario').onclick = () => {
+      window.location.href = 'controlgym.html';
+    };
 
-const params = new URLSearchParams(window.location.search);
-const fecha = params.get('fecha');
-document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
+    const cont = document.getElementById('contenedor');
 
-// Cambiado: ahora el calendario es solo la imagen con id "icono-calendario"
-document.getElementById('icono-calendario').onclick = () => {
-  window.location.href = 'index.html';
-};
+    // Cargar datos de Firestore
+    const data = {};
+    const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
+    querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });
 
-const cont = document.getElementById('contenedor');
-const data = JSON.parse(localStorage.getItem('gymData') || '{}');
+    rutinas.forEach((r, i) => {
+    	if (r.titulo === "Rodillas") return; // no mostramos
+      const div = document.createElement('div');
+      div.className = 'rutina';
+      div.innerHTML = `<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;
 
-rutinas.forEach((r, i) => {
-	if (r.titulo === "Rodillas") return; // no mostramos
-  const div = document.createElement('div');
-  div.className = 'rutina';
-  div.innerHTML = `<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;
+      if (
+        data[fecha] &&
+        data[fecha][i] &&
+        Object.values(data[fecha][i]).some(ej => Array.isArray(ej) && ej.length > 0)
+      ) {
+        const check = document.createElement('div');
+        check.className = 'check';
+        check.textContent = '✓';
+        div.appendChild(check);
+      }
 
-  if (
-    data[fecha] &&
-    data[fecha][i] &&
-    Object.values(data[fecha][i]).some(ej => Array.isArray(ej) && ej.length > 0)
-  ) {
-    const check = document.createElement('div');
-    check.className = 'check';
-    check.textContent = '✓';
-    div.appendChild(check);
+      div.onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutina=${i}`;
+      cont.appendChild(div);
+    });
+  })();
   }
-
-  div.onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutina=${i}`;
-  cont.appendChild(div);
-});
 </script>
-
 </body>
 </html>

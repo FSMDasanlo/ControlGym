@@ -20,16 +20,25 @@ th { background: #007bff; color: white; }
 footer { background: rgba(0,0,0,0.6); padding: 10px; font-size: 0.9em; position: fixed; bottom: 0; width: 100%; }
 .tabla-contenedor { max-height: 300px; overflow-y: auto; margin: 0 auto; width: 90%; max-width: 600px; background: rgba(255,255,255,0.95); border-radius: 10px; }
 #filtros input { padding: 5px; }
+#user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+#user-greeting { font-weight: bold; }
+#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+#logout-btn:hover { background: #c82333; }
 </style>
 </head>
 <body>
+
+<div id="user-header">
+  <span id="user-greeting"></span>
+  <button id="logout-btn">Cerrar Sesión</button>
+</div>
 
 <h1>📊 Estadísticas</h1>
 <div id="fecha"></div>
 
 <div class="botones">
   <a class="boton" id="volverRutinas">🏋️ Ir a Rutinas</a>
-  <a class="boton" href="index.html">📅 Ir al Calendario</a>
+  <a class="boton" href="controlgym.html">📅 Ir al Calendario</a>
 </div>
 
 <div class="modo-tiempo">
@@ -58,7 +67,29 @@ footer { background: rgba(0,0,0,0.6); padding: 10px; font-size: 0.9em; position:
 <footer>Copyright DasanloSoft, 2025</footer>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script>
+<script type="module">
+  import { db, auth } from './firebase-config.js';
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+
+  let userId = null;
+  let fullData = {}; // Variable global para almacenar todos los datos de Firestore
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      userId = user.uid;
+      const greeting = document.getElementById('user-greeting');
+      if (greeting) {
+        greeting.textContent = `Hola, ${user.displayName || user.email}`;
+      }
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        signOut(auth).then(() => window.location.href = 'index.html');
+      });
+      cargarDatosIniciales();
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
 // --- Fecha y enlaces ---
 const hoy = new Date();
 const yyyy = hoy.getFullYear();
@@ -69,7 +100,7 @@ document.getElementById('fecha').textContent = `Fecha: ${dd}-${mm}-${yyyy}`;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
 // --- Selector de modo ---
-const modoSelector = document.getElementById('modo');
+const modoSelector = document.getElementById('modo'); 
 modoSelector.addEventListener('change', e => {
   const modo = e.target.value;
   const filtros = document.getElementById('filtros');
@@ -82,7 +113,13 @@ modoSelector.addEventListener('change', e => {
   filtros.querySelectorAll('input').forEach(i => i.addEventListener('change', procesarEstadisticas));
   procesarEstadisticas();
 });
-modoSelector.dispatchEvent(new Event('change'));
+
+// Cargar todos los datos de Firestore una sola vez al inicio
+async function cargarDatosIniciales() {
+    const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
+    querySnapshot.forEach(doc => { fullData[doc.id] = doc.data(); });
+    modoSelector.dispatchEvent(new Event('change')); // Iniciar el primer procesamiento
+}
 
 // --- Funciones de filtrado ---
 function getMondayISO(week,year){
@@ -97,8 +134,8 @@ function getMondayISO(week,year){
 
 function procesarEstadisticas(){
   const modo = document.getElementById('modo').value;
-  const data = JSON.parse(localStorage.getItem('gymData')||'{}');
-  let fechasFiltradas = Object.keys(data);
+  const data = fullData; // Usar los datos ya cargados
+  let fechasFiltradas = Object.keys(data); 
 
   if(modo==='diario'){
     const f=document.getElementById('fechaDiaria')?.value;
@@ -186,6 +223,8 @@ document.getElementById('exportExcel').addEventListener('click',()=>{
   const wb=XLSX.utils.table_to_book(tabla,{sheet:"Estadísticas",raw:true});
   XLSX.writeFile(wb,`Estadisticas_${fecha}.xlsx`);
 });
+
+window.exportarCSV = exportarCSV; // Exponer al scope global
 </script>
 </body>
 </html>
