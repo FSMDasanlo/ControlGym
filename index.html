@@ -142,6 +142,12 @@
     const registerBtn = document.getElementById('register-btn');
     const errorMessageDiv = document.getElementById('error-message');
 
+    // Cargar el email guardado si existe
+    const savedEmail = localStorage.getItem('lastLoggedInEmail');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+    }
+
     const showError = (message) => {
       errorMessageDiv.textContent = message;
     };
@@ -158,6 +164,7 @@
       showError('');
 
       try {
+        localStorage.setItem('lastLoggedInEmail', email); // Guardar el email al iniciar sesión
         await signInWithEmailAndPassword(auth, email, password);
         window.location.href = 'controlgym.html';
       } catch (error) {
@@ -190,6 +197,7 @@
           displayName: name
         });
 
+        localStorage.setItem('lastLoggedInEmail', email); // Guardar el email al registrarse
         alert(`¡Bienvenido, ${name}! Usuario registrado con éxito.`);
         window.location.href = 'controlgym.html';
       } catch (error) {
