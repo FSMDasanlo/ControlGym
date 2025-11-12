@@ -192,10 +192,13 @@
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         
-        // Ahora actualizamos el perfil del usuario con su nombre
+        // Actualizamos el perfil del usuario con su nombre
         await updateProfile(userCredential.user, {
           displayName: name
         });
+
+        // Forzamos la recarga del usuario para asegurar que el displayName está disponible
+        await userCredential.user.reload();
 
         localStorage.setItem('lastLoggedInEmail', email); // Guardar el email al registrarse
         alert(`¡Bienvenido, ${name}! Usuario registrado con éxito.`);
