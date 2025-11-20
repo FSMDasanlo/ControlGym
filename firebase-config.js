@@ -4,7 +4,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/9.10.0/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
+export const firebaseConfig = { // Exportamos la configuración
   apiKey: "AIzaSyAYut-MRdq5Sdn_U5IQv4l_EF1X0JJ4e70",
   authDomain: "controlgym-4190e.firebaseapp.com",
   projectId: "controlgym-4190e",

@@ -5,17 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rutinas</title>
 <style>
-body {
-  font-family: Arial;
-  background: #f4f4f4;
-  margin: 0;
-  padding: 0;
-}
-h1 {
-  text-align: center;
-  color: #007bff;
-  padding: 10px;
-}
+  /* ESTILOS GENERALES Y CONTENEDORES */
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1d; color: #f1f1f1; margin: 0; padding: 0; }
+  .header-container { background: #2c2f33; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+  #user-header { max-width: 600px; margin: 0 auto; background: transparent; }
+  .main-container { max-width: 600px; margin: 25px auto; background: #2c2f33; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+  h1 { color: #0095ff; border-bottom: 2px solid #4f545c; padding-bottom: 10px; margin-top: 0; text-align: center; }
+  /* FIN DE ESTILOS GENERALES */
+
 #fecha-container {
   display: flex;
   justify-content: center;
@@ -23,6 +20,7 @@ h1 {
   gap: 10px;
   margin-bottom: 10px;
 }
+#fecha { font-weight: bold; font-size: 1.1em; }
 
 #icono-calendario {
   width: 28px;             /* agrandado un poco */
@@ -47,24 +45,24 @@ h1 {
   width: 100%;
   height: 120px;
   object-fit: cover;
-  opacity: 0.4;
+  opacity: 1; /* Imagen sin transparencia */
   border-radius: 10px;
-  transition: opacity 0.3s;
+  transition: transform 0.3s; /* Añadimos una transición al transformar */
 }
 .rutina:hover img {
-  opacity: 0.6;
+  transform: scale(1.05); /* Efecto de zoom sutil al pasar el ratón */
 }
 .rutina span {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 1.1em;
+  font-size: 1.2em; /* Un poco más grande para mejor lectura */
   font-weight: bold;
-  color: black;
+  color: white; /* Texto en blanco */
   text-align: center;
   padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.6); /* Fondo negro semitransparente */
   border-radius: 6px;
 }
 .check {
@@ -83,6 +81,22 @@ h1 {
 #logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
 #logout-btn:hover { background: #c82333; }
 </style>
+<style>
+  .rename-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 1.2em; position: absolute; bottom: 5px; right: 5px; z-index: 10; }
+  .rename-btn:hover { transform: scale(1.2); }
+
+  .crear-rutina-btn {
+    display: block;
+    width: 90%;
+    max-width: 480px;
+    margin: 20px auto;
+    padding: 15px;
+    background: #28a745;
+    color: white;
+    font-size: 1.1em;
+  }
+</style>
+
 </head>
 <body>
 
@@ -91,27 +105,30 @@ h1 {
   <button id="logout-btn">Cerrar Sesión</button>
 </div>
 
-<h1>Selecciona una rutina</h1>
+<div class="main-container">
+  <h1>Selecciona una rutina</h1>
 
-<!-- Contenedor de fecha + icono calendario -->
-<div id="fecha-container">
-  <div id="fecha"></div>
-  <img src="img/newcalendar.png" 
-       alt="Calendario" 
-       id="icono-calendario" 
-       title="Seleccionar otra fecha">
+  <!-- Contenedor de fecha + icono calendario -->
+  <div id="fecha-container">
+    <div id="fecha"></div>
+    <img src="img/newcalendar.png" 
+        alt="Calendario" 
+        id="icono-calendario" 
+        title="Seleccionar otra fecha">
+  </div>
+
+  <div id="contenedor"></div>
 </div>
-
-<div id="contenedor"></div>
 
 <script type="module">
   import { db, auth } from './firebase-config.js';
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { defaultRoutines } from './data-model.js';
+  import { doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // Usuario logueado, procedemos a cargar la página
-      initializeApp(user.uid);
+      initializeApp(user);
       const greeting = document.getElementById('user-greeting');
       if (greeting) {
         greeting.textContent = `Hola, ${user.displayName || user.email}`;
@@ -125,18 +142,26 @@ h1 {
     }
   });
   
-  async function initializeApp(userId) {
-  (async function() { // IIFE asíncrona
-    const rutinas = [
-      {titulo:"Pecho, bíceps y abdominales", imagen:"img/rutina1.jpg"},
-      {titulo:"Espalda y tríceps", imagen:"img/rutina2.jpg"},
-      {titulo:"Piernas", imagen:"img/rutina3.jpg"},
-      {titulo:"Pecho y bíceps", imagen:"img/rutina4.jpg"},
-      {titulo:"Espalda y tríceps 2", imagen:"img/rutina5.jpg"},
-      {titulo:"Rodillas", imagen:"img/rutina6.jpg"}
-    ];
+  async function initializeApp(user) {
+  const userId = user.uid;
+  const cont = document.getElementById('contenedor');
+  cont.innerHTML = '<p>Cargando rutinas...</p>';
 
-    const params = new URLSearchParams(window.location.search);
+  // Leemos la configuración de rutinas del usuario desde Firestore
+  const userConfigRef = doc(db, "users", userId, "config", "routines");
+  const docSnap = await getDoc(userConfigRef);
+  let userRoutines = [];
+
+  if (docSnap.exists()) {
+    userRoutines = docSnap.data().routines || [];
+  } else {
+    // Si el usuario no tiene configuración (es antiguo), se la creamos ahora.
+    // Esto es una "migración" automática.
+    await setDoc(userConfigRef, { routines: defaultRoutines });
+    userRoutines = defaultRoutines;
+  }
+
+  const params = new URLSearchParams(window.location.search);
     const fecha = params.get('fecha');
     document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 
@@ -145,34 +170,78 @@ h1 {
       window.location.href = 'controlgym.html';
     };
 
-    const cont = document.getElementById('contenedor');
-
     // Cargar datos de Firestore
     const data = {};
     const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
     querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });
+    cont.innerHTML = ''; // Limpiamos el mensaje de carga
 
-    rutinas.forEach((r, i) => {
+    // --- Renderizar Rutinas ---
+
+    userRoutines.forEach((r) => {
     	if (r.titulo === "Rodillas") return; // no mostramos
       const div = document.createElement('div');
       div.className = 'rutina';
-      div.innerHTML = `<img src="${r.imagen}" alt=""><span>${r.titulo}</span>`;
+      div.innerHTML = `<img src="${r.imagen}" alt="">
+                       <span id="title-${r.id}">${r.titulo}</span>
+                       <button class="rename-btn" data-id="${r.id}" title="Renombrar rutina">✏️</button>`;
 
       if (
         data[fecha] &&
-        data[fecha][i] &&
-        Object.values(data[fecha][i]).some(ej => Array.isArray(ej) && ej.length > 0)
+        data[fecha][r.id] && // Usamos el ID de la rutina
+        Object.values(data[fecha][r.id]).some(ej => Array.isArray(ej) && ej.length > 0)
       ) {
         const check = document.createElement('div');
         check.className = 'check';
         check.textContent = '✓';
         div.appendChild(check);
       }
+      
+      div.querySelector('img').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
+      div.querySelector('span').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
 
-      div.onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutina=${i}`;
       cont.appendChild(div);
     });
-  })();
+
+    // Añadimos la lógica para los botones de renombrar
+    document.querySelectorAll('.rename-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Evita que se navegue a la página de ejercicios
+        const rutinaId = e.target.dataset.id;
+        const rutinaActual = userRoutines.find(r => r.id === rutinaId);
+        const nuevoNombre = prompt("Introduce el nuevo nombre para la rutina:", rutinaActual.titulo);
+        if (nuevoNombre && nuevoNombre.trim() !== "") {
+          rutinaActual.titulo = nuevoNombre.trim();
+          await setDoc(userConfigRef, { routines: userRoutines });
+          document.getElementById(`title-${rutinaId}`).textContent = rutinaActual.titulo;
+        }
+      });
+    });
+
+    // --- Botón para Crear Nueva Rutina ---
+    const crearBtn = document.createElement('button');
+    crearBtn.textContent = '➕ Crear Nueva Rutina';
+    crearBtn.className = 'boton-volver add crear-rutina-btn'; // Reutilizamos clases y añadimos una nueva
+    crearBtn.onclick = async () => {
+      const nuevoNombre = prompt("Introduce el nombre para la nueva rutina:");
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        const nuevaRutina = {
+          id: `custom-routine-${Date.now()}`,
+          titulo: nuevoNombre.trim(),
+          imagen: 'img/rutina4.jpg', // Usamos una imagen por defecto
+          ejercicios: [] // Empieza sin ejercicios
+        };
+
+        // Añadimos la nueva rutina a la lista y guardamos
+        userRoutines.push(nuevaRutina);
+        await setDoc(userConfigRef, { routines: userRoutines });
+
+        // Recargamos la página para que se muestre la nueva rutina. Es la forma más simple de refrescar todo.
+        location.reload();
+      }
+    };
+    cont.appendChild(crearBtn);
+
   }
 </script>
 </body>

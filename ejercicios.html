@@ -5,36 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ejercicios</title>
 <style>
-body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
-h1 { text-align:center; color:#007bff; padding:10px;}
+  /* ESTILOS GENERALES Y CONTENEDORES */
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1d; color: #f1f1f1; margin: 0; padding: 0; }
+  .header-container { background: #2c2f33; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+  #user-header { max-width: 600px; margin: 0 auto; background: transparent; }
+  .main-container { max-width: 600px; margin: 25px auto; background: #2c2f33; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+  h1 { color: #0095ff; border-bottom: 2px solid #4f545c; padding-bottom: 10px; margin-top: 0; text-align: center; }
+  /* FIN DE ESTILOS GENERALES */
+
 #fecha, #tituloRutina { text-align:center; font-weight:bold; margin-bottom:10px;}
 
 .ejercicio-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  position: relative; /* Clave para posicionar la 'X' encima */
   width: 90%;
   max-width: 500px;
   margin: 8px auto;
 }
 
-.boton-video {
-  flex: 0 0 40px;
-  height: 40px;
-  background: #17a2b8;
-  color: white;
-  font-size: 20px;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.boton-video:hover { background: #117a8b; }
-
 .boton-ejercicio {
-  flex: 1;
-  padding: 10px;
-  background: #007bff;
+  width: 100%; /* Clave: el botón ocupa todo el ancho del contenedor */
+  padding: 12px;
+  background: #3a3f44;
   color: white;
   font-size: 1em;
   border: none;
@@ -42,8 +33,9 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   cursor: pointer;
   text-align: center;
   position: relative;
+  transition: background 0.3s;
 }
-.boton-ejercicio:hover { background:#0056b3; }
+.boton-ejercicio:hover { background:#4f545c; }
 
 .check {
   position:absolute;
@@ -51,6 +43,24 @@ h1 { text-align:center; color:#007bff; padding:10px;}
   right:8px;
   font-size:18px;
   color:limegreen;
+  text-shadow: 0 0 5px black;
+}
+
+.delete-btn-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px; /* Movido a la izquierda */
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 16px; /* Más pequeño */
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.2s;
+}
+.delete-btn-overlay:hover {
+  transform: scale(1.1);
 }
 
 .botones-volver {
@@ -64,7 +74,7 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 
 .boton-volver {
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   font-size: 0.9em;
   font-weight: bold;
   text-align: center;
@@ -83,15 +93,15 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 }
 
 .boton-volver.rutinas {
-  background: linear-gradient(45deg, #6c757d, #5a6268);
+  background: #6c757d;
   color: white;
 }
 .boton-volver.calendario {
-  background: linear-gradient(45deg, #17a2b8, #138496);
+  background: #17a2b8;
   color: white;
 }
 .boton-volver.add {
-  background: linear-gradient(45deg, #28a745, #218838);
+  background: #28a745;
   color: white;
 }
 .boton-volver:hover { opacity: 0.9; }
@@ -104,43 +114,44 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 </head>
 <body>
 
-<div id="user-header">
-  <span id="user-greeting"></span>
-  <button id="logout-btn">Cerrar Sesión</button>
+<div class="header-container">
+  <div id="user-header">
+    <span id="user-greeting"></span>
+    <button id="logout-btn">Cerrar Sesión</button>
+  </div>
 </div>
 
-<h1><div id="tituloRutina"></div></h1>
-<div id="fecha"></div>
+<div class="main-container">
+  <h1><div id="tituloRutina"></div></h1>
+  <div id="fecha"></div>
 
-<p style="color: #004d4d; font-size: 14px; text-align: center;">
-  Selecciona ejercicio:
-</p>
+  <p style="color: #ccc; font-size: 14px; text-align: center;">
+    Selecciona ejercicio:
+  </p>
 
-<div class="botones-volver">
-  <a class="boton-volver rutinas" id="volverRutinas" href="#">
-    <i>🏠</i> Rutinas
-  </a>
-  <a class="boton-volver calendario" id="volverCalendario" href="controlgym.html">
-    <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px;">
-    Calendario
-  </a>
-  <button class="boton-volver add" onclick="agregarEjercicio()">
-    <i>➕</i> Añadir
-  </button>
+  <div class="botones-volver">
+    <a class="boton-volver rutinas" id="volverRutinas" href="#">
+      <i>🏠</i> Rutinas
+    </a>
+    <a class="boton-volver calendario" id="volverCalendario" href="controlgym.html">
+      <img src="img/calendar-icon.png" alt="Calendario" style="height: 18px;">
+      Calendario
+    </a>
+    <button class="boton-volver add" onclick="agregarEjercicio()">
+      <i>➕</i> Añadir
+    </button>
+  </div>
+
+  <div id="lista"></div>
 </div>
-
-<div id="lista"></div>
 
 <script type="module">
   import { db, auth } from './firebase-config.js';
   import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
 
-  let userId = null;
-
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      userId = user.uid;
       const greeting = document.getElementById('user-greeting');
       if (greeting) {
         greeting.textContent = `Hola, ${user.displayName || user.email}`;
@@ -148,68 +159,29 @@ h1 { text-align:center; color:#007bff; padding:10px;}
       document.getElementById('logout-btn').addEventListener('click', () => {
         signOut(auth).then(() => window.location.href = 'index.html');
       });
-      initializeApp();
+      initializeApp(user); // Pasamos el objeto user completo
     } else {
       window.location.href = 'index.html';
     }
   });
-  async function initializeApp() {
-  (async function() { // IIFE asíncrona
-  const rutinas = [
-  {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
-  {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
-  {titulo:"Hombros, trapecio y piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
-  {titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
-  {titulo:"Espalda y tríceps", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
-  {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
-];
+  async function initializeApp(user) {
+  const userId = user.uid;
+  
+  // Leemos la configuración de rutinas del usuario desde Firestore
+  const userConfigRef = doc(db, "users", userId, "config", "routines");
+  const docSnap = await getDoc(userConfigRef);
+  let userRoutines = docSnap.exists() ? docSnap.data().routines : [];
 
-const videos = {
-  0: [
-    "https://www.youtube.com/watch?v=fqsTgdTPRQU",
-    "https://www.youtube.com/watch?v=fHmiVMFfKkE",
-    "https://www.youtube.com/shorts/a64mtMHyPfY",
-    "https://www.youtube.com/watch?v=IKxDIDNV890", // Curl de bíceps con barra
-    "https://www.youtube.com/watch?v=_m9lZOfi_W0",
-  ],
-  1: [
-    "https://www.youtube.com/watch?v=XZ9TKvUz-ZE",
-    "https://www.youtube.com/watch?v=MwCJGBu8PFk",
-    "https://www.youtube.com/shorts/BTkLgHG7kzo",
-    "https://www.youtube.com/watch?v=cGEPFQ99pyQ",
-    "https://www.youtube.com/watch?v=H6r0fh2-YNU", // Fondos de tríceps
-  ],
-
-  2: [
-    "https://www.youtube.com/watch?v=OCoQIC9ojAA", // Elevaciones laterales con mancuernas
-    "https://www.youtube.com/watch?v=cTRcA2sJqeM", // Trapecios con polea baja
-    "https://www.youtube.com/watch?v=dsCuiccYNGs", // Sentadillas con barra
-    "https://www.youtube.com/watch?v=J-Y-Z0EU9Ic", // Extensiones de piernas
-    "https://www.youtube.com/watch?v=0XL4cZR2Ink", // Peso muerto con barra
-	"https://www.youtube.com/watch?v=Mr4W1DCj05U", // Gemelo en máquina
-  ],
-    3: [
-    "https://www.youtube.com/watch?v=jrDDz7x1Dpo", // Press de banca con mancuernas
-    "https://www.youtube.com/watch?v=2uWdrii0ZG8", // Press declinado con mancuernas
-    "https://www.youtube.com/watch?v=96O5mvyblQM", // Curl de bíceps sentado con mancuerna
-    "https://www.youtube.com/watch?v=HU2lghjU29Y", // Curl de bíceps
-  ],
-4: [ // Espala y triceps
-    "https://www.youtube.com/shorts/evFO5upohaY", // Remo en polea baja
-    "https://www.youtube.com/watch?v=0XL4cZR2Ink", // Peso muerto
-    "https://www.youtube.com/watch?v=rAUjieI_UVk", // Extensión vertical alterna con mancuerna
-    "https://www.youtube.com/watch?v=szc48Qhec8Q", // Flexiones de tríceps
-	],
-5: [ // Rodillas
-    "https://www.youtube.com/watch?v=7E_Lks-oZT4", // Sentadillas de bajo impacto
-    "https://www.youtube.com/watch?v=eEbq5_AIgpo", // Elevación de piernas
-    "https://www.youtube.com/watch?v=DOPV51VQNac", // Ejercicios isométricos
-	]
-};
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
-const rutinaIndex = params.get('rutina');
-const rutina = rutinas[rutinaIndex];
+const rutinaId = params.get('rutinaId');
+const rutina = userRoutines.find(r => r.id === rutinaId);
+
+if (!rutina) {
+  document.body.innerHTML = "<h1>Error: Rutina no encontrada</h1>";
+  return;
+}
+
 document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 document.getElementById('tituloRutina').textContent = rutina.titulo;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
@@ -218,77 +190,42 @@ document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 const docRefRegistro = doc(db, "users", userId, "registros", fecha);
 const docSnapRegistro = await getDoc(docRefRegistro);
 const data = { [fecha]: docSnapRegistro.exists() ? docSnapRegistro.data() : {} };
-
-const docRefCustom = doc(db, "users", userId, "personalizados", "ejercicios");
-const docSnapCustom = await getDoc(docRefCustom);
-const customExercises = docSnapCustom.exists() ? docSnapCustom.data() : {};
-
-const customVideos = {}; // Asumimos que no se usa en esta página o se migrará después
-
-const personalizados = customExercises[rutinaIndex] || [];
-const todosEjercicios = [...rutina.ejercicios, ...personalizados];
-const todosVideos = [
-  ...(videos[rutinaIndex] || []),
-  ...(customVideos[rutinaIndex] || [])
-];
-
 const cont = document.getElementById('lista');
 
 function renderLista() {
   cont.innerHTML = '';
-  todosEjercicios.forEach((ej, i) => {
+  rutina.ejercicios.forEach((ej) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'ejercicio-item';
 
-    const esPersonalizado = i >= rutina.ejercicios.length;
-    const tieneVideo = !esPersonalizado && todosVideos[i];
+    // El botón de eliminar se añade a TODOS los ejercicios
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn-overlay';
+    deleteBtn.textContent = 'x'; // 'x' minúscula y sutil
+    deleteBtn.title = 'Eliminar ejercicio';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`¿Eliminar "${ej.nombre}" de la rutina?`)) {
+        // Filtramos para quitar el ejercicio
+        rutina.ejercicios = rutina.ejercicios.filter(e => e.id !== ej.id);
+        // Guardamos la configuración actualizada del usuario
+        setDoc(userConfigRef, { routines: userRoutines })
+          .then(() => renderLista()); // Re-renderiza la lista
+      }
+    };
+    wrapper.appendChild(deleteBtn);
 
-    // ▶️ Botón de vídeo (solo si tiene vídeo y no es personalizado)
-    if (tieneVideo) {
-      const videoBtn = document.createElement('button');
-      videoBtn.className = 'boton-video';
-      videoBtn.innerHTML = '▶';
-      videoBtn.onclick = (e) => {
-        e.stopPropagation();
-        window.open(todosVideos[i], '_blank');
-      };
-      wrapper.appendChild(videoBtn);
-    }
-
-    // ❌ Botón de eliminar (solo para personalizados)
-    if (esPersonalizado) {
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '❌';
-      deleteBtn.style.background = '#dc3545';
-      deleteBtn.style.color = 'white';
-      deleteBtn.style.border = 'none';
-      deleteBtn.style.borderRadius = '50%';
-      deleteBtn.style.width = '32px';
-      deleteBtn.style.height = '32px';
-      deleteBtn.style.cursor = 'pointer';
-      deleteBtn.title = 'Eliminar ejercicio';
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (confirm(`¿Eliminar "${ej}" de la rutina?`)) {
-          personalizados.splice(i - rutina.ejercicios.length, 1);
-          const nuevosCustom = { ...customExercises, [rutinaIndex]: personalizados };
-          setDoc(doc(db, "users", userId, "personalizados", "ejercicios"), nuevosCustom).then(() => location.reload());
-          location.reload();
-        }
-      };
-      wrapper.appendChild(deleteBtn);
-    }
 
     // 💪 Botón del ejercicio
     const btn = document.createElement('button');
     btn.className = 'boton-ejercicio';
-    btn.textContent = ej;
-    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutina=${rutinaIndex}&ejercicio=${i}`;
+    btn.textContent = ej.nombre;
+    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutinaId=${rutinaId}&ejercicioId=${ej.id}`;
 
     // ✅ check si hay datos guardados
-    if (data[fecha] && data[fecha][rutinaIndex] &&
-        data[fecha][rutinaIndex][ej] && // Usamos el nombre del ejercicio
-        Array.isArray(data[fecha][rutinaIndex][ej]) && data[fecha][rutinaIndex][ej].length > 0) {
+    if (data[fecha] && data[fecha][rutinaId] &&
+        data[fecha][rutinaId][ej.id] && // Usamos el ID del ejercicio
+        Array.isArray(data[fecha][rutinaId][ej.id]) && data[fecha][rutinaId][ej.id].length > 0) {
       const check = document.createElement('div');
       check.className = 'check';
       check.textContent = '✓';
@@ -304,10 +241,20 @@ function renderLista() {
 async function agregarEjercicio() {
   const nuevo = prompt('Nombre del nuevo ejercicio:');
   if (nuevo && nuevo.trim() !== '') {
-    const nuevosPersonalizados = [...(customExercises[rutinaIndex] || []), nuevo.trim()];
-    const nuevosCustom = { ...customExercises, [rutinaIndex]: nuevosPersonalizados };
-    await setDoc(doc(db, "users", userId, "personalizados", "ejercicios"), nuevosCustom);
-    window.agregarEjercicio = agregarEjercicio;
+    const videoUrl = prompt('URL del vídeo de YouTube (opcional):');
+    const nuevoEjercicio = {
+      id: `custom-${Date.now()}`, // ID único
+      nombre: nuevo.trim(),
+      video: videoUrl ? videoUrl.trim() : ""
+    };
+
+    // Añadimos el nuevo ejercicio a la rutina actual
+    rutina.ejercicios.push(nuevoEjercicio);
+
+    // Guardamos toda la configuración de rutinas del usuario
+    await setDoc(userConfigRef, { routines: userRoutines });
+
+    // Re-renderizamos la lista para mostrar el cambio al instante
     renderLista();
   }
 }
@@ -315,7 +262,6 @@ async function agregarEjercicio() {
 window.agregarEjercicio = agregarEjercicio;
 
 renderLista();
-})();
 }
 </script>
 </body>

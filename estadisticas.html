@@ -5,79 +5,100 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estadísticas</title>
 <style>
-body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; text-align: center; }
-h1 { color: #007bff; margin-top: 20px; }
+  /* ESTILOS GENERALES Y CONTENEDORES */
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1d; color: #f1f1f1; margin: 0; padding: 0; }
+  .header-container { background: #2c2f33; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+  #user-header { max-width: 600px; margin: 0 auto; background: transparent; }
+  .main-container { max-width: 600px; margin: 25px auto; background: #2c2f33; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+  h1 { color: #0095ff; border-bottom: 2px solid #4f545c; padding-bottom: 10px; margin-top: 0; text-align: center; }
+  /* FIN DE ESTILOS GENERALES */
+
 #fecha { font-weight: bold; margin: 10px 0; }
-table { margin-top: 0; width: 100%; border-collapse: collapse; table-layout: fixed; }
-th, td { padding: 6px; text-align: center; font-size: 0.9em; word-wrap: break-word; }
-th { background: #007bff; color: white; }
+table { margin-top: 20px; width: 100%; border-collapse: collapse; table-layout: fixed; background: #3a3f44; border-radius: 8px; overflow: hidden;}
+th, td { padding: 12px; text-align: center; font-size: 0.9em; word-wrap: break-word; border-bottom: 1px solid #4f545c;}
+th { background: #007bff; color: white; font-weight: bold; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background-color: #4f545c; }
+
 .botones { display: flex; justify-content: center; gap: 20px; margin: 20px; flex-wrap: wrap; }
-.boton { background: linear-gradient(45deg, #28a745, #004d4d); color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: transform 0.2s; }
-.boton:hover { transform: scale(1.05); }
-.modo-tiempo { margin: 20px auto 40px; background: rgba(255,255,255,0.9); color: black; padding: 20px; border-radius: 10px; max-width: 600px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
-.modo-tiempo select, .modo-tiempo input { padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
-#botonEstadisticas { display: none; }
-footer { background: rgba(0,0,0,0.6); padding: 10px; font-size: 0.9em; position: fixed; bottom: 0; width: 100%; }
-.tabla-contenedor { max-height: 300px; overflow-y: auto; margin: 0 auto; width: 90%; max-width: 600px; background: rgba(255,255,255,0.95); border-radius: 10px; }
+.boton { background: #17a2b8; color: white; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: opacity 0.2s; }
+.boton:hover { opacity: 0.9; }
+
+.modo-tiempo { margin: 20px auto 40px; background: #3a3f44; padding: 20px; border-radius: 10px; display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+.modo-tiempo select, .modo-tiempo input { padding: 8px; border-radius: 8px; border: 1px solid #4f545c; background: #25272a; color: white; }
+
+footer { text-align: center; padding: 15px; background: #2c2f33; color: #aaa; margin-top: 20px; }
+.tabla-contenedor { max-height: 300px; overflow-y: auto; margin: 0 auto; width: 100%; border-radius: 10px; }
 #filtros input { padding: 5px; }
+
 #user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
 #user-greeting { font-weight: bold; }
 #logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
 #logout-btn:hover { background: #c82333; }
+
+#graficaBarrasContainer {
+  margin-top: 30px;
+  padding: 15px;
+}
 </style>
 </head>
 <body>
-
-<div id="user-header">
-  <span id="user-greeting"></span>
-  <button id="logout-btn">Cerrar Sesión</button>
+<div class="header-container">
+  <div id="user-header">
+    <span id="user-greeting"></span>
+    <button id="logout-btn">Cerrar Sesión</button>
+  </div>
 </div>
 
-<h1>📊 Estadísticas</h1>
-<div id="fecha"></div>
-
-<div class="botones">
-  <a class="boton" id="volverRutinas">🏋️ Ir a Rutinas</a>
-  <a class="boton" href="controlgym.html">📅 Ir al Calendario</a>
+<div class="main-container">
+  <h1>📊 Estadísticas</h1>
+  <div id="fecha"></div>
+  <div class="botones">
+    <a class="boton" id="volverRutinas">🏋️ Ir a Rutinas</a>
+    <a class="boton" href="controlgym.html">📅 Ir al Calendario</a>
+  </div>
+  <div class="modo-tiempo">
+    <label>Ver estadísticas por:</label>
+    <select id="modo">
+      <option value="mensual" selected>Mensual</option> <!-- Por defecto mensual -->
+      <option value="semanal">Semanal</option>
+      <option value="diario">Diario</option>
+      <option value="rango">Rango</option>
+    </select>
+    <div id="filtros" style="display:flex; gap:5px; align-items:center;"></div>
+  </div>
+  <div class="tabla-contenedor">
+    <table id="tablaEstadisticas">
+      <thead>
+        <tr><th>Ejercicio</th><th>Media Peso</th><th>Media Reps</th><th>Días</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  
+  <div id="graficaBarrasContainer">
+    <h3 style="text-align:center; color: #0095ff;">Media de Peso por Ejercicio</h3>
+    <canvas id="graficaBarras"></canvas>
+  </div>  
+  <div class="botones">
+    <button onclick="exportarCSV()" class="boton" style="background: #28a745;">📄 Exportar a CSV</button>
+    <button id="exportExcel" class="boton" style="background: #217346;">📊 Exportar a Excel</button>
+  </div>
 </div>
 
-<div class="modo-tiempo">
-  <label>Ver estadísticas por:</label>
-  <select id="modo">
-    <option value="diario">Diario</option>
-    <option value="semanal">Semanal</option>
-    <option value="mensual">Mensual</option>
-    <option value="rango">Rango</option>
-  </select>
-  <div id="filtros" style="display:flex; gap:5px; align-items:center;"></div>
-</div>
+<footer>&copy; DasanloSoft, 2025</footer>
 
-<div class="tabla-contenedor">
-  <table id="tablaEstadisticas">
-    <thead>
-      <tr><th>Ejercicio</th><th>Media Peso</th><th>Media Reps</th><th>Días</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<button onclick="exportarCSV()">Exportar a CSV</button>
-<button id="exportExcel" style="margin:15px;">📥 Exportar a Excel</button>
-
-<footer>Copyright DasanloSoft, 2025</footer>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
   import { db, auth } from './firebase-config.js';
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
 
-  let userId = null;
   let fullData = {}; // Variable global para almacenar todos los datos de Firestore
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      userId = user.uid;
       const greeting = document.getElementById('user-greeting');
       if (greeting) {
         greeting.textContent = `Hola, ${user.displayName || user.email}`;
@@ -85,7 +106,7 @@ footer { background: rgba(0,0,0,0.6); padding: 10px; font-size: 0.9em; position:
       document.getElementById('logout-btn').addEventListener('click', () => {
         signOut(auth).then(() => window.location.href = 'index.html');
       });
-      cargarDatosIniciales();
+      cargarDatosIniciales(user);
     } else {
       window.location.href = 'index.html';
     }
@@ -95,7 +116,7 @@ const hoy = new Date();
 const yyyy = hoy.getFullYear();
 const mm = String(hoy.getMonth()+1).padStart(2,'0');
 const dd = String(hoy.getDate()).padStart(2,'0');
-const fecha = `${yyyy}-${mm}-${dd}`;
+const fecha = `${yyyy}-${mm}-${dd}`; // Definimos la fecha aquí
 document.getElementById('fecha').textContent = `Fecha: ${dd}-${mm}-${yyyy}`;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
@@ -107,17 +128,31 @@ modoSelector.addEventListener('change', e => {
   filtros.innerHTML = '';
   if(modo==='diario') filtros.innerHTML = `<input type="date" id="fechaDiaria">`;
   else if(modo==='semanal') filtros.innerHTML = `<input type="week" id="semana">`;
-  else if(modo==='mensual') filtros.innerHTML = `<input type="month" id="mes">`;
+  else if(modo==='mensual') filtros.innerHTML = `<input type="month" id="mes" name="mes">`;
   else if(modo==='rango') filtros.innerHTML = `<label>Desde:</label><input type="date" id="inicio"><label>Hasta:</label><input type="date" id="fin">`;
+
+  if (modo === 'mensual') {
+    const mesInput = document.getElementById('mes');
+    const hoy = new Date();
+    mesInput.value = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+  }
 
   filtros.querySelectorAll('input').forEach(i => i.addEventListener('change', procesarEstadisticas));
   procesarEstadisticas();
 });
 
 // Cargar todos los datos de Firestore una sola vez al inicio
-async function cargarDatosIniciales() {
+async function cargarDatosIniciales(user) {
+    const userId = user.uid;
     const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
     querySnapshot.forEach(doc => { fullData[doc.id] = doc.data(); });
+
+    // Cargamos la configuración de rutinas para poder mapear IDs a nombres
+    const userConfigRef = doc(db, "users", userId, "config", "routines");
+    const docSnap = await getDoc(userConfigRef);
+    const userRoutines = docSnap.exists() ? docSnap.data().routines : [];
+    window.ejercicioIdToNombre = userRoutines.flatMap(r => r.ejercicios).reduce((acc, ej) => ({ ...acc, [ej.id]: ej.nombre }), {});
+
     modoSelector.dispatchEvent(new Event('change')); // Iniciar el primer procesamiento
 }
 
@@ -156,20 +191,20 @@ function procesarEstadisticas(){
   fechasFiltradas.forEach(f=>{if(data[f]) datosFiltrados[f]=data[f];});
   generarEstadisticas(datosFiltrados);
 }
+let graficaBarrasChart = null; // Variable para la instancia del gráfico
 
 // --- Genera tabla ---
 function generarEstadisticas(data){
   const tbody = document.querySelector('#tablaEstadisticas tbody');
-  if(!tbody) return;
   tbody.innerHTML='';
 
   const resumen={};
   Object.entries(data).forEach(([fecha,rutinas])=>{
-    Object.values(rutinas).forEach(rutina=>{
-      Object.entries(rutina).forEach(([ejercicio,registros])=>{
+    Object.values(rutinas).forEach(rutina => {
+      Object.entries(rutina).forEach(([ejercicioId, registros]) => {
         if(!Array.isArray(registros)) return;
-        if(!resumen[ejercicio]) resumen[ejercicio]={pesos:[], reps:[], dias:new Set()};
-        registros.forEach(r=>{if(typeof r.peso==='number') resumen[ejercicio].pesos.push(r.peso); if(typeof r.reps==='number') resumen[ejercicio].reps.push(r.reps); resumen[ejercicio].dias.add(fecha);});
+        if(!resumen[ejercicioId]) resumen[ejercicioId]={pesos:[], reps:[], dias:new Set()};
+        registros.forEach(r=>{if(typeof r.peso==='number') resumen[ejercicioId].pesos.push(r.peso); if(typeof r.reps==='number') resumen[ejercicioId].reps.push(r.reps); resumen[ejercicioId].dias.add(fecha);});
       });
     });
   });
@@ -179,11 +214,12 @@ function generarEstadisticas(data){
   let maxPeso=0, maxReps=0, maxDias=0;
   const filas=[];
 
-  Object.entries(resumen).forEach(([ejercicio,datos])=>{
+  Object.entries(resumen).forEach(([ejercicioId, datos])=>{
+    const nombreEjercicio = window.ejercicioIdToNombre[ejercicioId] || ejercicioId; // Muestra el nombre si lo encuentra
     const mediaPeso=(datos.pesos.reduce((a,b)=>a+b,0)/datos.pesos.length).toFixed(2);
     const mediaReps=(datos.reps.reduce((a,b)=>a+b,0)/datos.reps.length).toFixed(0);
     const dias=datos.dias.size;
-    filas.push({ejercicio, mediaPeso:parseFloat(mediaPeso), mediaReps:parseInt(mediaReps), dias});
+    filas.push({ejercicio: nombreEjercicio, mediaPeso:parseFloat(mediaPeso), mediaReps:parseInt(mediaReps), dias});
     if(parseFloat(mediaPeso)>maxPeso) maxPeso=parseFloat(mediaPeso);
     if(parseInt(mediaReps)>maxReps) maxReps=parseInt(mediaReps);
     if(dias>maxDias) maxDias=dias;
@@ -193,13 +229,52 @@ function generarEstadisticas(data){
   filas.forEach(f=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${f.ejercicio}</td>
-      <td style="background:${(!pesoMarcado && f.mediaPeso===maxPeso)?'#d4edda':''}">${f.mediaPeso}</td>
-      <td style="background:${(!repsMarcado && f.mediaReps===maxReps)?'#fff3cd':''}">${f.mediaReps}</td>
-      <td style="background:${(!diasMarcado && f.dias===maxDias)?'#cce5ff':''}">${f.dias}</td>`;
+      <td style="background:${(!pesoMarcado && f.mediaPeso===maxPeso)?'#28a745':''}; color:${(!pesoMarcado && f.mediaPeso===maxPeso)?'white':''};">${f.mediaPeso}</td>
+      <td style="background:${(!repsMarcado && f.mediaReps===maxReps)?'#ffc107':''}; color:${(!repsMarcado && f.mediaReps===maxReps)?'black':''};">${f.mediaReps}</td>
+      <td style="background:${(!diasMarcado && f.dias===maxDias)?'#17a2b8':''}; color:${(!diasMarcado && f.dias===maxDias)?'white':''};">${f.dias}</td>`;
     if(!pesoMarcado && f.mediaPeso===maxPeso) pesoMarcado=true;
     if(!repsMarcado && f.mediaReps===maxReps) repsMarcado=true;
     if(!diasMarcado && f.dias===maxDias) diasMarcado=true;
     tbody.appendChild(tr);
+  });
+
+  // Generar la gráfica de barras
+  generarGraficaBarras(filas);
+}
+
+function generarGraficaBarras(filas) {
+  const ctx = document.getElementById('graficaBarras');
+  if (!ctx) return;
+
+  if (graficaBarrasChart) {
+    graficaBarrasChart.destroy();
+  }
+
+  const etiquetas = filas.map(f => f.ejercicio);
+  const datosPeso = filas.map(f => f.mediaPeso);
+
+  graficaBarrasChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: etiquetas,
+      datasets: [{
+        label: 'Media de Peso (kg)',
+        data: datosPeso,
+        backgroundColor: 'rgba(0, 149, 255, 0.6)',
+        borderColor: 'rgba(0, 149, 255, 1)',
+        borderWidth: 1,
+        barPercentage: 0.5 // Barras más finas
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Eje Y para los ejercicios, mejor para nombres largos
+      responsive: true,
+      scales: {
+        x: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+      },
+      plugins: { legend: { display: false } }
+    }
   });
 }
 

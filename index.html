@@ -7,25 +7,25 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #212529; /* Un fondo oscuro y neutro */
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1d; /* Un gris oscuro más profundo */
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
     }
     .login-container {
-      background: rgba(0, 0, 0, 0.75);
+      background: #2c2f33; /* Color de contenedor más suave */
       padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      border-radius: 12px; /* Bordes más redondeados */
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4); /* Sombra más pronunciada */
       color: white;
       width: 320px;
       max-width: 90%;
       text-align: center;
     }
     .login-container img {
-      width: 200px;
+      width: 180px; /* Un poco más pequeño para dar más aire */
       height: auto; /* Asegura que la altura se ajuste a la anchura */
       max-width: 100%; /* Evita que la imagen se desborde en pantallas muy pequeñas */
       margin-bottom: 20px;
@@ -45,11 +45,12 @@
     .input-group input {
       width: 100%;
       padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #555;
-      background: #333;
+      border-radius: 8px;
+      border: 1px solid #4f545c;
+      background: #25272a;
       color: white;
       box-sizing: border-box;
+      transition: border-color 0.3s;
     }
     .btn {
       width: 100%;
@@ -57,16 +58,16 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 600; /* Un poco más de peso */
       font-size: 1em;
       transition: background 0.3s;
     }
     .btn-primary {
-      background: #007bff;
+      background: linear-gradient(45deg, #007bff, #0056b3);
       color: white;
     }
     .btn-primary:hover {
-      background: #0056b3;
+      opacity: 0.9;
     }
     .btn-secondary {
       background: #6c757d;
@@ -111,17 +112,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
-    
-    // Tu configuración de Firebase, que ya tenemos en firebase-config.js
-    // ¡Importante! Necesitaremos la configuración aquí también.
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYut-MRdq5Sdn_U5IQv4l_EF1X0JJ4e70",
-      authDomain: "controlgym-4190e.firebaseapp.com",
-      projectId: "controlgym-4190e",
-      storageBucket: "controlgym-4190e.firebasestorage.app",
-      messagingSenderId: "488604272453",
-      appId: "1:488604272453:web:c83ad35e9be910a2f2a02c"
-    };
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+    import { firebaseConfig, db as firestore_db } from './firebase-config.js'; // Importamos la config y la instancia de la BD
+    import { defaultRoutines } from './data-model.js';    
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -197,6 +190,9 @@
           displayName: name
         });
 
+        // ¡AQUÍ LA MAGIA! Copiamos las rutinas por defecto para el nuevo usuario.
+        await seedInitialData(userCredential.user.uid);
+
         // Forzamos la recarga del usuario para asegurar que el displayName está disponible
         await userCredential.user.reload();
 
@@ -209,6 +205,11 @@
         else showError('Error al registrar el usuario.');
       }
     });
+
+    async function seedInitialData(userId) {
+      const userConfigRef = doc(firestore_db, "users", userId, "config", "routines");
+      await setDoc(userConfigRef, { routines: defaultRoutines });
+    }
 
   </script>
 

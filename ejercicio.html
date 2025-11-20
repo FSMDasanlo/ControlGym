@@ -5,8 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ejercicio</title>
 <style>
-body { font-family: Arial; background:#f4f4f4; margin:0; padding:0;}
-h1 { text-align:center; color:#007bff; padding:10px;}
+  /* ESTILOS GENERALES Y CONTENEDORES */
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a1d; color: #f1f1f1; margin: 0; padding: 0; }
+  .header-container { background: #2c2f33; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+  #user-header { max-width: 600px; margin: 0 auto; background: transparent; }
+  .main-container { max-width: 600px; margin: 25px auto; background: #2c2f33; padding: 20px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+  h1 { color: #0095ff; border-bottom: 2px solid #4f545c; padding-bottom: 10px; margin-top: 0; text-align: center; }
+  /* FIN DE ESTILOS GENERALES */
+
 #fecha, #tituloRutina, #tituloEjercicio { text-align:center; font-weight:bold; margin-bottom:10px;}
 #tituloEjercicio { font-size:1.2em; font-style: italic; color: #004d4d; }
 
@@ -15,10 +21,10 @@ h1 { text-align:center; color:#007bff; padding:10px;}
 #videoEjercicio a { display: inline-block; background: #17a2b8; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
 #videoEjercicio a:hover { background: #117a8b; }
 
-table { width:95%; max-width:600px; margin:auto; border-collapse:collapse; margin-top:15px; font-size: 0.9em; table-layout: fixed; word-wrap: break-word; background:white;}
-th, td { border:1px solid #ccc; padding:4px 6px; text-align:center; height:28px; }
-th { background:#007bff; color:white; font-weight:bold; padding:6px 4px; }
-tfoot td { background: #e9ecef; font-weight: bold; }
+table { width:100%; margin:auto; border-collapse:collapse; margin-top:15px; font-size: 0.9em; table-layout: fixed; word-wrap: break-word; }
+th, td { border:1px solid #4f545c; padding:8px 6px; text-align:center; }
+th { background:#007bff; color:white; font-weight:bold; }
+tfoot td { background: #3a3f44; font-weight: bold; }
 
 th:nth-child(1), td:nth-child(1) { width: 35%; }
 th:nth-child(2), td:nth-child(2) { width: 25%; }
@@ -30,18 +36,23 @@ th:nth-child(4), td:nth-child(4) { width: 15%; }
 .boton-accion:hover { opacity:0.8; }
 
 #formulario { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:15px;}
-input { padding:5px; width:120px; }
-button { background:#28a745; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;}
-button:hover { background:#218838;}
+input { padding:8px; width:120px; border-radius: 8px; border: 1px solid #4f545c; background: #25272a; color: white; }
+#formulario button { background:#28a745; color:white; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight: bold; transition: background 0.3s;}
+#formulario button:hover { background:#218838;}
 
-#toast { visibility:hidden; min-width:200px; background:#333; color:#fff; text-align:center; border-radius:8px; padding:10px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:0.9em;}
+#toast { visibility:hidden; min-width:200px; background:#28a745; color:#fff; text-align:center; border-radius:8px; padding:12px; position:fixed; z-index:1; left:50%; bottom:30px; transform:translateX(-50%); font-size:1em; box-shadow: 0 4px 15px rgba(0,0,0,0.3);}
 #toast.show { visibility:visible; animation: fadein 0.3s, fadeout 0.3s 1.7s; }
 @keyframes fadein { from {bottom:0;opacity:0;} to {bottom:30px;opacity:1;} }
 @keyframes fadeout { from {bottom:30px;opacity:1;} to {bottom:0;opacity:0;} }
 
-.boton-volver { display: block; width: 90%; max-width: 500px; margin: 10px auto; padding: 12px; font-size: 1.1em; font-weight: bold; text-align: center; border-radius: 10px; text-decoration: none; transition: background 0.3s; }
-.boton-volver.rutinas { background: linear-gradient(45deg, #6c757d, #5a6268); color: white; }
-.boton-volver.ejercicios { background: linear-gradient(45deg, #28a745, #218838); color: white; }
+.botones-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.boton-volver { flex: 1; padding: 12px; font-size: 1em; font-weight: bold; text-align: center; border-radius: 8px; text-decoration: none; transition: opacity 0.3s; }
+.boton-volver.rutinas { background: #6c757d; color: white; }
+.boton-volver.ejercicios { background: #17a2b8; color: white; }
 .boton-volver:hover { opacity: 0.9; }
 .boton-volver i { margin-right: 8px; }
 
@@ -49,7 +60,7 @@ button:hover { background:#218838;}
   width:95%;
   max-width:600px;
   margin:25px auto;
-  background:white;
+  background:#2c2f33;
   padding:10px;
   border-radius:8px;
   box-shadow:0 0 5px rgba(0,0,0,0.1);
@@ -63,7 +74,7 @@ button:hover { background:#218838;}
   button.boton-eliminar { padding:2px 5px; font-size:0.75em; }
 }
 .btn-filtro { background: #17a2b8; color: white; padding:6px 12px; border: none; border-radius:6px; cursor:pointer; font-size:0.9em; font-weight:bold; transition: background 0.3s; }
-.btn-filtro:hover { background:#117a8b; }
+.btn-filtro:hover { opacity: 0.9; }
 
 td.max-valor {
   background: #ffc107; /* amarillo brillante */
@@ -77,37 +88,42 @@ td.max-valor {
 </style>
 </head>
 <body>
-
-<div id="user-header">
-  <span id="user-greeting"></span>
-  <button id="logout-btn">Cerrar Sesión</button>
+<div class="header-container">
+  <div id="user-header">
+    <span id="user-greeting"></span>
+    <button id="logout-btn">Cerrar Sesión</button>
+  </div>
 </div>
 
-<h1 id="tituloPrincipal">Ejercicio</h1>
-<div id="fecha"></div>
-<div id="tituloEjercicio"></div>
-<div id="videoEjercicio"></div>
+<div class="main-container">
+  <h1 id="tituloPrincipal">Ejercicio</h1>
+  <div id="fecha"></div>
+  <div id="tituloEjercicio" style="color: #00c3ff;"></div>
+  <div id="videoEjercicio"></div>
 
-<table>
-  <thead id="thead"></thead>
-  <tbody id="tbody"></tbody>
-  <tfoot id="tfoot"></tfoot>
-</table>
+  <table>
+    <thead id="thead"></thead>
+    <tbody id="tbody"></tbody>
+    <tfoot id="tfoot"></tfoot>
+  </table>
 
-<!-- Gráfica con botón -->
-<div id="grafica-container">
-  <button id="toggleVista" class="btn-filtro" onclick="alternarVista()">📈 Histórico</button>
-  <canvas id="graficaProgreso" style="margin-top:10px;"></canvas>
+  <!-- Gráfica con botón -->
+  <div id="grafica-container" style="background: #3a3f44;">
+    <button id="toggleVista" class="btn-filtro" onclick="alternarVista()">📈 Histórico</button>
+    <canvas id="graficaProgreso" style="margin-top:10px;"></canvas>
+  </div>
+
+  <div id="formulario">
+    <input type="number" id="peso" placeholder="Peso (kg)">
+    <input type="number" id="reps" placeholder="Repeticiones">
+    <button onclick="guardarDatos()">Guardar</button>
+  </div>
+
+  <div class="botones-footer">
+    <a id="volverEjercicios" class="boton-volver ejercicios" href="#"><i>↩️</i> Volver a Ejercicios</a>
+    <a id="volverRutinas" class="boton-volver rutinas" href="#"><i>🏠</i> Volver a Rutinas</a>
+  </div>
 </div>
-
-<div id="formulario">
-  <input type="number" id="peso" placeholder="Peso (kg)">
-  <input type="number" id="reps" placeholder="Repeticiones">
-  <button onclick="guardarDatos()">Guardar</button>
-</div>
-
-<a id="volverEjercicios" class="boton-volver ejercicios" href="#"><i>↩️</i> Volver a Ejercicios</a>
-<a id="volverRutinas" class="boton-volver rutinas" href="#"><i>🏠</i> Volver a Rutinas</a>
 
 <div id="toast">✅ Datos guardados</div>
 
@@ -119,11 +135,8 @@ td.max-valor {
   import { doc, getDoc, setDoc, getDocs, collection, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
 
-  let userId = null;
-
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      userId = user.uid;
       const greeting = document.getElementById('user-greeting');
       if (greeting) {
         greeting.textContent = `Hola, ${user.displayName || user.email}`;
@@ -131,91 +144,40 @@ td.max-valor {
       document.getElementById('logout-btn').addEventListener('click', () => {
         signOut(auth).then(() => window.location.href = 'index.html');
       });
-      initializeApp();
+      initializeApp(user); // Pasamos el objeto user completo
     } else {
       window.location.href = 'index.html';
     }
   });
-async function initializeApp() {
+async function initializeApp(user) {
 (async function() { // IIFE asíncrona
-const rutinas = [
-  {titulo:"Pecho, bíceps y abdominales", ejercicios:["Press de banca con barra","Aperturas en banco inclinado con mancuernas","Press inclinado con mancuernas","Curl de bíceps con barra","Crunch en máquina con carga alta"]},
-  {titulo:"Espalda y tríceps", ejercicios:["Dominadas en barra fija","Remo con barra","Press francés","Extensiones de tríceps en polea alta","Fondos de tríceps"]},
-  {titulo:"Piernas", ejercicios:["Elevaciones laterales con mancuernas","Trapecios con polea baja","Sentadillas con barra","Extensiones de piernas","Peso muerto con barra","Gemelo en máquina"]},
-  {titulo:"Pecho y bíceps", ejercicios:["Press de banca con mancuernas","Press declinado con mancuernas","Curl de bíceps sentado con mancuerna","Curl de bíceps"]},
-  {titulo:"Espalda y tríceps 2", ejercicios:["Remo en polea baja","Peso muerto","Extensión vertical alterna con mancuerna","Flexiones de tríceps"]},
-  {titulo:"Rodillas", ejercicios:["Sentadillas de bajo impacto","Elevación de piernas","Ejercicios isométricos"]}
-];
-
-// reemplaza: const videos = {};
-const videos = {
-  0: [
-    "https://www.youtube.com/watch?v=fqsTgdTPRQU",
-    "https://www.youtube.com/watch?v=fHmiVMFfKkE",
-    "https://www.youtube.com/shorts/a64mtMHyPfY",
-    "https://www.youtube.com/watch?v=IKxDIDNV890",
-    "https://www.youtube.com/watch?v=_m9lZOfi_W0",
-  ],
-  1: [
-    "https://www.youtube.com/watch?v=XZ9TKvUz-ZE",
-    "https://www.youtube.com/watch?v=MwCJGBu8PFk",
-    "https://www.youtube.com/shorts/BTkLgHG7kzo",
-    "https://www.youtube.com/watch?v=cGEPFQ99pyQ",
-    "https://www.youtube.com/watch?v=H6r0fh2-YNU",
-  ],
-  2: [
-    "https://www.youtube.com/watch?v=OCoQIC9ojAA",
-    "https://www.youtube.com/watch?v=cTRcA2sJqeM",
-    "https://www.youtube.com/watch?v=dsCuiccYNGs",
-    "https://www.youtube.com/watch?v=J-Y-Z0EU9Ic",
-    "https://www.youtube.com/watch?v=0XL4cZR2Ink",
-    "https://www.youtube.com/watch?v=Mr4W1DCj05U",
-  ],
-  3: [
-    "https://www.youtube.com/watch?v=jrDDz7x1Dpo",
-    "https://www.youtube.com/watch?v=2uWdrii0ZG8",
-    "https://www.youtube.com/watch?v=96O5mvyblQM",
-    "https://www.youtube.com/watch?v=HU2lghjU29Y",
-  ],
-  4: [
-    "https://www.youtube.com/shorts/evFO5upohaY",
-    "https://www.youtube.com/watch?v=0XL4cZR2Ink",
-    "https://www.youtube.com/watch?v=rAUjieI_UVk",
-    "https://www.youtube.com/watch?v=szc48Qhec8Q",
-  ],
-  5: [
-    "https://www.youtube.com/watch?v=7E_Lks-oZT4",
-    "https://www.youtube.com/watch?v=eEbq5_AIgpo",
-    "https://www.youtube.com/watch?v=DOPV51VQNac",
-  ]
-};
+const userId = user.uid;
 
 const params = new URLSearchParams(window.location.search);
 const fecha = params.get('fecha');
-const rutinaIndex = parseInt(params.get('rutina'));
-const ejercicioIndex = parseInt(params.get('ejercicio'));
+const rutinaId = params.get('rutinaId');
+const ejercicioId = params.get('ejercicioId');
 
-const rutina = rutinas[rutinaIndex];
+// Leemos la configuración de rutinas del usuario desde Firestore
+const userConfigRef = doc(db, "users", userId, "config", "routines");
+const docSnap = await getDoc(userConfigRef);
+const userRoutines = docSnap.exists() ? docSnap.data().routines : [];
 
-const docRefCustomEjercicios = doc(db, "users", userId, "personalizados", "ejercicios");
-const docSnapCustomEjercicios = await getDoc(docRefCustomEjercicios);
-const customExercises = docSnapCustomEjercicios.exists() ? docSnapCustomEjercicios.data() : {};
-const customVideos = {}; // Aún no se usa, pero si se usara, también necesitaría el userId
+const rutina = userRoutines.find(r => r.id === rutinaId);
+const ejercicio = rutina ? rutina.ejercicios.find(e => e.id === ejercicioId) : null;
 
-const personalizados = customExercises[rutinaIndex] || [];
-const todosEjercicios = [...rutina.ejercicios, ...personalizados];
-const todosVideos = [
-  ...(videos[rutinaIndex] || []),
-  ...(customVideos[rutinaIndex] || [])
-];
+if (!rutina || !ejercicio) {
+  document.body.innerHTML = "<h1>Error: Ejercicio no encontrado</h1>";
+  return;
+}
 
-const ejercicioNombre = todosEjercicios[ejercicioIndex];
-const videoUrl = todosVideos[ejercicioIndex] || null;
+const ejercicioNombre = ejercicio.nombre;
+const videoUrl = ejercicio.video;
 
 document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 document.getElementById('tituloPrincipal').textContent = rutina.titulo;
 document.getElementById('tituloEjercicio').textContent = ejercicioNombre;
-document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutina=${rutinaIndex}`;
+document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutinaId=${rutinaId}`;
 document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
 
 if (videoUrl) {
@@ -246,7 +208,7 @@ querySnapshot.forEach(doc => {
     data[doc.id] = doc.data();
 });
 for (const f in data) { // f es la fecha (ID del documento)
-  const ejer = data[f]?.[rutinaIndex]?.[ejercicioNombre];
+  const ejer = data[f]?.[rutinaId]?.[ejercicioId]; // Usamos IDs
   if (Array.isArray(ejer)) {
     ejer.forEach((r, i) => registros.push({ fecha: f, peso: r.peso, reps: r.reps, index: i }));
   }
@@ -270,8 +232,8 @@ tbody.innerHTML = registros.map((r, i) => `
     <td contenteditable="true" class="edit-peso ${r.peso === maxPeso ? 'max-valor' : ''}">${r.peso}</td>
     <td contenteditable="true" class="edit-reps ${r.reps === maxReps ? 'max-valor' : ''}">${r.reps}</td>
     <td>
-      <button class="boton-accion edit" onclick="editarFila(this)">💾</button>
-      <button class="boton-accion" onclick="eliminarFila('${r.fecha}', ${r.index})">🗑️</button>
+      <button class="boton-accion edit" title="Editar registro" onclick="editarFila(this)">✏️</button>
+      <button class="boton-accion" title="Eliminar registro" onclick="eliminarFila('${r.fecha}', ${r.index})">🗑️</button>
     </td>
   </tr>
 `).join('');
@@ -286,7 +248,7 @@ function actualizarResumen(){
   const dias = registros.length;
   const mediaPeso = (registros.reduce((a,b)=>a+b.peso,0)/dias).toFixed(2);
   const mediaReps = (registros.reduce((a,b)=>a+b.reps,0)/dias).toFixed(2);
-  tfoot.innerHTML = `<tr><td>${dias} días</td><td>${mediaPeso}</td><td>${mediaReps}</td><td></td></tr>`;
+  tfoot.innerHTML = `<tr><td>${dias} ejercicios</td><td>${mediaPeso}</td><td>${mediaReps}</td><td></td></tr>`;
 }
 
 // Inicializamos tabla
@@ -302,15 +264,15 @@ async function guardarDatos(){
 
   if (docSnap.exists()) {
     const datosActuales = docSnap.data();
-    const registrosEjercicio = datosActuales[rutinaIndex]?.[ejercicioNombre] || [];
-    registrosEjercicio.push({ peso, reps });
+    const registrosEjercicio = datosActuales[rutinaId]?.[ejercicioId] || [];
+    registrosEjercicio.push({ peso, reps }); // Guardamos el nuevo registro
     await updateDoc(docRef, {
-      [`${rutinaIndex}.${ejercicioNombre}`]: registrosEjercicio
+      [`${rutinaId}.${ejercicioId}`]: registrosEjercicio
     });
   } else {
     const nuevoDato = {
-      [rutinaIndex]: {
-        [ejercicioNombre]: [{ peso, reps }]
+      [rutinaId]: {
+        [ejercicioId]: [{ peso, reps }]
       }
     };
     await setDoc(docRef, nuevoDato);
@@ -327,14 +289,19 @@ async function eliminarFila(f, idx){
   if (!docSnap.exists()) return;
 
   const datosActuales = docSnap.data();
-  const registrosEjercicio = datosActuales[rutinaIndex]?.[ejercicioNombre] || [];
+  const registrosEjercicio = datosActuales[rutinaId]?.[ejercicioId] || [];
   registrosEjercicio.splice(idx, 1);
 
+  // Creamos el objeto de actualización
+  const updateData = {};
   if (registrosEjercicio.length === 0) {
-    await updateDoc(docRef, { [`${rutinaIndex}.${ejercicioNombre}`]: deleteField() });
+    // Si no quedan registros para este ejercicio, eliminamos el campo del ejercicio
+    updateData[`${rutinaId}.${ejercicioId}`] = deleteField();
   } else {
-    await updateDoc(docRef, { [`${rutinaIndex}.${ejercicioNombre}`]: registrosEjercicio });
+    // Si quedan, actualizamos el array
+    updateData[`${rutinaId}.${ejercicioId}`] = registrosEjercicio;
   }
+  await updateDoc(docRef, updateData);
   location.reload();
 }
 
@@ -347,23 +314,25 @@ async function editarFila(btn){
   const nuevasReps = parseInt(fila.querySelector('.edit-reps').textContent);
 
   // Elimina el registro antiguo
-  await eliminarFila(fOriginal, idx);
-
-  // Guarda el nuevo registro (simulando un guardado normal)
-  const docRef = doc(db, "users", userId, "registros", nuevaFecha);
-  const docSnap = await getDoc(docRef);
-  const datosNuevos = docSnap.exists() ? docSnap.data() : {};
-  if (!datosNuevos[rutinaIndex]) datosNuevos[rutinaIndex] = {};
-  if (!datosNuevos[rutinaIndex][ejercicioNombre]) datosNuevos[rutinaIndex][ejercicioNombre] = [];
-  datosNuevos[rutinaIndex][ejercicioNombre].push({ peso: nuevoPeso, reps: nuevasReps });
-
-  if (docSnap.exists()) {
-    await updateDoc(docRef, datosNuevos);
-  } else {
-    await setDoc(docRef, datosNuevos);
+  const docRefOriginal = doc(db, "users", userId, "registros", fOriginal);
+  const docSnapOriginal = await getDoc(docRefOriginal);
+  if (docSnapOriginal.exists()) {
+    const datosOriginales = docSnapOriginal.data();
+    const registrosOriginales = datosOriginales[rutinaId]?.[ejercicioId] || [];
+    registrosOriginales.splice(idx, 1);
+    await updateDoc(docRefOriginal, { [`${rutinaId}.${ejercicioId}`]: registrosOriginales.length > 0 ? registrosOriginales : deleteField() });
   }
 
-  mostrarToast("💾 Cambios guardados");
+  // Guarda el nuevo registro (simulando un guardado normal)
+  const docRefNuevo = doc(db, "users", userId, "registros", nuevaFecha);
+  const docSnapNuevo = await getDoc(docRefNuevo);
+  const datosNuevos = docSnapNuevo.exists() ? docSnapNuevo.data() : {};
+  const registrosNuevos = datosNuevos[rutinaId]?.[ejercicioId] || [];
+  registrosNuevos.push({ peso: nuevoPeso, reps: nuevasReps });
+
+  await setDoc(docRefNuevo, { ...datosNuevos, [rutinaId]: { ...datosNuevos[rutinaId], [ejercicioId]: registrosNuevos } }, { merge: true });
+
+  mostrarToast("✏️ Cambios guardados");
   setTimeout(()=> location.reload(),500);
 }
 
@@ -417,14 +386,21 @@ function generarGrafica() {
         { label: 'Repeticiones', data: reps, borderColor: 'orange', tension: 0.2, fill: false }
       ]
     },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    options: { 
+      responsive: true, 
+      scales: { 
+        y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+      },
+      plugins: { legend: { labels: { color: 'white' } } }
+    }
   });
 }
 
 // Inicializamos gráfica
 generarGrafica();
 })();
-}
+} 
 </script>
 
 </body>
