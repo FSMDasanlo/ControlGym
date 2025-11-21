@@ -61,6 +61,7 @@ input { padding:8px; width:120px; border-radius: 8px; border: 1px solid #4f545c;
   background:#2c2f33;
   padding:10px;
   border-radius:8px;
+  max-height: 250px; /* Limita la altura de la gráfica */
   box-shadow:0 0 5px rgba(0,0,0,0.1);
   text-align:center;
 }
@@ -396,7 +397,11 @@ function generarGrafica() {
     options: { 
       responsive: true, 
       scales: { 
-        y: { beginAtZero: true, ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        y: { 
+          beginAtZero: true, 
+          ticks: { color: 'white', maxTicksLimit: 6 }, /* Menos saltos en la escala */
+          grid: { color: 'rgba(255,255,255,0.1)' } 
+        },
         x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
       },
       plugins: { legend: { labels: { color: 'white' } } }
