@@ -49,7 +49,7 @@
 .delete-btn-overlay {
   position: absolute;
   top: 8px;
-  left: 8px; /* Movido a la izquierda */
+  left: 10px; /* Movido a la izquierda */
   background: transparent;
   border: none;
   color: #dc3545;
@@ -61,6 +61,21 @@
 }
 .delete-btn-overlay:hover {
   transform: scale(1.1);
+}
+
+.edit-btn-overlay {
+  position: absolute;
+  top: 8px;
+  left: 34px; /* Al lado del botón de eliminar */
+  background: transparent;
+  border: none;
+  color: #ffc107; /* Amarillo para editar */
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.2s;
+  padding: 0;
 }
 
 .botones-volver {
@@ -86,30 +101,21 @@
   align-items: center;
   gap: 6px;
 }
-
 .boton-volver i,
 .boton-volver img {
   margin-right: 4px;
 }
-
-.boton-volver.rutinas {
-  background: #6c757d;
+.boton-volver, .add {
+  background: linear-gradient(45deg, #050a19, #002244);
   color: white;
+  border: 1px solid #004466;
 }
-.boton-volver.calendario {
-  background: #17a2b8;
-  color: white;
-}
-.boton-volver.add {
-  background: #28a745;
-  color: white;
-}
-.boton-volver:hover { opacity: 0.9; }
+.boton-volver:hover, .add:hover { opacity: 0.9; }
 
 #user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
 #user-greeting { font-weight: bold; }
-#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
-#logout-btn:hover { background: #c82333; }
+#logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: opacity 0.3s; }
+#logout-btn:hover { opacity: 0.8; }
 </style>
 </head>
 <body>
@@ -215,6 +221,24 @@ function renderLista() {
     };
     wrapper.appendChild(deleteBtn);
 
+    // El botón de editar se añade a TODOS los ejercicios
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn-overlay';
+    editBtn.innerHTML = '✏️'; // Usamos el emoji de lápiz
+    editBtn.title = 'Editar nombre del ejercicio';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      const nuevoNombre = prompt(`Editar nombre para "${ej.nombre}":`, ej.nombre);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        // Encontramos el ejercicio y actualizamos su nombre
+        const ejercicioAEditar = rutina.ejercicios.find(e => e.id === ej.id);
+        ejercicioAEditar.nombre = nuevoNombre.trim();
+        // Guardamos la configuración actualizada del usuario
+        setDoc(userConfigRef, { routines: userRoutines })
+          .then(() => renderLista()); // Re-renderiza la lista
+      }
+    };
+    wrapper.appendChild(editBtn);
 
     // 💪 Botón del ejercicio
     const btn = document.createElement('button');
