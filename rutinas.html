@@ -66,15 +66,18 @@
   border-radius: 6px;
 }
 .check {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: green;
-  font-size: 18px;
-  background: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-weight: bold;
+    position: absolute;
+    bottom: 5px;
+    right: 75px; /* Lo separamos un poco más de la papelera */
+    color: limegreen;
+    font-size: 1.5em; /* Más grande */
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    width: 28px; /* Tamaño fijo para que sea un círculo */
+    height: 28px;
+    line-height: 28px; /* Centrado vertical */
+    font-weight: bold;
+    text-align: center;
 }
 #user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
 #user-greeting { font-weight: bold; }
@@ -82,8 +85,15 @@
 #logout-btn:hover { opacity: 0.8; }
 </style>
 <style>
-  .rename-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 1.2em; position: absolute; bottom: 5px; right: 5px; z-index: 10; }
-  .rename-btn:hover { transform: scale(1.2); }
+  .action-btn { background: transparent; border: none; color: white; cursor: pointer; font-size: 1.2em; z-index: 10; transition: transform 0.2s; }
+  .action-btn:hover { transform: scale(1.2); }
+
+  .rename-btn { position: absolute; bottom: 5px; right: 5px; }
+  .delete-btn { position: absolute; bottom: 5px; right: 35px; color: #dc3545; }
+  .move-up-btn { position: absolute; top: 5px; right: 35px; }
+  .move-down-btn { position: absolute; top: 5px; right: 5px; }
+
+
 
   .crear-rutina-btn {
     display: block;
@@ -155,6 +165,33 @@
   const docSnap = await getDoc(userConfigRef);
   let userRoutines = [];
 
+  // --- Funciones de renderizado y guardado ---
+  function renderRoutines() {
+    cont.innerHTML = ''; // Limpiamos el contenedor
+    userRoutines.forEach((r, index) => {
+      if (r.titulo === "Rodillas") return;
+      const div = document.createElement('div');
+      div.className = 'rutina';
+      // Se añaden los nuevos botones de eliminar y mover
+      div.innerHTML = `
+        <img src="${r.imagen}" alt="">
+        <span id="title-${r.id}">${r.titulo}</span>
+        ${index > 0 ? `<button class="action-btn move-up-btn" data-id="${r.id}" title="Mover arriba">🔼</button>` : ''}
+        ${index < userRoutines.length - 2 ? `<button class="action-btn move-down-btn" data-id="${r.id}" title="Mover abajo">🔽</button>` : ''}
+        <button class="action-btn rename-btn" data-id="${r.id}" title="Renombrar rutina">✏️</button>
+        <button class="action-btn delete-btn" data-id="${r.id}" title="Eliminar rutina">🗑️</button>
+      `;
+
+      addCheckmarkIfCompleted(div, r.id);
+      
+      div.querySelector('img').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
+      div.querySelector('span').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
+
+      cont.appendChild(div);
+    });
+    addCreateButton(); // Añadimos el botón de crear al final
+  }
+
   if (docSnap.exists()) {
     userRoutines = docSnap.data().routines || [];
   } else {
@@ -176,56 +213,63 @@
     // Cargar datos de Firestore
     const data = {};
     const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
-    querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });
-    cont.innerHTML = ''; // Limpiamos el mensaje de carga
+    querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });    
 
-    // --- Renderizar Rutinas ---
-
-    userRoutines.forEach((r) => {
-    	if (r.titulo === "Rodillas") return; // no mostramos
-      const div = document.createElement('div');
-      div.className = 'rutina';
-      div.innerHTML = `<img src="${r.imagen}" alt="">
-                       <span id="title-${r.id}">${r.titulo}</span>
-                       <button class="rename-btn" data-id="${r.id}" title="Renombrar rutina">✏️</button>`;
-
+    function addCheckmarkIfCompleted(div, rutinaId) {
       if (
         data[fecha] &&
-        data[fecha][r.id] && // Usamos el ID de la rutina
-        Object.values(data[fecha][r.id]).some(ej => Array.isArray(ej) && ej.length > 0)
+        data[fecha][rutinaId] &&
+        Object.values(data[fecha][rutinaId]).some(ej => Array.isArray(ej) && ej.length > 0)
       ) {
         const check = document.createElement('div');
         check.className = 'check';
         check.textContent = '✓';
         div.appendChild(check);
       }
+    }
+
+    // Delegación de eventos para todos los botones de acción
+    cont.addEventListener('click', async (e) => {
+      const button = e.target.closest('.action-btn');
+      if (!button) return;
       
-      div.querySelector('img').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
-      div.querySelector('span').onclick = () => window.location.href = `ejercicios.html?fecha=${fecha}&rutinaId=${r.id}`;
+      e.stopPropagation();
+      const rutinaId = button.dataset.id;
+      const index = userRoutines.findIndex(r => r.id === rutinaId);
 
-      cont.appendChild(div);
-    });
-
-    // Añadimos la lógica para los botones de renombrar
-    document.querySelectorAll('.rename-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation(); // Evita que se navegue a la página de ejercicios
-        const rutinaId = e.target.dataset.id;
-        const rutinaActual = userRoutines.find(r => r.id === rutinaId);
+      if (button.classList.contains('rename-btn')) {
+        const rutinaActual = userRoutines[index];
         const nuevoNombre = prompt("Introduce el nuevo nombre para la rutina:", rutinaActual.titulo);
         if (nuevoNombre && nuevoNombre.trim() !== "") {
           rutinaActual.titulo = nuevoNombre.trim();
-          await setDoc(userConfigRef, { routines: userRoutines });
-          document.getElementById(`title-${rutinaId}`).textContent = rutinaActual.titulo;
         }
-      });
+      } 
+      else if (button.classList.contains('delete-btn')) {
+        if (confirm(`¿Estás seguro de que quieres eliminar la rutina "${userRoutines[index].titulo}"? Esta acción no se puede deshacer.`)) {
+          userRoutines.splice(index, 1);
+        }
+      }
+      else if (button.classList.contains('move-up-btn')) {
+        if (index > 0) {
+          [userRoutines[index], userRoutines[index - 1]] = [userRoutines[index - 1], userRoutines[index]];
+        }
+      }
+      else if (button.classList.contains('move-down-btn')) {
+        if (index < userRoutines.length - 1) {
+          [userRoutines[index], userRoutines[index + 1]] = [userRoutines[index + 1], userRoutines[index]];
+        }
+      }
+
+      // Guardar y re-renderizar
+      await setDoc(userConfigRef, { routines: userRoutines });
+      renderRoutines();
     });
 
-    // --- Botón para Crear Nueva Rutina ---
-    const crearBtn = document.createElement('button');
-    crearBtn.textContent = '➕ Crear Nueva Rutina';
-    crearBtn.className = 'boton-volver add crear-rutina-btn'; // Reutilizamos clases y añadimos una nueva
-    crearBtn.onclick = async () => {
+    function addCreateButton() {
+      const crearBtn = document.createElement('button');
+      crearBtn.textContent = '➕ Crear Nueva Rutina';
+      crearBtn.className = 'boton-volver add crear-rutina-btn';
+      crearBtn.onclick = async () => {
       const nuevoNombre = prompt("Introduce el nombre para la nueva rutina:");
       if (nuevoNombre && nuevoNombre.trim() !== "") {
         const nuevaRutina = {
@@ -234,17 +278,16 @@
           imagen: 'img/rutina4.jpg', // Usamos una imagen por defecto
           ejercicios: [] // Empieza sin ejercicios
         };
-
-        // Añadimos la nueva rutina a la lista y guardamos
         userRoutines.push(nuevaRutina);
         await setDoc(userConfigRef, { routines: userRoutines });
-
-        // Recargamos la página para que se muestre la nueva rutina. Es la forma más simple de refrescar todo.
-        location.reload();
+        renderRoutines();
       }
     };
     cont.appendChild(crearBtn);
+    }
 
+    // --- Renderizado Inicial ---
+    renderRoutines();
   }
 </script>
 </body>

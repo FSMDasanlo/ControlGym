@@ -39,11 +39,11 @@
 
 .check {
   position:absolute;
-  top:8px;
-  right:8px;
+  top: 8px;
+  left: 58px; /* A la derecha del lápiz */
   font-size:18px;
   color:limegreen;
-  text-shadow: 0 0 5px black;
+  line-height: 1;
 }
 
 .delete-btn-overlay {
@@ -77,6 +77,10 @@
   transition: transform 0.2s;
   padding: 0;
 }
+.move-up-btn-overlay { position: absolute; top: 8px; right: 34px; background: transparent; border: none; color: white; font-size: 15px; cursor: pointer; z-index: 10; padding: 0; }
+.move-down-btn-overlay { position: absolute; top: 8px; right: 10px; background: transparent; border: none; color: white; font-size: 15px; cursor: pointer; z-index: 10; padding: 0; }
+.move-up-btn-overlay:hover, .move-down-btn-overlay:hover { transform: scale(1.1); }
+
 
 .botones-volver {
   display: flex;
@@ -146,9 +150,9 @@
     <button class="boton-volver add" onclick="agregarEjercicio()">
       <i>➕</i> Añadir
     </button>
-  </div>
 
-  <div id="lista"></div>
+  </div>
+  <div id="lista" style="margin-top: 20px;"></div>
 </div>
 
 <script type="module">
@@ -200,67 +204,29 @@ const cont = document.getElementById('lista');
 
 function renderLista() {
   cont.innerHTML = '';
-  rutina.ejercicios.forEach((ej) => {
+  rutina.ejercicios.forEach((ej, index) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'ejercicio-item';
 
-    // El botón de eliminar se añade a TODOS los ejercicios
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-btn-overlay';
-    deleteBtn.textContent = 'x'; // 'x' minúscula y sutil
-    deleteBtn.title = 'Eliminar ejercicio';
-    deleteBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (confirm(`¿Eliminar "${ej.nombre}" de la rutina?`)) {
-        // Filtramos para quitar el ejercicio
-        rutina.ejercicios = rutina.ejercicios.filter(e => e.id !== ej.id);
-        // Guardamos la configuración actualizada del usuario
-        setDoc(userConfigRef, { routines: userRoutines })
-          .then(() => renderLista()); // Re-renderiza la lista
-      }
-    };
-    wrapper.appendChild(deleteBtn);
-
-    // El botón de editar se añade a TODOS los ejercicios
-    const editBtn = document.createElement('button');
-    editBtn.className = 'edit-btn-overlay';
-    editBtn.innerHTML = '✏️'; // Usamos el emoji de lápiz
-    editBtn.title = 'Editar nombre del ejercicio';
-    editBtn.onclick = (e) => {
-      e.stopPropagation();
-      const nuevoNombre = prompt(`Editar nombre para "${ej.nombre}":`, ej.nombre);
-      if (nuevoNombre && nuevoNombre.trim() !== "") {
-        // Encontramos el ejercicio y actualizamos su nombre
-        const ejercicioAEditar = rutina.ejercicios.find(e => e.id === ej.id);
-        ejercicioAEditar.nombre = nuevoNombre.trim();
-        // Guardamos la configuración actualizada del usuario
-        setDoc(userConfigRef, { routines: userRoutines })
-          .then(() => renderLista()); // Re-renderiza la lista
-      }
-    };
-    wrapper.appendChild(editBtn);
-
-    // 💪 Botón del ejercicio
-    const btn = document.createElement('button');
-    btn.className = 'boton-ejercicio';
-    btn.textContent = ej.nombre;
-    btn.onclick = () => window.location.href = `ejercicio.html?fecha=${fecha}&rutinaId=${rutinaId}&ejercicioId=${ej.id}`;
+    let checkHtml = '';
 
     // ✅ check si hay datos guardados
     if (data[fecha] && data[fecha][rutinaId] &&
         data[fecha][rutinaId][ej.id] && // Usamos el ID del ejercicio
         Array.isArray(data[fecha][rutinaId][ej.id]) && data[fecha][rutinaId][ej.id].length > 0) {
-      const check = document.createElement('div');
-      check.className = 'check';
-      check.textContent = '✓';
-      btn.appendChild(check);
+      checkHtml = `<div class="check">✓</div>`;
     }
 
-    wrapper.appendChild(btn);
+    wrapper.innerHTML = `
+      <button class="delete-btn-overlay" data-action="delete" data-id="${ej.id}" title="Eliminar ejercicio">x</button>
+      <button class="edit-btn-overlay" data-action="edit" data-id="${ej.id}" title="Editar nombre del ejercicio">✏️</button>
+      ${index > 0 ? `<button class="move-up-btn-overlay" data-action="move-up" data-id="${ej.id}" title="Mover arriba">🔼</button>` : ''}
+      ${index < rutina.ejercicios.length - 1 ? `<button class="move-down-btn-overlay" data-action="move-down" data-id="${ej.id}" title="Mover abajo">🔽</button>` : ''}
+      <button class="boton-ejercicio" data-action="open" data-id="${ej.id}">${ej.nombre}${checkHtml}</button>
+    `;
     cont.appendChild(wrapper);
   });
 }
-
 
 async function agregarEjercicio() {
   const nuevo = prompt('Nombre del nuevo ejercicio:');
@@ -282,6 +248,57 @@ async function agregarEjercicio() {
     renderLista();
   }
 }
+
+// Delegación de eventos para todos los botones de la lista
+cont.addEventListener('click', async (e) => {
+  const button = e.target.closest('button');
+  if (!button) return;
+
+  const action = button.dataset.action;
+  const ejercicioId = button.dataset.id;
+
+  if (!action || !ejercicioId) return;
+
+  e.stopPropagation();
+
+  const index = rutina.ejercicios.findIndex(ej => ej.id === ejercicioId);
+  const ejercicio = rutina.ejercicios[index];
+
+  switch (action) {
+    case 'open':
+      window.location.href = `ejercicio.html?fecha=${fecha}&rutinaId=${rutinaId}&ejercicioId=${ejercicioId}`;
+      break;
+    case 'delete':
+      if (confirm(`¿Eliminar "${ejercicio.nombre}" de la rutina?`)) {
+        rutina.ejercicios.splice(index, 1);
+        await setDoc(userConfigRef, { routines: userRoutines });
+        renderLista();
+      }
+      break;
+    case 'edit':
+      const nuevoNombre = prompt(`Editar nombre para "${ejercicio.nombre}":`, ejercicio.nombre);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        ejercicio.nombre = nuevoNombre.trim();
+        await setDoc(userConfigRef, { routines: userRoutines }); // Corregido
+        renderLista();
+      }
+      break;
+    case 'move-up':
+      if (index > 0) {
+        [rutina.ejercicios[index], rutina.ejercicios[index - 1]] = [rutina.ejercicios[index - 1], rutina.ejercicios[index]];
+        await setDoc(userConfigRef, { routines: userRoutines });
+        renderLista();
+      }
+      break;
+    case 'move-down':
+      if (index < rutina.ejercicios.length - 1) {
+        [rutina.ejercicios[index], rutina.ejercicios[index + 1]] = [rutina.ejercicios[index + 1], rutina.ejercicios[index]];
+        await setDoc(userConfigRef, { routines: userRoutines });
+        renderLista();
+      }
+      break;
+  }
+});
 
 window.agregarEjercicio = agregarEjercicio;
 

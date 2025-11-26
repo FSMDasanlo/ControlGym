@@ -40,7 +40,7 @@ th:nth-child(4), td:nth-child(4) { width: 15%; }
 .boton-accion.edit { background:#ffc107; color:black; }
 .boton-accion:hover { opacity:0.8; }
 
-#formulario { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:15px;}
+#formulario { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin: 25px 15px 15px 15px;}
 input { padding:8px; width:120px; border-radius: 8px; border: 1px solid #4f545c; background: #25272a; color: white; }
 #formulario button { background:#28a745; color:white; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight: bold; transition: background 0.3s;}
 #formulario button:hover { background:#218838;}
@@ -64,18 +64,36 @@ input { padding:8px; width:120px; border-radius: 8px; border: 1px solid #4f545c;
   max-width:600px;
   margin:25px auto;
   background:#2c2f33;
-  padding:10px;
   border-radius:8px;
-  max-height: 250px; /* Limita la altura de la gráfica */
   box-shadow:0 0 5px rgba(0,0,0,0.1);
-  text-align:center;
+  max-height: 250px; /* Limita la altura de la gráfica */
 }
-#grafica-container button { margin-bottom:10px; }
+/* Nuevo contenedor para alinear botón y leyenda */
+#grafica-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px 0 20px; /* Padding superior y lateral */
+}
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   table { font-size: 0.8em; }
-  th, td { padding:3px 4px; }
-  button.boton-eliminar { padding:2px 5px; font-size:0.75em; }
+  th, td { padding:2px 4px; } /* Reducimos el padding vertical para filas más compactas en móvil */
+  /* Ajustamos anchos de columna para dar más espacio a los botones */
+  th:nth-child(1), td:nth-child(1) { width: 25%; } /* Fecha */
+  th:nth-child(2), td:nth-child(2) { width: 20%; } /* Peso */
+  th:nth-child(3), td:nth-child(3) { width: 20%; } /* Reps */
+  th:nth-child(4), td:nth-child(4) { width: 35%; } /* Acciones */
+
+  td:last-child {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .boton-accion {
+    font-size: 0.8em; /* Hacemos los iconos aún más pequeños */
+    padding: 1px 3px; /* Reducimos más el padding */
+  }
 }
 .btn-filtro {
   background: linear-gradient(45deg, #050a19, #002244);
@@ -134,8 +152,10 @@ td.max-valor {
 
   <!-- Gráfica con botón -->
   <div id="grafica-container" style="background: #3a3f44;">
-    <button id="toggleVista" class="btn-filtro" onclick="alternarVista()">📈 Histórico</button>
-    <canvas id="graficaProgreso" style="margin-top:10px;"></canvas>
+    <div id="grafica-wrapper">
+      <button id="toggleVista" class="btn-filtro" onclick="alternarVista()">📈 Histórico</button>
+    </div>
+    <canvas id="graficaProgreso" style="padding: 0 15px 15px 15px;"></canvas>
   </div>
 
   <div id="formulario">
@@ -477,7 +497,11 @@ function generarGrafica() {
       ]
     },
     options: { 
-      responsive: true, 
+      responsive: true,
+      maintainAspectRatio: false, // Permite que la gráfica no sea cuadrada
+      plugins: {
+        legend: { position: 'top', labels: { color: 'white' } } 
+      },
       scales: { 
         y: { 
           beginAtZero: true, 
@@ -485,8 +509,7 @@ function generarGrafica() {
           grid: { color: 'rgba(255,255,255,0.1)' } 
         },
         x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-      },
-      plugins: { legend: { labels: { color: 'white' } } }
+      }
     }
   });
 }
