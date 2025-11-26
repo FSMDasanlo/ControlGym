@@ -22,8 +22,13 @@
 #videoEjercicio a:hover { background: #117a8b; }
 
 table { width:100%; margin:auto; border-collapse:collapse; margin-top:15px; font-size: 0.9em; table-layout: fixed; word-wrap: break-word; }
-th, td { border:1px solid #4f545c; padding:8px 6px; text-align:center; }
+th, td { border:1px solid #4f545c; padding:4px 6px; text-align:center; }
 th { background:#007bff; color:white; font-weight:bold; }
+th[data-sort] {
+  cursor: pointer;
+}
+th[data-sort]:hover { background: #0056b3; }
+th .sort-icon { margin-left: 5px; font-size: 0.8em; }
 tfoot td { background: #3a3f44; font-weight: bold; }
 
 th:nth-child(1), td:nth-child(1) { width: 35%; }
@@ -85,9 +90,21 @@ input { padding:8px; width:120px; border-radius: 8px; border: 1px solid #4f545c;
 }
 
 td.max-valor {
-  background: #ffc107; /* amarillo brillante */
   color: black;
   font-weight: bold;
+}
+
+.max-valor span {
+  background: #ffe599; /* amarillo suave */
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.control-vista-tabla {
+  margin-left: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #ffc107;
+  display: inline-block;
 }
 #user-header { background: #343a40; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
 #user-greeting { font-weight: bold; }
@@ -206,7 +223,16 @@ const thead = document.getElementById('thead');
 const tbody = document.getElementById('tbody');
 const tfoot = document.getElementById('tfoot');
 
-thead.innerHTML = `<tr><th>Fecha</th><th>Peso (kg)</th><th>Repeticiones</th><th>Acciones</th></tr>`;
+thead.innerHTML = `<tr>
+  <th data-sort="fecha">
+    Fecha
+    <span id="ver-mas" class="control-vista-tabla" title="Mostrar 10 más">+</span>
+    <span id="ver-menos" class="control-vista-tabla" title="Mostrar solo los 3 últimos" style="display: none;">x</span>
+    <span class="sort-icon"></span>
+  </th>
+  <th data-sort="peso">Peso (kg)<span class="sort-icon"></span></th>
+  <th data-sort="reps">Repeticiones<span class="sort-icon"></span></th>
+  <th>Acciones</th></tr>`;
 
 // Construimos registros desde Firestore
 let registros = [];
@@ -223,22 +249,52 @@ for (const f in data) { // f es la fecha (ID del documento)
 }
 registros.sort((a,b)=> new Date(a.fecha)-new Date(b.fecha));
 
+let sortState = { column: 'fecha', direction: 'asc' };
+let numRegistrosMostrados = 3;
+
+function sortRegistros() {
+  registros.sort((a, b) => (sortState.direction === 'asc' ? 1 : -1) * (a[sortState.column] > b[sortState.column] ? 1 : -1));
+}
+
 // Función para generar la tabla
 function actualizarTabla() {
   if (!registros.length) {
     tbody.innerHTML = `<tr><td colspan="4">No hay datos guardados aún</td></tr>`;
     tfoot.innerHTML = '';
+    document.getElementById('ver-mas').style.display = 'none';
+    document.getElementById('ver-menos').style.display = 'none';
   } else {
-  // Calcular máximos
-const maxPeso = Math.max(...registros.map(r => r.peso));
-const maxReps = Math.max(...registros.map(r => r.reps));
+    // Control de visibilidad de botones +/-
+    const verMasBtn = document.getElementById('ver-mas');
+    const verMenosBtn = document.getElementById('ver-menos');
 
-// Pintar filas
-tbody.innerHTML = registros.map((r, i) => `
-  <tr data-fecha="${r.fecha}" data-idx="${r.index}">
-    <td contenteditable="true" class="edit-fecha">${r.fecha.split('-').reverse().join('-')}</td>
-    <td contenteditable="true" class="edit-peso ${r.peso === maxPeso ? 'max-valor' : ''}">${r.peso}</td>
-    <td contenteditable="true" class="edit-reps ${r.reps === maxReps ? 'max-valor' : ''}">${r.reps}</td>
+    verMasBtn.style.display = (numRegistrosMostrados >= registros.length) ? 'none' : 'inline-block';
+    verMenosBtn.style.display = (numRegistrosMostrados > 3) ? 'inline-block' : 'none';
+
+    // Calcular máximos
+    const maxPeso = Math.max(...registros.map(r => r.peso));
+    const maxReps = Math.max(...registros.map(r => r.reps));
+
+    // Actualizar iconos de ordenación en cabeceras
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      const icon = th.querySelector('.sort-icon');
+      if (th.dataset.sort === sortState.column) {
+        icon.textContent = sortState.direction === 'asc' ? '🔼' : '🔽';
+      } else {
+        icon.textContent = '';
+      }
+    });
+
+    // Seleccionar los registros a mostrar
+    // Si ordenamos por fecha ascendente (por defecto), mostramos los últimos. Para el resto, los primeros.
+    const registrosVisibles = (sortState.column === 'fecha' && sortState.direction === 'asc') ? registros.slice(-numRegistrosMostrados) : registros.slice(0, numRegistrosMostrados);
+
+    // Pintar filas
+    tbody.innerHTML = registrosVisibles.map(r => `
+      <tr data-fecha="${r.fecha}" data-idx="${r.index}">
+        <td contenteditable="true" class="edit-fecha">${r.fecha.split('-').reverse().join('-')}</td>
+    <td contenteditable="true" class="edit-peso ${r.peso === maxPeso ? 'max-valor' : ''}"><span>${r.peso}</span></td>
+    <td contenteditable="true" class="edit-reps ${r.reps === maxReps ? 'max-valor' : ''}"><span>${r.reps}</span></td>
     <td>
       <button class="boton-accion edit" title="Editar registro" onclick="editarFila(this)">✏️</button>
       <button class="boton-accion" title="Eliminar registro" onclick="eliminarFila('${r.fecha}', ${r.index})">🗑️</button>
@@ -249,6 +305,32 @@ tbody.innerHTML = registros.map((r, i) => `
     actualizarResumen();
   }
 }
+
+// Event Listeners para ordenar
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const column = th.dataset.sort;
+    if (sortState.column === column) {
+      sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortState.column = column;
+      sortState.direction = (column === 'fecha') ? 'asc' : 'desc'; // Por defecto, peso y reps descendente
+    }
+    sortRegistros();
+    actualizarTabla();
+  });
+});
+// Event Listeners para los nuevos botones
+document.getElementById('ver-mas').addEventListener('click', () => {
+  numRegistrosMostrados += 10;
+  if (numRegistrosMostrados > registros.length) numRegistrosMostrados = registros.length;
+  actualizarTabla();
+});
+
+document.getElementById('ver-menos').addEventListener('click', () => {
+  numRegistrosMostrados = 3;
+  actualizarTabla();
+});
 
 // Función para resumen
 function actualizarResumen(){
