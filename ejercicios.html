@@ -19,6 +19,7 @@
   position: relative; /* Clave para posicionar la 'X' encima */
   width: 90%;
   max-width: 500px;
+  transition: transform 0.25s ease-in-out; /* La clave de la animación */
   margin: 8px auto;
 }
 
@@ -38,6 +39,7 @@
 .boton-ejercicio:hover { background:#4f545c; }
 
 .check {
+  pointer-events: none; /* Evita que el check interfiera con el drag and drop */
   position:absolute;
   top: 8px;
   left: 58px; /* A la derecha del lápiz */
@@ -77,8 +79,14 @@
   transition: transform 0.2s;
   padding: 0;
 }
-.move-up-btn-overlay { position: absolute; top: 8px; right: 34px; background: transparent; border: none; color: white; font-size: 15px; cursor: pointer; z-index: 10; padding: 0; }
-.move-down-btn-overlay { position: absolute; top: 8px; right: 10px; background: transparent; border: none; color: white; font-size: 15px; cursor: pointer; z-index: 10; padding: 0; }
+.move-up-btn-overlay, .move-down-btn-overlay { display: none; } /* Ocultamos los botones de mover */
+
+/* Estilos para Drag and Drop */
+.ejercicio-item.dragging {
+  opacity: 0.4;
+  background: #4f545c;
+}
+
 .move-up-btn-overlay:hover, .move-down-btn-overlay:hover { transform: scale(1.1); }
 
 
@@ -207,6 +215,7 @@ function renderLista() {
   rutina.ejercicios.forEach((ej, index) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'ejercicio-item';
+    wrapper.draggable = true; // Hacemos el elemento arrastrable
 
     let checkHtml = '';
 
@@ -220,8 +229,6 @@ function renderLista() {
     wrapper.innerHTML = `
       <button class="delete-btn-overlay" data-action="delete" data-id="${ej.id}" title="Eliminar ejercicio">x</button>
       <button class="edit-btn-overlay" data-action="edit" data-id="${ej.id}" title="Editar nombre del ejercicio">✏️</button>
-      ${index > 0 ? `<button class="move-up-btn-overlay" data-action="move-up" data-id="${ej.id}" title="Mover arriba">🔼</button>` : ''}
-      ${index < rutina.ejercicios.length - 1 ? `<button class="move-down-btn-overlay" data-action="move-down" data-id="${ej.id}" title="Mover abajo">🔽</button>` : ''}
       <button class="boton-ejercicio" data-action="open" data-id="${ej.id}">${ej.nombre}${checkHtml}</button>
     `;
     cont.appendChild(wrapper);
@@ -256,6 +263,7 @@ cont.addEventListener('click', async (e) => {
 
   const action = button.dataset.action;
   const ejercicioId = button.dataset.id;
+  const itemWrapper = button.closest('.ejercicio-item');
 
   if (!action || !ejercicioId) return;
 
@@ -283,21 +291,73 @@ cont.addEventListener('click', async (e) => {
         renderLista();
       }
       break;
-    case 'move-up':
-      if (index > 0) {
-        [rutina.ejercicios[index], rutina.ejercicios[index - 1]] = [rutina.ejercicios[index - 1], rutina.ejercicios[index]];
-        await setDoc(userConfigRef, { routines: userRoutines });
-        renderLista();
-      }
-      break;
-    case 'move-down':
-      if (index < rutina.ejercicios.length - 1) {
-        [rutina.ejercicios[index], rutina.ejercicios[index + 1]] = [rutina.ejercicios[index + 1], rutina.ejercicios[index]];
-        await setDoc(userConfigRef, { routines: userRoutines });
-        renderLista();
-      }
-      break;
   }
+});
+
+// --- Lógica de Drag and Drop para ejercicios ---
+let draggedItemId = null;
+
+cont.addEventListener('dragstart', (e) => {
+    const target = e.target.closest('.ejercicio-item');
+    if (target) {
+        const button = target.querySelector('button');
+        draggedItemId = button.dataset.id;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => target.classList.add('dragging'), 0);
+    }
+});
+
+cont.addEventListener('dragend', (e) => {
+    const target = e.target.closest('.ejercicio-item');
+    if (target) target.classList.remove('dragging');
+});
+
+cont.addEventListener('dragover', (e) => e.preventDefault());
+
+cont.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const dropTargetWrapper = e.target.closest('.ejercicio-item');
+    const draggedElement = cont.querySelector(`[data-id="${draggedItemId}"]`)?.closest('.ejercicio-item');
+
+    if (dropTargetWrapper && draggedElement && dropTargetWrapper !== draggedElement) {
+        const dropTargetId = dropTargetWrapper.querySelector('button').dataset.id;
+
+        // --- Lógica de animación FLIP ---
+        const children = Array.from(cont.querySelectorAll('.ejercicio-item'));
+        const initialPositions = new Map();
+        children.forEach(child => initialPositions.set(child, child.getBoundingClientRect()));
+
+        const dropTargetRect = dropTargetWrapper.getBoundingClientRect();
+        const isAfter = e.clientY > dropTargetRect.top + dropTargetRect.height / 2;
+
+        if (isAfter) {
+            dropTargetWrapper.parentNode.insertBefore(draggedElement, dropTargetWrapper.nextSibling);
+        } else {
+            dropTargetWrapper.parentNode.insertBefore(draggedElement, dropTargetWrapper);
+        }
+
+        children.forEach(child => {
+            const newPos = child.getBoundingClientRect();
+            const oldPos = initialPositions.get(child);
+            const deltaY = oldPos.top - newPos.top;
+            if (deltaY !== 0) {
+                child.style.transform = `translateY(${deltaY}px)`;
+                child.style.transition = 'transform 0s';
+            }
+        });
+
+        cont.offsetHeight; // Forzar repintado
+        children.forEach(child => {
+            child.style.transform = '';
+            child.style.transition = 'transform 0.25s ease-in-out';
+        });
+
+        const fromIndex = rutina.ejercicios.findIndex(ej => ej.id === draggedItemId);
+        const [movedItem] = rutina.ejercicios.splice(fromIndex, 1);
+        const toIndex = Array.from(cont.querySelectorAll('.ejercicio-item')).findIndex(item => item === draggedElement);
+        rutina.ejercicios.splice(toIndex, 0, movedItem);
+        await setDoc(userConfigRef, { routines: userRoutines });
+    }
 });
 
 window.agregarEjercicio = agregarEjercicio;

@@ -1,4 +1,3 @@
-<script>
 window.GYMVideos = {
   "r1": [
     "https://www.youtube.com/watch?v=fqsTgdTPRQU",
@@ -40,4 +39,3 @@ window.GYMVideos = {
     "https://www.youtube.com/watch?v=DOPV51VQNac"
   ]
 };
-</script>

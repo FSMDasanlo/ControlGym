@@ -38,6 +38,7 @@
 .rutina {
   position: relative;
   margin: 6px auto;
+  transition: transform 0.25s ease-in-out; /* La clave de la animación */
   max-width: 480px;
   cursor: pointer;
 }
@@ -66,6 +67,7 @@
   border-radius: 6px;
 }
 .check {
+    pointer-events: none; /* Evita que el check interfiera con el drag and drop */
     position: absolute;
     bottom: 5px;
     right: 75px; /* Lo separamos un poco más de la papelera */
@@ -93,8 +95,17 @@
   .move-up-btn { position: absolute; top: 5px; right: 35px; }
   .move-down-btn { position: absolute; top: 5px; right: 5px; }
 
-
-
+  /* Estilos para Drag and Drop */
+  .rutina.dragging {
+    opacity: 0.5;
+    border: 2px dashed #0095ff;
+  }
+  .drag-over-indicator {
+    height: 4px;
+    background-color: #0095ff;
+    margin: 2px 0;
+    border-radius: 2px;
+  }
   .crear-rutina-btn {
     display: block;
     width: 90%;
@@ -172,12 +183,12 @@
       if (r.titulo === "Rodillas") return;
       const div = document.createElement('div');
       div.className = 'rutina';
+      div.draggable = true; // Hacemos el elemento arrastrable
+      div.dataset.id = r.id; // Guardamos el ID para identificarlo
       // Se añaden los nuevos botones de eliminar y mover
       div.innerHTML = `
         <img src="${r.imagen}" alt="">
         <span id="title-${r.id}">${r.titulo}</span>
-        ${index > 0 ? `<button class="action-btn move-up-btn" data-id="${r.id}" title="Mover arriba">🔼</button>` : ''}
-        ${index < userRoutines.length - 2 ? `<button class="action-btn move-down-btn" data-id="${r.id}" title="Mover abajo">🔽</button>` : ''}
         <button class="action-btn rename-btn" data-id="${r.id}" title="Renombrar rutina">✏️</button>
         <button class="action-btn delete-btn" data-id="${r.id}" title="Eliminar rutina">🗑️</button>
       `;
@@ -249,20 +260,92 @@
           userRoutines.splice(index, 1);
         }
       }
-      else if (button.classList.contains('move-up-btn')) {
-        if (index > 0) {
-          [userRoutines[index], userRoutines[index - 1]] = [userRoutines[index - 1], userRoutines[index]];
-        }
-      }
-      else if (button.classList.contains('move-down-btn')) {
-        if (index < userRoutines.length - 1) {
-          [userRoutines[index], userRoutines[index + 1]] = [userRoutines[index + 1], userRoutines[index]];
-        }
-      }
 
-      // Guardar y re-renderizar
-      await setDoc(userConfigRef, { routines: userRoutines });
-      renderRoutines();
+      // Guardar y re-renderizar solo para renombrar y eliminar
+      if (button.classList.contains('rename-btn') || button.classList.contains('delete-btn')) {
+        await setDoc(userConfigRef, { routines: userRoutines });
+        renderRoutines();
+      }
+    });
+
+    // --- Lógica de Drag and Drop ---
+    let draggedItemId = null;
+
+    cont.addEventListener('dragstart', (e) => {
+      const target = e.target.closest('.rutina');
+      if (target) {
+        draggedItemId = target.dataset.id;
+        e.dataTransfer.effectAllowed = 'move';
+        // Usamos un timeout para que el navegador "capture" el estado original antes de aplicar la clase
+        setTimeout(() => target.classList.add('dragging'), 0);
+      }
+    });
+
+    cont.addEventListener('dragend', (e) => {
+      const target = e.target.closest('.rutina');
+      if (target) {
+        target.classList.remove('dragging');
+      }
+    });
+
+    cont.addEventListener('dragover', (e) => {
+      e.preventDefault(); // Necesario para permitir el drop
+    });
+
+    cont.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      const dropTarget = e.target.closest('.rutina');
+      const draggedElement = cont.querySelector(`[data-id="${draggedItemId}"]`);
+
+      if (dropTarget && draggedElement && dropTarget !== draggedElement) {
+        // --- Lógica de animación FLIP ---
+
+        // 1. FIRST: Guardar posiciones iniciales de todos los elementos
+        const children = Array.from(cont.querySelectorAll('.rutina'));
+        const initialPositions = new Map();
+        children.forEach(child => {
+          initialPositions.set(child, child.getBoundingClientRect());
+        });
+
+        // 2. LAST (parte 1): Mover el elemento en el DOM
+        // Determinar si se inserta antes o después del objetivo
+        const dropTargetRect = dropTarget.getBoundingClientRect();
+        const isAfter = e.clientY > dropTargetRect.top + dropTargetRect.height / 2;
+        
+        if (isAfter) {
+          dropTarget.parentNode.insertBefore(draggedElement, dropTarget.nextSibling);
+        } else {
+          dropTarget.parentNode.insertBefore(draggedElement, dropTarget);
+        }
+
+        // 3. INVERT: Aplicar transformaciones inversas
+        children.forEach(child => {
+          const newPos = child.getBoundingClientRect();
+          const oldPos = initialPositions.get(child);
+          const deltaY = oldPos.top - newPos.top;
+          
+          if (deltaY !== 0) {
+            child.style.transform = `translateY(${deltaY}px)`;
+            child.style.transition = 'transform 0s'; // Desactivar transición para el movimiento inicial
+          }
+        });
+
+        // 4. PLAY: Forzar repintado y animar a la posición final
+        cont.offsetHeight; // Truco para forzar el repintado del navegador
+        children.forEach(child => {
+          child.style.transform = '';
+          child.style.transition = 'transform 0.25s ease-in-out';
+        });
+
+        // Actualizar el array de datos en segundo plano
+        const fromIndex = userRoutines.findIndex(r => r.id === draggedItemId);
+        const toIndex = userRoutines.findIndex(r => r.id === dropTarget.dataset.id);
+        const [movedItem] = userRoutines.splice(fromIndex, 1);
+        userRoutines.splice(isAfter ? toIndex + 1 : toIndex, 0, movedItem);
+        
+        await setDoc(userConfigRef, { routines: userRoutines });
+        // Ya no llamamos a renderRoutines() para evitar el parpadeo
+      }
     });
 
     function addCreateButton() {
