@@ -23,7 +23,6 @@ async function initializeApp(user) {
 
   ui.inicializarPagina(rutina, ejercicio, fecha);
 
-  // --- INICIO DE CORRECCIÓN ---
   // 1. Creamos la cabecera de la tabla PRIMERO para que los elementos existan
   const thead = document.getElementById('thead');
   thead.innerHTML = `<tr>
@@ -50,7 +49,6 @@ async function initializeApp(user) {
   }
   sortRegistros();
   repintarUI();
-  // --- FIN DE CORRECCIÓN ---
 
   function sortRegistros() {
     registros.sort((a, b) => (sortState.direction === 'asc' ? 1 : -1) * (a[sortState.column] > b[sortState.column] ? 1 : -1));
