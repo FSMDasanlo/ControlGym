@@ -41,11 +41,12 @@
 .check {
   pointer-events: none; /* Evita que el check interfiera con el drag and drop */
   position:absolute;
-  top: 8px;
-  left: 58px; /* A la derecha del lápiz */
+  top: 50%; /* Centrado vertical */
+  transform: translateY(-50%); /* Ajuste fino para centrado vertical */
+  right: 15px; /* Lo posicionamos a la derecha */
   font-size:18px;
   color:limegreen;
-  line-height: 1;
+  font-weight: bold;
 }
 
 .delete-btn-overlay {
