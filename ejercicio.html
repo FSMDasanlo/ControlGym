@@ -28,7 +28,7 @@
 
   <!-- Gráfica con botón -->
   <div id="grafica-container" style="background: #3a3f44;">
-    <div id="grafica-wrapper">
+    <div id="grafica-wrapper" style="position: relative;">
       <button id="toggleVista" class="btn-filtro">📈 Histórico</button>
       <!-- Leyenda HTML personalizada -->
       <div id="grafica-leyenda">
@@ -41,8 +41,8 @@
           <span class="leyenda-texto">Repeticiones</span>
         </div>
       </div>
+      <canvas id="graficaProgreso" style="padding: 0 15px 15px 15px;"></canvas>
     </div>
-    <canvas id="graficaProgreso" style="padding: 0 15px 15px 15px;"></canvas>
   </div>
 
   <div id="formulario">

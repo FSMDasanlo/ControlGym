@@ -112,7 +112,16 @@ async function initializeApp(user) {
   }
 
   // --- Asignación de Event Listeners ---
-  document.getElementById('formulario').querySelector('button').onclick = handleSave;
+  const guardarBtn = document.getElementById('guardar');
+  
+  // Usamos una función manejadora para evitar doble ejecución en caso de añadir más eventos
+  const handleSaveEvent = (event) => {
+      event.preventDefault(); // Previene comportamientos por defecto (como enviar un formulario)
+      handleSave();
+  };
+  guardarBtn.addEventListener('click', handleSaveEvent);
+  guardarBtn.addEventListener('touchend', handleSaveEvent); // Añadido para máxima compatibilidad en iOS
+
   document.querySelectorAll('th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const column = th.dataset.sort;
