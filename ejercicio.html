@@ -29,9 +29,9 @@
   <!-- Gráfica con botón -->
   <div id="grafica-container" style="background: #3a3f44;">
     <div id="grafica-wrapper" style="position: relative;">
-      <button id="toggleVista" class="btn-filtro">📈 Histórico</button>
+      <button id="toggleVista" class="btn-filtro" style="position: absolute; top: 10px; left: 15px; z-index: 10;">📈 Histórico</button>
       <!-- Leyenda HTML personalizada -->
-      <div id="grafica-leyenda">
+      <div id="grafica-leyenda" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 15px;">
         <div class="leyenda-item" data-dataset-index="0">
           <span class="leyenda-color" style="background-color: blue;"></span>
           <span class="leyenda-texto">Peso (kg)</span>
