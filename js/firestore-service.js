@@ -31,11 +31,11 @@ export async function guardarRegistro(userId, fecha, rutinaId, ejercicioId, peso
   if (docSnap.exists()) {
     const datosActuales = docSnap.data();
     const registrosEjercicio = datosActuales[rutinaId]?.[ejercicioId] || [];
-    registrosEjercicio.push({ peso, reps });
+    registrosEjercicio.push({ peso, reps, timestamp: Date.now() });
     await updateDoc(docRef, { [`${rutinaId}.${ejercicioId}`]: registrosEjercicio });
     return registrosEjercicio.length - 1; // Devuelve el nuevo índice
   } else {
-    const nuevoDato = { [rutinaId]: { [ejercicioId]: [{ peso, reps }] } };
+    const nuevoDato = { [rutinaId]: { [ejercicioId]: [{ peso, reps, timestamp: Date.now() }] } };
     await setDoc(docRef, nuevoDato);
     return 0; // Devuelve el nuevo índice (0)
   }
@@ -81,7 +81,8 @@ export async function editarRegistro(userId, rutinaId, ejercicioId, oldData, new
       const datos = docSnap.data();
       const registrosEjercicio = datos[rutinaId]?.[ejercicioId] || [];
       if (registrosEjercicio[oldData.index]) {
-        registrosEjercicio[oldData.index] = { peso: newData.peso, reps: newData.reps };
+        // Usamos spread syntax (...) para mantener el timestamp original y otros campos si los hubiera
+        registrosEjercicio[oldData.index] = { ...registrosEjercicio[oldData.index], peso: newData.peso, reps: newData.reps };
         await updateDoc(docRef, { [`${rutinaId}.${ejercicioId}`]: registrosEjercicio });
       }
     }
@@ -95,7 +96,9 @@ export async function editarRegistro(userId, rutinaId, ejercicioId, oldData, new
     const docSnapNuevo = await getDoc(docRefNuevo);
     const datosNuevos = docSnapNuevo.exists() ? docSnapNuevo.data() : {};
     const registrosNuevos = datosNuevos[rutinaId]?.[ejercicioId] || [];
-    registrosNuevos.push({ peso: newData.peso, reps: newData.reps });
+    // Al mover de fecha, se considera un nuevo registro en el tiempo, pero podríamos mantener el timestamp original si quisiéramos.
+    // Por simplicidad y lógica de "nuevo día", creamos uno nuevo o mantenemos el actual. Vamos a crear uno nuevo para que se ordene bien en el nuevo día.
+    registrosNuevos.push({ peso: newData.peso, reps: newData.reps, timestamp: Date.now() });
     await setDoc(docRefNuevo, { ...datosNuevos, [rutinaId]: { ...datosNuevos[rutinaId], [ejercicioId]: registrosNuevos } }, { merge: true });
     return registrosNuevos.length - 1; // Devolvemos el nuevo índice
   }

@@ -140,3 +140,12 @@ td.max-valor {
 #user-greeting { font-weight: bold; }
 #logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: opacity 0.3s; }
 #logout-btn:hover { opacity: 0.8; }
+
+/* Animación para resaltar nuevo registro */
+@keyframes flash-green {
+  0% { background-color: rgba(40, 167, 69, 0.6); }
+  100% { background-color: transparent; }
+}
+.highlight-new {
+  animation: flash-green 2s ease-out;
+}

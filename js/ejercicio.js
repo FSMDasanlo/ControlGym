@@ -33,7 +33,7 @@ async function initializeApp(user) {
 
   // Estado de la aplicación
   let registros = [];
-  let sortState = { column: 'fecha', direction: 'asc' };
+  let sortState = { column: 'fecha', direction: 'desc' }; // Cambiado a descendente por defecto
   let numRegistrosMostrados = 3;
   let vistaGrafica = '2m';
   let graficaInstance = null;
@@ -44,7 +44,7 @@ async function initializeApp(user) {
   for (const f in data) {
     const ejer = data[f]?.[rutinaId]?.[ejercicioId];
     if (Array.isArray(ejer)) {
-      ejer.forEach((r, i) => registros.push({ fecha: f, peso: r.peso, reps: r.reps, index: i }));
+      ejer.forEach((r, i) => registros.push({ fecha: f, peso: r.peso, reps: r.reps, index: i, timestamp: r.timestamp }));
     }
     // Recuperamos el tiempo del ejercicio si existe para la fecha actual
     if (f === fecha) {
@@ -53,11 +53,52 @@ async function initializeApp(user) {
   }
 
   ui.inicializarPagina(rutina, ejercicio, fecha, tiempoEjercicio);
+
+  // --- Lógica del Temporizador Global ---
+  const timerDisplay = document.getElementById('global-workout-time');
+  const initTimerBtn = document.getElementById('btn-init-timer');
+  
+  function updateGlobalTimer() {
+    const startTime = localStorage.getItem('workoutStartTime');
+    const workoutDate = localStorage.getItem('workoutDate');
+    
+    if (startTime && workoutDate === fecha) {
+      const elapsed = Date.now() - parseInt(startTime);
+      const totalSeconds = Math.floor(elapsed / 1000);
+      const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const s = String(totalSeconds % 60).padStart(2, '0');
+      if(timerDisplay) timerDisplay.textContent = `${h}:${m}:${s}`;
+    } else {
+      if(timerDisplay) timerDisplay.textContent = "00:00:00";
+    }
+  }
+
+  if(initTimerBtn) {
+    initTimerBtn.addEventListener('click', () => {
+      if (confirm("¿Iniciar o reiniciar el cronómetro de la sesión?")) {
+        localStorage.setItem('workoutStartTime', Date.now());
+        localStorage.setItem('workoutDate', fecha);
+        updateGlobalTimer();
+      }
+    });
+  }
+  setInterval(updateGlobalTimer, 1000);
+  updateGlobalTimer(); // Ejecutar inmediatamente
+
   sortRegistros();
   repintarUI();
 
   function sortRegistros() {
-    registros.sort((a, b) => (sortState.direction === 'asc' ? 1 : -1) * (a[sortState.column] > b[sortState.column] ? 1 : -1));
+    registros.sort((a, b) => {
+      const dir = sortState.direction === 'asc' ? 1 : -1;
+      // Orden principal por columna
+      if (a[sortState.column] > b[sortState.column]) return 1 * dir;
+      if (a[sortState.column] < b[sortState.column]) return -1 * dir;
+      // Desempate: Si la fecha es la misma, usamos el índice (orden de inserción)
+      // Si es DESC, queremos el índice mayor primero. Si es ASC, el menor primero.
+      return (a.index - b.index) * dir;
+    });
   }
 
   function repintarUI() {
@@ -70,18 +111,30 @@ async function initializeApp(user) {
     const peso = parseFloat(document.getElementById('peso').value) || 0;
     const reps = parseInt(document.getElementById('reps').value) || 0;
 
-    // Iniciar el temporizador de la sesión si no está activo para hoy
+    // Alerta de olvido: si hay datos pero no hay cronómetro
     const workoutDate = localStorage.getItem('workoutDate');
-    if (workoutDate !== fecha) {
-      localStorage.setItem('workoutStartTime', Date.now());
-      localStorage.setItem('workoutDate', fecha);
+    const startTime = localStorage.getItem('workoutStartTime');
+    if ((!startTime || workoutDate !== fecha) && (peso > 0 || reps > 0)) {
+      if (confirm("⚠️ El cronómetro no está iniciado.\n\n¿Quieres iniciarlo ahora?")) {
+        localStorage.setItem('workoutStartTime', Date.now());
+        localStorage.setItem('workoutDate', fecha);
+        updateGlobalTimer();
+      }
     }
 
     const nuevoIndex = await store.guardarRegistro(userId, fecha, rutinaId, ejercicioId, peso, reps);
-    registros.push({ fecha, peso, reps, index: nuevoIndex });
+    registros.push({ fecha, peso, reps, index: nuevoIndex, timestamp: Date.now() });
     
     sortRegistros();
     repintarUI();
+
+    // Resaltar visualmente la fila recién creada
+    const filaNueva = document.querySelector(`tr[data-fecha="${fecha}"][data-idx="${nuevoIndex}"]`);
+    if (filaNueva) {
+      filaNueva.classList.add('highlight-new');
+      setTimeout(() => filaNueva.classList.remove('highlight-new'), 2000);
+    }
+
     ui.mostrarToast("✅ Datos guardados");
     document.getElementById('peso').value = '';
     document.getElementById('reps').value = '';
