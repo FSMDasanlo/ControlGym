@@ -13,6 +13,23 @@
   h1 { color: #0095ff; border-bottom: 2px solid #4f545c; padding-bottom: 10px; margin-top: 0; text-align: center; }
   /* FIN DE ESTILOS GENERALES */
 
+/* Estilos para el temporizador de entrenamiento */
+#workout-timer-container {
+  display: none; /* Oculto por defecto */
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background-color: #1a1a1d;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px auto;
+  max-width: 480px;
+}
+#workout-time { font-size: 1.4em; color: #00c3ff; font-weight: bold; }
+#finish-workout-btn { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+#finish-workout-btn:hover { background: #c82333; }
+
+
 #fecha-container {
   display: flex;
   justify-content: center;
@@ -152,14 +169,23 @@
         title="Seleccionar otra fecha">
   </div>
 
+  <!-- Contenedor para el temporizador y botón de finalizar -->
+  <div id="workout-timer-container">
+    <span id="workout-time">00:00:00</span>
+    <button id="finish-workout-btn">🏁 Finalizar Entrenamiento</button>
+  </div>
+
+
   <div id="contenedor"></div>
 </div>
 
 <script type="module">
   import { db, auth } from './firebase-config.js';
   import { defaultRoutines } from './data-model.js';
-  import { doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+  // No necesitamos importar directamente las funciones de Firestore, usamos el servicio.
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+  import * as store from './js/firestore-service.js';
+
   onAuthStateChanged(auth, (user) => {
     if (user) {
       // Usuario logueado, procedemos a cargar la página
@@ -182,11 +208,8 @@
   const cont = document.getElementById('contenedor');
   cont.innerHTML = '<p>Cargando rutinas...</p>';
 
-  // Leemos la configuración de rutinas del usuario desde Firestore
-  const userConfigRef = doc(db, "users", userId, "config", "routines");
-  const docSnap = await getDoc(userConfigRef);
-  let userRoutines = [];
-
+  const params = new URLSearchParams(window.location.search);
+  
   // --- Funciones de renderizado y guardado ---
   function renderRoutines() {
     cont.innerHTML = ''; // Limpiamos el contenedor
@@ -214,28 +237,17 @@
     addCreateButton(); // Añadimos el botón de crear al final
   }
 
-  if (docSnap.exists()) {
-    userRoutines = docSnap.data().routines || [];
-  } else {
-    // Si el usuario no tiene configuración (es antiguo), se la creamos ahora.
-    // Esto es una "migración" automática.
-    await setDoc(userConfigRef, { routines: defaultRoutines });
-    userRoutines = defaultRoutines;
-  }
+  let userRoutines = await store.getUserConfig(userId);
 
-  const params = new URLSearchParams(window.location.search);
     const fecha = params.get('fecha');
     document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 
-    // Cambiado: ahora el calendario es solo la imagen con id "icono-calendario"
     document.getElementById('icono-calendario').onclick = () => {
       window.location.href = 'controlgym.html';
     };
 
-    // Cargar datos de Firestore
-    const data = {};
-    const querySnapshot = await getDocs(collection(db, "users", userId, "registros"));
-    querySnapshot.forEach(doc => { data[doc.id] = doc.data(); });    
+    // Cargar datos de registros usando el servicio
+    const data = await store.getAllRegistros(userId);
 
     function addCheckmarkIfCompleted(div, rutinaId) {
       if (
@@ -274,7 +286,7 @@
 
       // Guardar y re-renderizar solo para renombrar y eliminar
       if (button.classList.contains('rename-btn') || button.classList.contains('delete-btn')) {
-        await setDoc(userConfigRef, { routines: userRoutines });
+        await store.saveUserConfig(userId, userRoutines);
         renderRoutines();
       }
     });
@@ -354,7 +366,7 @@
         const [movedItem] = userRoutines.splice(fromIndex, 1);
         userRoutines.splice(isAfter ? toIndex + 1 : toIndex, 0, movedItem);
         
-        await setDoc(userConfigRef, { routines: userRoutines });
+        await store.saveUserConfig(userId, userRoutines);
         // Ya no llamamos a renderRoutines() para evitar el parpadeo
       }
     });
@@ -373,15 +385,60 @@
           ejercicios: [] // Empieza sin ejercicios
         };
         userRoutines.push(nuevaRutina);
-        await setDoc(userConfigRef, { routines: userRoutines });
+        await store.saveUserConfig(userId, userRoutines);
         renderRoutines();
       }
     };
     cont.appendChild(crearBtn);
     }
 
+    // --- Lógica del Temporizador de Entrenamiento ---
+    const timerContainer = document.getElementById('workout-timer-container');
+    const timeDisplay = document.getElementById('workout-time');
+    const finishBtn = document.getElementById('finish-workout-btn');
+    let timerInterval = null;
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const s = String(totalSeconds % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function checkWorkoutTimer() {
+      const startTime = localStorage.getItem('workoutStartTime');
+      const workoutDate = localStorage.getItem('workoutDate');
+
+      if (startTime && workoutDate === fecha) {
+        timerContainer.style.display = 'flex';
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          timeDisplay.textContent = formatTime(elapsed);
+        }, 1000);
+      } else {
+        timerContainer.style.display = 'none';
+        if (timerInterval) clearInterval(timerInterval);
+      }
+    }
+
+    finishBtn.addEventListener('click', async () => {
+      if (!confirm("¿Seguro que quieres finalizar el entrenamiento de hoy?")) return;
+      const startTime = localStorage.getItem('workoutStartTime');
+      const totalDurationSeconds = Math.round((Date.now() - startTime) / 1000);
+
+      await store.guardarTiempoTotal(userId, fecha, totalDurationSeconds);
+
+      localStorage.removeItem('workoutStartTime');
+      localStorage.removeItem('workoutDate');
+      checkWorkoutTimer(); // Esto ocultará el temporizador
+      alert(`¡Entrenamiento finalizado! Duración: ${formatTime(totalDurationSeconds * 1000)}`);
+    });
+
     // --- Renderizado Inicial ---
     renderRoutines();
+    checkWorkoutTimer();
   }
 </script>
 </body>

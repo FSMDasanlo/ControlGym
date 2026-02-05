@@ -76,6 +76,13 @@ footer { text-align: center; padding: 15px; background: #2c2f33; color: #aaa; ma
     </select>
     <div id="filtros" style="display:flex; gap:5px; align-items:center;"></div>
   </div>
+
+  <div id="resumen-tiempo" style="text-align: center; margin: 20px 0; font-size: 1.1em;">
+    <h3 style="color: #0095ff; margin-bottom: 5px;">Tiempo Total de Entrenamiento</h3>
+    <span id="tiempo-total-display" style="font-weight: bold; color: #ffc107;">Calculando...</span>
+  </div>
+
+
   <div class="tabla-contenedor">
     <table id="tablaEstadisticas">
       <thead>
@@ -200,13 +207,25 @@ function procesarEstadisticas(){
   fechasFiltradas.forEach(f=>{if(data[f]) datosFiltrados[f]=data[f];});
   generarEstadisticas(datosFiltrados);
 }
+
+function formatTotalTime(totalSeconds) {
+  if (totalSeconds === 0) return "0 segundos";
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  let parts = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  if (s > 0) parts.push(`${s}s`);
+  return parts.join(' ');
+}
+
 let graficaBarrasChart = null; // Variable para la instancia del gráfico
 
 // --- Genera tabla ---
 function generarEstadisticas(data){
   const tbody = document.querySelector('#tablaEstadisticas tbody');
   tbody.innerHTML='';
-
   const resumen={};
   Object.entries(data).forEach(([fecha,rutinas])=>{
     Object.values(rutinas).forEach(rutina => {
@@ -218,7 +237,14 @@ function generarEstadisticas(data){
     });
   });
 
-  if(Object.keys(resumen).length===0){tbody.innerHTML='<tr><td colspan="4">No hay datos disponibles para las fechas seleccionadas</td></tr>'; return;}
+  // Calcular y mostrar tiempo total
+  const tiempoTotalSegundos = Object.values(data).reduce((acc, dia) => acc + (dia.tiempoTotal || 0), 0);
+  document.getElementById('tiempo-total-display').textContent = formatTotalTime(tiempoTotalSegundos);
+
+  if(Object.keys(resumen).length===0){
+    tbody.innerHTML='<tr><td colspan="4">No hay datos disponibles para las fechas seleccionadas</td></tr>';
+    return;
+  }
 
   let maxPeso=0, maxReps=0, maxDias=0;
   const filas=[];

@@ -1,10 +1,18 @@
 import { db } from '../firebase-config.js';
 import { doc, getDoc, setDoc, getDocs, collection, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+import { defaultRoutines } from '../data-model.js';
 
 export async function getUserConfig(userId) {
   const userConfigRef = doc(db, "users", userId, "config", "routines");
   const docSnap = await getDoc(userConfigRef);
-  return docSnap.exists() ? docSnap.data().routines : [];
+  if (docSnap.exists() && docSnap.data().routines) {
+    return docSnap.data().routines;
+  } else {
+    // Si el usuario no tiene configuración (es nuevo o antiguo), se la creamos.
+    // Esto es una "migración" automática.
+    await setDoc(userConfigRef, { routines: defaultRoutines });
+    return defaultRoutines;
+  }
 }
 
 export async function getAllRegistros(userId) {
@@ -42,13 +50,26 @@ export async function eliminarRegistro(userId, fecha, rutinaId, ejercicioId, ind
   const registrosEjercicio = datosActuales[rutinaId]?.[ejercicioId] || [];
   registrosEjercicio.splice(index, 1);
 
+  // Si ya no quedan registros para este ejercicio, eliminamos también su tiempo acumulado.
   const updateData = {};
   if (registrosEjercicio.length === 0) {
     updateData[`${rutinaId}.${ejercicioId}`] = deleteField();
+    updateData[`${rutinaId}.${ejercicioId}_tiempo`] = deleteField(); // Limpiamos el tiempo
   } else {
     updateData[`${rutinaId}.${ejercicioId}`] = registrosEjercicio;
   }
   await updateDoc(docRef, updateData);
+}
+
+export async function guardarTiempoEjercicio(userId, fecha, rutinaId, ejercicioId, duracionSegundos) {
+  const docRef = doc(db, "users", userId, "registros", fecha);
+  const docSnap = await getDoc(docRef);
+  const tiempoKey = `${rutinaId}.${ejercicioId}_tiempo`;
+  
+  const tiempoActual = docSnap.exists() ? (docSnap.data()[rutinaId]?.[`${ejercicioId}_tiempo`] || 0) : 0;
+  const nuevoTiempo = tiempoActual + duracionSegundos;
+
+  await setDoc(docRef, { [rutinaId]: { [`${ejercicioId}_tiempo`]: nuevoTiempo } }, { merge: true });
 }
 
 export async function editarRegistro(userId, rutinaId, ejercicioId, oldData, newData) {
@@ -79,4 +100,14 @@ export async function editarRegistro(userId, rutinaId, ejercicioId, oldData, new
     return registrosNuevos.length - 1; // Devolvemos el nuevo índice
   }
   return oldData.index; // Si no se movió, el índice no cambia
+}
+
+export async function guardarTiempoTotal(userId, fecha, duracionSegundos) {
+  const docRef = doc(db, "users", userId, "registros", fecha);
+  await setDoc(docRef, { tiempoTotal: duracionSegundos }, { merge: true });
+}
+
+export async function saveUserConfig(userId, routines) {
+  const userConfigRef = doc(db, "users", userId, "config", "routines");
+  await setDoc(userConfigRef, { routines: routines });
 }

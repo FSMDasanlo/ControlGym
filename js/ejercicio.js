@@ -21,15 +21,15 @@ async function initializeApp(user) {
     return;
   }
 
-  ui.inicializarPagina(rutina, ejercicio, fecha);
-
-  // 1. Creamos la cabecera de la tabla PRIMERO para que los elementos existan
   const thead = document.getElementById('thead');
   thead.innerHTML = `<tr>
     <th data-sort="fecha">Fecha<span id="ver-mas" class="control-vista-tabla" title="Mostrar 10 más">+</span><span id="ver-menos" class="control-vista-tabla" title="Mostrar solo los 3 últimos" style="display: none;">x</span><span class="sort-icon"></span></th>
     <th data-sort="peso">Peso (kg)<span class="sort-icon"></span></th>
     <th data-sort="reps">Repeticiones<span class="sort-icon"></span></th>
     <th>Acciones</th></tr>`;
+
+  // Tiempo en esta página
+  const entryTime = Date.now();
 
   // Estado de la aplicación
   let registros = [];
@@ -38,15 +38,21 @@ async function initializeApp(user) {
   let vistaGrafica = '2m';
   let graficaInstance = null;
 
-  // 2. Ahora cargamos los datos y pintamos la UI
   // Cargar datos iniciales
   const data = await store.getAllRegistros(userId);
+  let tiempoEjercicio = 0;
   for (const f in data) {
     const ejer = data[f]?.[rutinaId]?.[ejercicioId];
     if (Array.isArray(ejer)) {
       ejer.forEach((r, i) => registros.push({ fecha: f, peso: r.peso, reps: r.reps, index: i }));
     }
+    // Recuperamos el tiempo del ejercicio si existe para la fecha actual
+    if (f === fecha) {
+      tiempoEjercicio = data[f]?.[rutinaId]?.[`${ejercicioId}_tiempo`] || 0;
+    }
   }
+
+  ui.inicializarPagina(rutina, ejercicio, fecha, tiempoEjercicio);
   sortRegistros();
   repintarUI();
 
@@ -63,6 +69,13 @@ async function initializeApp(user) {
   async function handleSave() {
     const peso = parseFloat(document.getElementById('peso').value) || 0;
     const reps = parseInt(document.getElementById('reps').value) || 0;
+
+    // Iniciar el temporizador de la sesión si no está activo para hoy
+    const workoutDate = localStorage.getItem('workoutDate');
+    if (workoutDate !== fecha) {
+      localStorage.setItem('workoutStartTime', Date.now());
+      localStorage.setItem('workoutDate', fecha);
+    }
 
     const nuevoIndex = await store.guardarRegistro(userId, fecha, rutinaId, ejercicioId, peso, reps);
     registros.push({ fecha, peso, reps, index: nuevoIndex });
@@ -159,5 +172,13 @@ async function initializeApp(user) {
     const datasetIndex = parseInt(item.dataset.datasetIndex);
     graficaInstance.setDatasetVisibility(datasetIndex, !graficaInstance.isDatasetVisible(datasetIndex));
     graficaInstance.update();
+  });
+
+  // Guardar el tiempo en la página al salir
+  window.addEventListener('pagehide', () => {
+    const durationSeconds = Math.round((Date.now() - entryTime) / 1000);
+    if (durationSeconds > 2) { // Solo guardar si ha estado más de 2 segundos
+      store.guardarTiempoEjercicio(userId, fecha, rutinaId, ejercicioId, durationSeconds);
+    }
   });
 }

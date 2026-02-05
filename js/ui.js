@@ -1,11 +1,19 @@
 let grafica = null;
 
-export function inicializarPagina(rutina, ejercicio, fecha) {
+function formatSeconds(seconds) {
+  if (seconds < 60) return `${seconds} seg`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes} min ${remainingSeconds} seg`;
+}
+
+export function inicializarPagina(rutina, ejercicio, fecha, tiempoEjercicio) {
   document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
   document.getElementById('tituloPrincipal').textContent = rutina.titulo;
   document.getElementById('tituloEjercicio').textContent = ejercicio.nombre;
   document.getElementById('volverEjercicios').href = `ejercicios.html?fecha=${fecha}&rutinaId=${rutina.id}`;
   document.getElementById('volverRutinas').href = `rutinas.html?fecha=${fecha}`;
+  document.getElementById('tiempo-ejercicio').textContent = tiempoEjercicio > 0 ? `Tiempo dedicado hoy: ${formatSeconds(tiempoEjercicio)}` : '';
 
   const videoUrl = ejercicio.video;
   if (videoUrl) {
