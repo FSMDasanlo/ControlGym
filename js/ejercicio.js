@@ -58,27 +58,69 @@ async function initializeApp(user) {
   const timerDisplay = document.getElementById('global-workout-time');
   const initTimerBtn = document.getElementById('btn-init-timer');
   
-  function updateGlobalTimer() {
-    const startTime = localStorage.getItem('workoutStartTime');
+  function getTimerState() {
     const workoutDate = localStorage.getItem('workoutDate');
-    
-    if (startTime && workoutDate === fecha) {
-      const elapsed = Date.now() - parseInt(startTime);
-      const totalSeconds = Math.floor(elapsed / 1000);
-      const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-      const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-      const s = String(totalSeconds % 60).padStart(2, '0');
-      if(timerDisplay) timerDisplay.textContent = `${h}:${m}:${s}`;
-    } else {
-      if(timerDisplay) timerDisplay.textContent = "00:00:00";
+    if (workoutDate !== fecha) return { status: 'stopped', startTime: 0, accumulated: 0 };
+
+    let status = localStorage.getItem('workoutStatus');
+    let startTime = parseInt(localStorage.getItem('workoutStartTime') || '0');
+    let accumulated = parseInt(localStorage.getItem('workoutAccumulated') || '0');
+
+    // Migración simple para compatibilidad
+    if (!status && startTime > 0) {
+      status = 'running';
+      localStorage.setItem('workoutStatus', 'running');
+      localStorage.setItem('workoutAccumulated', '0');
     }
+    
+    return { status: status || 'stopped', startTime, accumulated };
+  }
+
+  function updateGlobalTimer() {
+    const { status, startTime, accumulated } = getTimerState();
+    let totalSeconds = 0;
+    
+    if (status === 'running') {
+      const elapsed = Date.now() - startTime;
+      totalSeconds = Math.floor((accumulated + elapsed) / 1000);
+      if (initTimerBtn) initTimerBtn.textContent = "⏸ Pausar";
+    } else if (status === 'paused') {
+      totalSeconds = Math.floor(accumulated / 1000);
+      if (initTimerBtn) initTimerBtn.textContent = "▶ Continuar";
+    } else {
+      totalSeconds = 0;
+      if (initTimerBtn) initTimerBtn.textContent = "▶ Iniciar";
+    }
+
+    const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(totalSeconds % 60).padStart(2, '0');
+    if(timerDisplay) timerDisplay.textContent = `${h}:${m}:${s}`;
   }
 
   if(initTimerBtn) {
     initTimerBtn.addEventListener('click', () => {
-      if (confirm("¿Iniciar o reiniciar el cronómetro de la sesión?")) {
+      const { status, startTime, accumulated } = getTimerState();
+
+      if (status === 'stopped') {
+        if (confirm("¿Iniciar el cronómetro de la sesión?")) {
+          localStorage.setItem('workoutDate', fecha);
+          localStorage.setItem('workoutStatus', 'running');
+          localStorage.setItem('workoutStartTime', Date.now());
+          localStorage.setItem('workoutAccumulated', '0');
+          updateGlobalTimer();
+        }
+      } else if (status === 'running') {
+        // Pausar
+        const elapsed = Date.now() - startTime;
+        localStorage.setItem('workoutStatus', 'paused');
+        localStorage.setItem('workoutAccumulated', accumulated + elapsed);
+        localStorage.removeItem('workoutStartTime');
+        updateGlobalTimer();
+      } else if (status === 'paused') {
+        // Continuar
+        localStorage.setItem('workoutStatus', 'running');
         localStorage.setItem('workoutStartTime', Date.now());
-        localStorage.setItem('workoutDate', fecha);
         updateGlobalTimer();
       }
     });
@@ -112,12 +154,13 @@ async function initializeApp(user) {
     const reps = parseInt(document.getElementById('reps').value) || 0;
 
     // Alerta de olvido: si hay datos pero no hay cronómetro
-    const workoutDate = localStorage.getItem('workoutDate');
-    const startTime = localStorage.getItem('workoutStartTime');
-    if ((!startTime || workoutDate !== fecha) && (peso > 0 || reps > 0)) {
+    const { status } = getTimerState();
+    if (status === 'stopped' && (peso > 0 || reps > 0)) {
       if (confirm("⚠️ El cronómetro no está iniciado.\n\n¿Quieres iniciarlo ahora?")) {
-        localStorage.setItem('workoutStartTime', Date.now());
         localStorage.setItem('workoutDate', fecha);
+        localStorage.setItem('workoutStatus', 'running');
+        localStorage.setItem('workoutStartTime', Date.now());
+        localStorage.setItem('workoutAccumulated', '0');
         updateGlobalTimer();
       }
     }
