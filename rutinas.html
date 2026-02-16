@@ -204,6 +204,7 @@
     <label class="modal-label">Nombre:</label>
     <input type="text" id="new-routine-name" class="modal-input" placeholder="Ej: Pierna y Glúteo">
     <label class="modal-label">Elige un fondo:</label>
+    <input type="text" id="image-search" class="modal-input" placeholder="🔍 Buscar por nombre..." style="margin-bottom: 8px; padding: 8px; font-size: 0.9em;">
     <div class="modal-images-grid" id="modal-images-grid"></div>
     <label class="modal-label">O sube una imagen:</label>
     <input type="file" id="custom-image-file" class="modal-input" accept="image/*">
@@ -416,6 +417,7 @@
     const modal = document.getElementById('modal-crear-rutina');
     const modalTitle = document.getElementById('modal-title');
     const nameInput = document.getElementById('new-routine-name');
+    const imageSearchInput = document.getElementById('image-search');
     const fileInput = document.getElementById('custom-image-file');
     const imagesGrid = document.getElementById('modal-images-grid');
     const btnConfirm = document.getElementById('btn-confirm-create');
@@ -427,6 +429,7 @@
     function openModal(index = -1) {
       editingRoutineIndex = index;
       modal.style.display = 'flex';
+      imageSearchInput.value = ''; // Limpiar buscador
       fileInput.value = ''; // Limpiar input file
       
       if (editingRoutineIndex >= 0) {
@@ -462,14 +465,21 @@
     function renderModalImages() {
       imagesGrid.innerHTML = '';
       // Obtenemos las imágenes de rutinas.js (window.GYMImagenes) o usamos un fallback
-      const imagenes = window.GYMImagenes || [
-        "img/rutina1.jpg", "img/rutina2.jpg", "img/rutina3.jpg", 
-        "img/rutina4.jpg", "img/rutina5.jpg", "img/rutina6.jpg"
-      ];
+      const imagenes = window.GYMImagenes || [];
+      const filtro = imageSearchInput.value.toLowerCase();
       
       imagenes.forEach(src => {
+        // Filtrar por nombre de archivo
+        if (filtro && !src.toLowerCase().includes(filtro)) return;
+
         const img = document.createElement('img');
         img.src = src;
+        // Si la imagen no existe en el directorio, la eliminamos de la visualización
+        img.onerror = function() { this.remove(); };
+
+        // Mostrar nombre del archivo al pasar el ratón (tooltip)
+        img.title = src.split('/').pop();
+
         if (src === selectedImage && !customImageBase64) img.classList.add('selected');
         img.onclick = () => {
           selectedImage = src;
@@ -480,6 +490,9 @@
         imagesGrid.appendChild(img);
       });
     }
+
+    // Evento para filtrar imágenes en tiempo real
+    imageSearchInput.addEventListener('input', renderModalImages);
 
     fileInput.onchange = (e) => {
       if (e.target.files && e.target.files[0]) {

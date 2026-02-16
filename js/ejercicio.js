@@ -54,6 +54,28 @@ async function initializeApp(user) {
 
   ui.inicializarPagina(rutina, ejercicio, fecha, tiempoEjercicio);
 
+  // --- Lógica para ver imagen de máquina ---
+  if (ejercicio.imagen) {
+    const tituloDiv = document.getElementById('tituloEjercicio');
+    const btnMaquina = document.createElement('button');
+    btnMaquina.className = 'btn-ver-maquina';
+    btnMaquina.innerHTML = '🏋️';
+    btnMaquina.title = 'Ver máquina';
+    btnMaquina.onclick = () => {
+      const modal = document.getElementById('modal-maquina-view');
+      const img = document.getElementById('machine-image-view');
+      img.src = ejercicio.imagen;
+      modal.style.display = 'flex';
+    };
+    tituloDiv.appendChild(btnMaquina);
+  }
+
+  const modalView = document.getElementById('modal-maquina-view');
+  if (modalView) {
+    modalView.querySelector('.close-modal').onclick = () => modalView.style.display = 'none';
+    modalView.onclick = (e) => { if (e.target === modalView) modalView.style.display = 'none'; };
+  }
+
   // --- Lógica del Temporizador Global ---
   const timerDisplay = document.getElementById('global-workout-time');
   const initTimerBtn = document.getElementById('btn-init-timer');
