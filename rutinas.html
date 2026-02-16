@@ -147,6 +147,24 @@
     border-radius: 8px;
     font-weight: bold;
   }
+
+  /* Estilos para el Modal de Crear Rutina */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; }
+  .modal-content { background: #2c2f33; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); border: 1px solid #4f545c; }
+  .modal-content h3 { color: #0095ff; margin-top: 0; margin-bottom: 15px; }
+  .modal-input { width: 90%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #4f545c; background: #1a1a1d; color: white; font-size: 1em; }
+  .modal-label { display: block; text-align: left; margin-left: 5%; margin-bottom: 5px; color: #ccc; font-size: 0.9em; }
+  
+  .modal-images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 10px 0 20px 0; max-height: 300px; overflow-y: auto; padding: 5px; }
+  .modal-images-grid img { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; opacity: 0.7; }
+  .modal-images-grid img:hover { transform: scale(1.05); opacity: 1; }
+  .modal-images-grid img.selected { border-color: #00c3ff; transform: scale(1.1); opacity: 1; box-shadow: 0 0 10px rgba(0, 195, 255, 0.5); }
+  
+  .modal-btns { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+  .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 1em; transition: opacity 0.3s; }
+  .btn-cancel { background: #dc3545; color: white; }
+  .btn-confirm { background: #28a745; color: white; }
+  .modal-btn:hover { opacity: 0.9; }
 </style>
 
 </head>
@@ -179,6 +197,24 @@
   <div id="contenedor"></div>
 </div>
 
+<!-- Modal para Crear Rutina -->
+<div id="modal-crear-rutina" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="modal-title">➕ Nueva Rutina</h3>
+    <label class="modal-label">Nombre:</label>
+    <input type="text" id="new-routine-name" class="modal-input" placeholder="Ej: Pierna y Glúteo">
+    <label class="modal-label">Elige un fondo:</label>
+    <div class="modal-images-grid" id="modal-images-grid"></div>
+    <label class="modal-label">O sube una imagen:</label>
+    <input type="file" id="custom-image-file" class="modal-input" accept="image/*">
+    <div class="modal-btns">
+      <button id="btn-cancel-create" class="modal-btn btn-cancel">Cancelar</button>
+      <button id="btn-confirm-create" class="modal-btn btn-confirm">Crear</button>
+    </div>
+  </div>
+</div>
+
+<script src="rutinas.js"></script>
 <script type="module">
   import { db, auth } from './firebase-config.js';
   import { defaultRoutines } from './data-model.js';
@@ -239,7 +275,11 @@
 
   let userRoutines = await store.getUserConfig(userId);
 
-    const fecha = params.get('fecha');
+    let fecha = params.get('fecha');
+    if (!fecha) {
+      const today = new Date();
+      fecha = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
     document.getElementById('fecha').textContent = fecha.split('-').reverse().join('-');
 
     document.getElementById('icono-calendario').onclick = () => {
@@ -272,22 +312,15 @@
       const index = userRoutines.findIndex(r => r.id === rutinaId);
 
       if (button.classList.contains('rename-btn')) {
-        const rutinaActual = userRoutines[index];
-        const nuevoNombre = prompt("Introduce el nuevo nombre para la rutina:", rutinaActual.titulo);
-        if (nuevoNombre && nuevoNombre.trim() !== "") {
-          rutinaActual.titulo = nuevoNombre.trim();
-        }
+        openModal(index);
+        return; // El modal se encarga de guardar
       } 
       else if (button.classList.contains('delete-btn')) {
         if (confirm(`¿Estás seguro de que quieres eliminar la rutina "${userRoutines[index].titulo}"? Esta acción no se puede deshacer.`)) {
           userRoutines.splice(index, 1);
+          await store.saveUserConfig(userId, userRoutines);
+          renderRoutines();
         }
-      }
-
-      // Guardar y re-renderizar solo para renombrar y eliminar
-      if (button.classList.contains('rename-btn') || button.classList.contains('delete-btn')) {
-        await store.saveUserConfig(userId, userRoutines);
-        renderRoutines();
       }
     });
 
@@ -375,22 +408,140 @@
       const crearBtn = document.createElement('button');
       crearBtn.textContent = '➕ Crear Nueva Rutina';
       crearBtn.className = 'boton-volver add crear-rutina-btn';
-      crearBtn.onclick = async () => {
-      const nuevoNombre = prompt("Introduce el nombre para la nueva rutina:");
-      if (nuevoNombre && nuevoNombre.trim() !== "") {
-        const nuevaRutina = {
-          id: `custom-routine-${Date.now()}`,
-          titulo: nuevoNombre.trim(),
-          imagen: 'img/rutina4.jpg', // Usamos una imagen por defecto
-          ejercicios: [] // Empieza sin ejercicios
+      crearBtn.onclick = () => openModal();
+      cont.appendChild(crearBtn);
+    }
+
+    // --- Lógica del Modal (Creación y Edición) ---
+    const modal = document.getElementById('modal-crear-rutina');
+    const modalTitle = document.getElementById('modal-title');
+    const nameInput = document.getElementById('new-routine-name');
+    const fileInput = document.getElementById('custom-image-file');
+    const imagesGrid = document.getElementById('modal-images-grid');
+    const btnConfirm = document.getElementById('btn-confirm-create');
+    const btnCancel = document.getElementById('btn-cancel-create');
+    let selectedImage = null;
+    let customImageBase64 = null;
+    let editingRoutineIndex = -1;
+
+    function openModal(index = -1) {
+      editingRoutineIndex = index;
+      modal.style.display = 'flex';
+      fileInput.value = ''; // Limpiar input file
+      
+      if (editingRoutineIndex >= 0) {
+        const r = userRoutines[editingRoutineIndex];
+        modalTitle.textContent = '✏️ Editar Rutina';
+        nameInput.value = r.titulo;
+        
+        // Comprobar si la imagen es una de las predefinidas
+        const imagenes = window.GYMImagenes || [
+          "img/rutina1.jpg", "img/rutina2.jpg", "img/rutina3.jpg", 
+          "img/rutina4.jpg", "img/rutina5.jpg", "img/rutina6.jpg"
+        ];
+        if (imagenes.includes(r.imagen)) {
+          selectedImage = r.imagen;
+          customImageBase64 = null;
+        } else {
+          selectedImage = null;
+          customImageBase64 = r.imagen;
+        }
+        btnConfirm.textContent = 'Guardar';
+      } else {
+        modalTitle.textContent = '➕ Nueva Rutina';
+        nameInput.value = '';
+        selectedImage = 'img/rutina4.jpg'; // Imagen por defecto
+        customImageBase64 = null;
+        btnConfirm.textContent = 'Crear';
+      }
+
+      renderModalImages();
+      nameInput.focus();
+    }
+
+    function renderModalImages() {
+      imagesGrid.innerHTML = '';
+      // Obtenemos las imágenes de rutinas.js (window.GYMImagenes) o usamos un fallback
+      const imagenes = window.GYMImagenes || [
+        "img/rutina1.jpg", "img/rutina2.jpg", "img/rutina3.jpg", 
+        "img/rutina4.jpg", "img/rutina5.jpg", "img/rutina6.jpg"
+      ];
+      
+      imagenes.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        if (src === selectedImage && !customImageBase64) img.classList.add('selected');
+        img.onclick = () => {
+          selectedImage = src;
+          customImageBase64 = null;
+          fileInput.value = '';
+          renderModalImages(); // Re-renderizar para actualizar la selección
         };
-        userRoutines.push(nuevaRutina);
-        await store.saveUserConfig(userId, userRoutines);
-        renderRoutines();
+        imagesGrid.appendChild(img);
+      });
+    }
+
+    fileInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        // Procesar y redimensionar imagen para evitar límites de Firestore
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 600;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
+            else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            customImageBase64 = canvas.toDataURL('image/jpeg', 0.7); // Comprimir a JPEG 70%
+            selectedImage = null;
+            renderModalImages();
+          };
+        };
       }
     };
-    cont.appendChild(crearBtn);
-    }
+
+    // Cerrar modal
+    btnCancel.onclick = () => modal.style.display = 'none';
+    modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+    // Confirmar creación
+    btnConfirm.onclick = async () => {
+      const nombre = nameInput.value.trim();
+      if (!nombre) {
+        alert("Por favor, introduce un nombre para la rutina.");
+        return;
+      }
+
+      const imagenFinal = customImageBase64 || selectedImage || 'img/rutina4.jpg';
+      
+      if (editingRoutineIndex >= 0) {
+        // Editar existente
+        userRoutines[editingRoutineIndex].titulo = nombre;
+        userRoutines[editingRoutineIndex].imagen = imagenFinal;
+      } else {
+        // Crear nueva
+        const nuevaRutina = {
+          id: `custom-routine-${Date.now()}`,
+          titulo: nombre,
+          imagen: imagenFinal,
+          ejercicios: []
+        };
+        userRoutines.push(nuevaRutina);
+      }
+
+      await store.saveUserConfig(userId, userRoutines);
+      renderRoutines();
+      modal.style.display = 'none';
+    };
 
     // --- Lógica del Temporizador de Entrenamiento ---
     const timerContainer = document.getElementById('workout-timer-container');
