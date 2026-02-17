@@ -426,9 +426,12 @@
     let customImageBase64 = null;
     let editingRoutineIndex = -1;
 
-    function openModal(index = -1) {
+    async function openModal(index = -1) {
       editingRoutineIndex = index;
       modal.style.display = 'flex';
+      // Esperar a que la auto-detección de imágenes termine (si no lo ha hecho ya)
+      if (window.GYMImagenes_promise) await window.GYMImagenes_promise;
+
       imageSearchInput.value = ''; // Limpiar buscador
       fileInput.value = ''; // Limpiar input file
       

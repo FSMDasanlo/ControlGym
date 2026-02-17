@@ -363,12 +363,16 @@ const fileInput = document.getElementById('machine-file-input');
 let currentExerciseIndex = -1;
 let tempImage = null; // Para almacenar la selección temporal antes de guardar
 
-function openMachineModal(index) {
+async function openMachineModal(index) {
   currentExerciseIndex = index;
   const ejercicio = rutina.ejercicios[index];
   tempImage = ejercicio.imagen || null; // Cargar imagen actual si existe
   
   modalMachine.style.display = 'flex';
+
+  // Esperar a que la auto-detección de imágenes termine (si no lo ha hecho ya)
+  if (window.GYMImagenes_promise) await window.GYMImagenes_promise;
+
   fileInput.value = ''; // Reset input file
   renderMachinePreview();
   renderMachineGrid();
@@ -394,6 +398,7 @@ function renderMachineGrid() {
     const img = document.createElement('img');
     img.src = src;
     img.onerror = function() { this.remove(); }; // Si no existe, quitar
+    img.title = src.split('/').pop(); // Añadir tooltip con nombre de archivo
     if (src === tempImage) img.classList.add('selected');
     
     img.onclick = () => {
@@ -401,6 +406,18 @@ function renderMachineGrid() {
       renderMachinePreview();
       renderMachineGrid(); // Para actualizar borde seleccionado
     };
+
+    // Previsualización en grande al pasar el ratón
+    img.onmouseover = () => {
+      previewContainer.innerHTML = '';
+      const previewImg = document.createElement('img');
+      previewImg.src = src;
+      previewContainer.appendChild(previewImg);
+    };
+
+    // Al quitar el ratón, restaurar la imagen seleccionada
+    img.onmouseout = renderMachinePreview;
+
     imagesGrid.appendChild(img);
   });
 }

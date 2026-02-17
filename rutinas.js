@@ -19,15 +19,16 @@ window.GYMImagenes = [
 // AUTO-DESCUBRIMIENTO DE IMÁGENES (MAGIA)
 // ========================================================================
 // Esta función intenta leer el contenido de la carpeta 'img/' y busca
-// automáticamente archivos que empiecen por "rutina" y terminen en ".jpg".
-(async function autoDiscoverImages() {
+// automáticamente archivos que empiecen por "rutina" o "maquina" y terminen en ".jpg",
+// y expone una promesa (window.GYMImagenes_promise) para saber cuándo ha terminado.
+window.GYMImagenes_promise = (async function autoDiscoverImages() {
   try {
     const response = await fetch('img/');
     if (response.ok) {
       const text = await response.text();
-      // Buscamos patrones de texto que parezcan nombres de archivo (rutina...jpg)
+      // Buscamos patrones de texto que parezcan nombres de archivo (rutina...jpg o maquina...jpg)
       // \w incluye letras, números y guion bajo. Añadimos guion medio también.
-      const matches = text.match(/rutina[\w-]*\.jpg/gi);
+      const matches = text.match(/(rutina|maquina)[\w-]*\.jpg/gi);
       
       if (matches) {
         matches.forEach(filename => {
