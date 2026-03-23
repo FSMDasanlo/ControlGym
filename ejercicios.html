@@ -395,6 +395,10 @@ function renderMachineGrid() {
   const imagenes = window.GYMImagenes || [];
   
   imagenes.forEach(src => {
+    // Filtrar solo las imágenes que comienzan por 'maquina' (evita mostrar las de 'rutina')
+    const filename = src.split('/').pop().toLowerCase();
+    if (!filename.startsWith('maquina')) return;
+
     const img = document.createElement('img');
     img.src = src;
     img.onerror = function() { this.remove(); }; // Si no existe, quitar
